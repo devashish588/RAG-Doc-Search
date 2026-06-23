@@ -50,22 +50,16 @@ Start the FastAPI backend:
 python main.py
 ```
 
-Or:
+Then open the full app at:
 
-```bash
-uvicorn backend.main:app --reload
-```
+- http://127.0.0.1:8000
 
-Start the Streamlit frontend in another terminal:
+Optional API docs:
 
-```bash
-streamlit run frontend/app.py
-```
+- http://127.0.0.1:8000/docs
 
-Then open:
-
-- API docs: http://127.0.0.1:8000/docs
-- Streamlit UI: http://localhost:8501
+The Streamlit frontend in `frontend/app.py` is still available for experiments,
+but the main project now runs from one common port on FastAPI.
 
 ## API
 
@@ -121,7 +115,7 @@ Example response:
 
 ## Notes
 
-The first upload can take longer because the HuggingFace embedding model is
-downloaded and loaded. Later searches use precomputed document embeddings stored
-in ChromaDB.
-
+The first upload can take longer because the embedding model is loaded. If the
+HuggingFace model is not available locally, the app automatically falls back to
+a fully local hashing-based embedding backend so search still works offline.
+Later searches use precomputed document embeddings stored in ChromaDB.

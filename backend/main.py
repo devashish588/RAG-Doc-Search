@@ -4,6 +4,7 @@ from uuid import uuid4
 
 from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, Response
 
 from backend.ingestion import (
     get_document_status,
@@ -14,6 +15,8 @@ from backend.ingestion import (
 from backend.retrieval import run_search
 from backend.schemas import DocumentStatus, HealthResponse, SearchRequest, SearchResponse, UploadResponse
 from backend.settings import CHROMA_DIR, MAX_UPLOAD_MB, SUPPORTED_EXTENSIONS, UPLOAD_DIR, ensure_runtime_dirs
+from backend.webapp import build_index_html
+from backend.vector_store import get_embedding_backend
 
 
 @asynccontextmanager
@@ -38,6 +41,16 @@ app.add_middleware(
 )
 
 
+@app.get("/", response_class=HTMLResponse)
+def root() -> HTMLResponse:
+    return HTMLResponse(build_index_html())
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon() -> Response:
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 async def _save_upload(upload_file: UploadFile, target_path: Path) -> None:
     max_bytes = MAX_UPLOAD_MB * 1024 * 1024
     written = 0
@@ -59,7 +72,11 @@ async def _save_upload(upload_file: UploadFile, target_path: Path) -> None:
 
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
-    return HealthResponse(status="ok", vector_store=str(CHROMA_DIR))
+    return HealthResponse(
+        status="ok",
+        vector_store=str(CHROMA_DIR),
+        embedding_backend=get_embedding_backend(),
+    )
 
 
 @app.post("/upload", response_model=UploadResponse, status_code=status.HTTP_202_ACCEPTED)
@@ -112,4 +129,3 @@ def search(request: SearchRequest) -> SearchResponse:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Search failed: {exc}") from exc
-
