@@ -13,6 +13,7 @@ wheels/
 # Local configuration and generated indexes
 .env
 vector_store/
+logs/
 data/uploads/*
 data/chroma_db/*
 !data/uploads/.gitkeep
