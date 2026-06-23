@@ -1,16 +1,10 @@
 import re
 from functools import lru_cache
 from threading import RLock
+from typing import Any
 
 from langchain_core.embeddings import Embeddings
 from langchain_core.documents import Document
-from langchain_huggingface import HuggingFaceEmbeddings
-from sklearn.feature_extraction.text import HashingVectorizer
-
-try:
-    from langchain_chroma import Chroma
-except ImportError:  # pragma: no cover - compatibility for older installs
-    from langchain_community.vectorstores import Chroma
 
 from backend.settings import (
     CHROMA_DIR,
@@ -29,6 +23,8 @@ class HashingEmbeddings(Embeddings):
     """Fully local embedding fallback that never needs model downloads."""
 
     def __init__(self, n_features: int = HASHING_EMBEDDING_DIMENSIONS) -> None:
+        from sklearn.feature_extraction.text import HashingVectorizer
+
         self._vectorizer = HashingVectorizer(
             n_features=n_features,
             alternate_sign=False,
@@ -49,9 +45,21 @@ def _slugify(text: str) -> str:
 
 
 @lru_cache(maxsize=1)
-def _load_huggingface_embeddings(*, local_files_only: bool) -> HuggingFaceEmbeddings:
+def _load_huggingface_embeddings(*, local_files_only: bool) -> Embeddings:
+    from langchain_huggingface import HuggingFaceEmbeddings
+
     model_kwargs = {"local_files_only": local_files_only}
     return HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL, model_kwargs=model_kwargs)
+
+
+@lru_cache(maxsize=1)
+def _load_chroma_class() -> type[Any]:
+    try:
+        from langchain_chroma import Chroma
+    except ImportError:  # pragma: no cover - compatibility for older installs
+        from langchain_community.vectorstores import Chroma
+
+    return Chroma
 
 
 @lru_cache(maxsize=1)
@@ -88,10 +96,11 @@ def get_collection_name() -> str:
 
 
 @lru_cache(maxsize=1)
-def get_vector_store() -> Chroma:
+def get_vector_store() -> Any:
     """Return the persistent Chroma collection used by the app."""
     ensure_runtime_dirs()
-    return Chroma(
+    chroma_class = _load_chroma_class()
+    return chroma_class(
         collection_name=get_collection_name(),
         persist_directory=str(CHROMA_DIR),
         embedding_function=get_embeddings(),
