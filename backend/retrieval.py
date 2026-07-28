@@ -7,35 +7,33 @@ from backend.schemas import SearchRequest, SearchResponse, SearchResult
 from backend.vector_store import search_similar
 
 
-def _page_from_metadata(metadata: dict[str, Any]) -> int | None:
-    page = metadata.get("page")
-    if isinstance(page, int):
-        return page
-    if isinstance(page, str) and page.isdigit():
-        return int(page)
+def _page(metadata: dict[str, Any]) -> int | None:
+    p = metadata.get("page")
+    if isinstance(p, int):
+        return p
+    if isinstance(p, str) and p.isdigit():
+        return int(p)
     return None
 
 
-def _result_from_document(document: Document, score: float) -> SearchResult:
-    metadata = dict(document.metadata)
+def _to_result(doc: Document, score: float) -> SearchResult:
+    meta = dict(doc.metadata)
     return SearchResult(
-        text=document.page_content,
-        source=str(metadata.get("source", "unknown")),
-        page=_page_from_metadata(metadata),
+        text=doc.page_content,
+        source=str(meta.get("source", "unknown")),
+        page=_page(meta),
         score=score,
-        metadata=metadata,
+        metadata=meta,
     )
 
 
-def _build_answer(results: list[SearchResult]) -> str:
+def _answer(results: list[SearchResult]) -> str:
     if not results:
-        return "I could not find relevant context in the indexed documents."
-
+        return "No relevant context found in the indexed documents."
     lines = ["Most relevant context:"]
-    for index, result in enumerate(results[:3], start=1):
-        page = f", page {result.page}" if result.page else ""
-        snippet = result.text[:700].strip()
-        lines.append(f"[{index}] {result.source}{page}: {snippet}")
+    for i, r in enumerate(results[:3], 1):
+        page = f", page {r.page}" if r.page else ""
+        lines.append(f"[{i}] {r.source}{page}: {r.text[:700].strip()}")
     return "\n\n".join(lines)
 
 
@@ -43,16 +41,12 @@ def run_search(request: SearchRequest) -> SearchResponse:
     query = " ".join(request.query.split())
     if not query:
         raise ValueError("Query cannot be empty.")
-
     start = perf_counter()
     pairs = search_similar(query=query, k=request.top_k, source=request.source)
-    results = [_result_from_document(document, score) for document, score in pairs]
-    latency_ms = (perf_counter() - start) * 1000
-
+    results = [_to_result(doc, score) for doc, score in pairs]
     return SearchResponse(
         query=query,
-        answer=_build_answer(results),
+        answer=_answer(results),
         results=results,
-        latency_ms=round(latency_ms, 2),
+        latency_ms=round((perf_counter() - start) * 1000, 2),
     )
-

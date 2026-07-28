@@ -15,8 +15,8 @@ from backend.ingestion import (
 from backend.retrieval import run_search
 from backend.schemas import DocumentStatus, HealthResponse, SearchRequest, SearchResponse, UploadResponse
 from backend.settings import CHROMA_DIR, MAX_UPLOAD_MB, SUPPORTED_EXTENSIONS, UPLOAD_DIR, ensure_runtime_dirs
-from backend.webapp import build_index_html
 from backend.vector_store import get_embedding_backend
+from backend.webapp import build_index_html
 
 
 @asynccontextmanager
@@ -26,22 +26,26 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title="RAG Document Search API",
-    description="FastAPI backend for semantic document search with LangChain, HuggingFace embeddings, and ChromaDB.",
+    title="RAG Document Search",
+    description="Semantic document search with LangChain, HuggingFace embeddings, and ChromaDB.",
     version="1.0.0",
     lifespan=lifespan,
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8501", "http://127.0.0.1:8501"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-@app.get("/", response_class=HTMLResponse)
+# ---------------------------------------------------------------------------
+# Routes
+# ---------------------------------------------------------------------------
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
 def root() -> HTMLResponse:
     return HTMLResponse(build_index_html())
 
@@ -49,25 +53,6 @@ def root() -> HTMLResponse:
 @app.get("/favicon.ico", include_in_schema=False)
 def favicon() -> Response:
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-async def _save_upload(upload_file: UploadFile, target_path: Path) -> None:
-    max_bytes = MAX_UPLOAD_MB * 1024 * 1024
-    written = 0
-
-    with target_path.open("wb") as buffer:
-        while True:
-            chunk = await upload_file.read(1024 * 1024)
-            if not chunk:
-                break
-            written += len(chunk)
-            if written > max_bytes:
-                target_path.unlink(missing_ok=True)
-                raise HTTPException(
-                    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                    detail=f"File is larger than {MAX_UPLOAD_MB} MB.",
-                )
-            buffer.write(chunk)
 
 
 @app.get("/health", response_model=HealthResponse)
@@ -84,27 +69,27 @@ async def upload_document(background_tasks: BackgroundTasks, file: UploadFile = 
     if not file.filename:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A filename is required.")
 
-    original_filename = Path(file.filename).name
-    extension = Path(original_filename).suffix.lower()
-    if extension not in SUPPORTED_EXTENSIONS:
+    name = Path(file.filename).name
+    ext  = Path(name).suffix.lower()
+    if ext not in SUPPORTED_EXTENSIONS:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unsupported file type. Use one of: {', '.join(sorted(SUPPORTED_EXTENSIONS))}.",
+            detail=f"Unsupported file type. Allowed: {', '.join(sorted(SUPPORTED_EXTENSIONS))}.",
         )
 
     ensure_runtime_dirs()
-    document_id = uuid4().hex
-    stored_path = UPLOAD_DIR / f"{document_id}_{original_filename}"
-    await _save_upload(file, stored_path)
+    doc_id = uuid4().hex
+    dest   = UPLOAD_DIR / f"{doc_id}_{name}"
+    await _save_upload(file, dest)
 
-    register_document(document_id=document_id, filename=original_filename, stored_path=stored_path)
-    background_tasks.add_task(ingest_document, document_id, stored_path, original_filename)
+    register_document(document_id=doc_id, filename=name, stored_path=dest)
+    background_tasks.add_task(ingest_document, doc_id, dest, name)
 
     return UploadResponse(
-        document_id=document_id,
-        filename=original_filename,
+        document_id=doc_id,
+        filename=name,
         status="queued",
-        message="Upload accepted. Ingestion is running in the background.",
+        message="Upload accepted. Ingestion running in the background.",
     )
 
 
@@ -129,3 +114,22 @@ def search(request: SearchRequest) -> SearchResponse:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Search failed: {exc}") from exc
+
+
+# ---------------------------------------------------------------------------
+# Upload helper
+# ---------------------------------------------------------------------------
+
+async def _save_upload(upload: UploadFile, dest: Path) -> None:
+    max_bytes = MAX_UPLOAD_MB * 1024 * 1024
+    written   = 0
+    with dest.open("wb") as fh:
+        while chunk := await upload.read(1024 * 1024):
+            written += len(chunk)
+            if written > max_bytes:
+                dest.unlink(missing_ok=True)
+                raise HTTPException(
+                    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                    detail=f"File exceeds the {MAX_UPLOAD_MB} MB limit.",
+                )
+            fh.write(chunk)

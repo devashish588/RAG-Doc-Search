@@ -10,138 +10,108 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from backend.settings import CHUNK_OVERLAP, CHUNK_SIZE, SUPPORTED_EXTENSIONS
 from backend.vector_store import add_documents
 
+_DOCS: dict[str, dict[str, Any]] = {}
+_LOCK = RLock()
 
-_DOCUMENTS: dict[str, dict[str, Any]] = {}
-_DOCUMENT_LOCK = RLock()
 
-
-def clean_text(text: str) -> str:
-    """Normalize whitespace without changing the meaning of the source text."""
-    return "\n".join(line.strip() for line in text.splitlines() if line.strip())
-
+# ---------------------------------------------------------------------------
+# Internal state helpers
+# ---------------------------------------------------------------------------
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def _public_status(record: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "document_id": record["document_id"],
-        "filename": record["filename"],
-        "status": record["status"],
-        "chunks_indexed": record.get("chunks_indexed", 0),
-        "message": record.get("message"),
-        "error": record.get("error"),
-        "uploaded_at": record["uploaded_at"],
-    }
+def _public(record: dict[str, Any]) -> dict[str, Any]:
+    return {k: record[k] for k in (
+        "document_id", "filename", "status",
+        "chunks_indexed", "message", "error", "uploaded_at",
+    )}
 
+
+def _update(document_id: str, **fields: Any) -> None:
+    with _LOCK:
+        if document_id in _DOCS:
+            _DOCS[document_id].update(fields)
+
+
+# ---------------------------------------------------------------------------
+# Public registry API
+# ---------------------------------------------------------------------------
 
 def register_document(document_id: str, filename: str, stored_path: Path) -> dict[str, Any]:
-    record = {
-        "document_id": document_id,
-        "filename": filename,
-        "stored_path": str(stored_path),
-        "status": "queued",
+    record: dict[str, Any] = {
+        "document_id":   document_id,
+        "filename":      filename,
+        "stored_path":   str(stored_path),
+        "status":        "queued",
         "chunks_indexed": 0,
-        "message": "Document queued for ingestion.",
-        "error": None,
-        "uploaded_at": _now(),
+        "message":       "Document queued for ingestion.",
+        "error":         None,
+        "uploaded_at":   _now(),
     }
-    with _DOCUMENT_LOCK:
-        _DOCUMENTS[document_id] = record
-    return _public_status(record)
-
-
-def update_document_status(document_id: str, **updates: Any) -> None:
-    with _DOCUMENT_LOCK:
-        if document_id in _DOCUMENTS:
-            _DOCUMENTS[document_id].update(updates)
+    with _LOCK:
+        _DOCS[document_id] = record
+    return _public(record)
 
 
 def get_document_status(document_id: str) -> dict[str, Any] | None:
-    with _DOCUMENT_LOCK:
-        record = _DOCUMENTS.get(document_id)
-        return _public_status(record) if record else None
+    with _LOCK:
+        record = _DOCS.get(document_id)
+        return _public(record) if record else None
 
 
 def list_document_statuses() -> list[dict[str, Any]]:
-    with _DOCUMENT_LOCK:
-        return [_public_status(record) for record in _DOCUMENTS.values()]
+    with _LOCK:
+        return [_public(r) for r in _DOCS.values()]
 
 
-def _load_documents(path: Path) -> list[Document]:
+# ---------------------------------------------------------------------------
+# Document processing
+# ---------------------------------------------------------------------------
+
+def _load(path: Path) -> list[Document]:
     suffix = path.suffix.lower()
     if suffix == ".pdf":
         return PyPDFLoader(str(path)).load()
     if suffix in {".txt", ".md"}:
         return TextLoader(str(path), encoding="utf-8").load()
-    raise ValueError(f"Unsupported file type: {suffix}. Supported types: {sorted(SUPPORTED_EXTENSIONS)}")
+    raise ValueError(f"Unsupported file type '{suffix}'. Supported: {sorted(SUPPORTED_EXTENSIONS)}")
 
 
-def _metadata_value(value: Any) -> str | int | float | bool:
-    if isinstance(value, (str, int, float, bool)):
-        return value
-    if value is None:
-        return ""
-    return str(value)
+def _safe_value(v: Any) -> str | int | float | bool:
+    return v if isinstance(v, (str, int, float, bool)) else ("" if v is None else str(v))
 
 
-def _prepare_chunks(documents: list[Document], document_id: str, filename: str) -> tuple[list[Document], list[str]]:
+def _chunk(documents: list[Document], document_id: str, filename: str) -> tuple[list[Document], list[str]]:
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=CHUNK_SIZE,
         chunk_overlap=CHUNK_OVERLAP,
         separators=["\n\n", "\n", ". ", " ", ""],
     )
-    split_docs = splitter.split_documents(documents)
-
-    chunks: list[Document] = []
-    ids: list[str] = []
-    for index, chunk in enumerate(split_docs):
-        text = clean_text(chunk.page_content)
+    chunks, ids = [], []
+    for i, raw in enumerate(splitter.split_documents(documents)):
+        text = "\n".join(ln.strip() for ln in raw.page_content.splitlines() if ln.strip())
         if not text:
             continue
-
-        metadata = {key: _metadata_value(value) for key, value in chunk.metadata.items()}
-        metadata["document_id"] = document_id
-        metadata["source"] = filename
-        metadata["chunk"] = index
-
-        if "page" in metadata and isinstance(metadata["page"], int):
-            metadata["page"] = metadata["page"] + 1
-
-        chunks.append(Document(page_content=text, metadata=metadata))
-        ids.append(f"{document_id}:{index}")
-
+        meta = {k: _safe_value(v) for k, v in raw.metadata.items()}
+        meta.update(document_id=document_id, source=filename, chunk=i)
+        if isinstance(meta.get("page"), int):
+            meta["page"] += 1          # LangChain uses 0-based page numbers
+        chunks.append(Document(page_content=text, metadata=meta))
+        ids.append(f"{document_id}:{i}")
     return chunks, ids
 
 
 def ingest_document(document_id: str, stored_path: Path, filename: str) -> None:
-    """Load, chunk, embed, and index one uploaded document."""
+    """Load, chunk, embed, and index one uploaded document (runs in background)."""
     try:
-        update_document_status(
-            document_id,
-            status="processing",
-            message="Extracting text and building embeddings.",
-            error=None,
-        )
-        documents = _load_documents(stored_path)
-        chunks, ids = _prepare_chunks(documents, document_id, filename)
+        _update(document_id, status="processing", message="Extracting text and building embeddings.", error=None)
+        docs = _load(stored_path)
+        chunks, ids = _chunk(docs, document_id, filename)
         if not chunks:
-            raise ValueError("No extractable text was found in the uploaded document.")
-
-        indexed_count = add_documents(chunks, ids)
-        update_document_status(
-            document_id,
-            status="complete",
-            chunks_indexed=indexed_count,
-            message=f"Indexed {indexed_count} chunks.",
-            error=None,
-        )
+            raise ValueError("No extractable text found in the uploaded document.")
+        count = add_documents(chunks, ids)
+        _update(document_id, status="complete", chunks_indexed=count, message=f"Indexed {count} chunks.", error=None)
     except Exception as exc:
-        update_document_status(
-            document_id,
-            status="failed",
-            message="Document ingestion failed.",
-            error=str(exc),
-        )
-
+        _update(document_id, status="failed", message="Ingestion failed.", error=str(exc))
