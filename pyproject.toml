@@ -1,2 +1,23 @@
+[project]
+name = "rag-doc-search"
+version = "0.1.0"
+description = "RAG Document Search Engine"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "python-multipart>=0.0.9",
+    "langchain>=0.3.0",
+    "langchain-community>=0.3.0",
+    "langchain-chroma>=0.1.4",
+    "langchain-huggingface>=0.2.0",
+    "langchain-text-splitters>=0.3.0",
+    "chromadb>=0.5.0",
+    "sentence-transformers>=3.0.0",
+    "scikit-learn>=1.4.0",
+    "pypdf>=4.0.0",
+]
+
 [tool.vercel]
-entrypoint = "backend.main:app"
+entrypoint = "main.py"
