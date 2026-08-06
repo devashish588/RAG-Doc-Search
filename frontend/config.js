@@ -1,9 +1,21 @@
-// RAG Document Search — API base URL.
+// RAG Document Search — API base URL, auto-detected.
 //
-// LOCAL DEV (frontend and backend on the same host): leave this as "".
-//   The frontend will call the backend on the same origin.
-//
-// SEPARATE HOSTING (frontend static host + backend API host):
-//   Set this to the deployed backend URL WITHOUT a trailing slash, e.g.:
-//     "https://my-backend.onrender.com"
-window.API_BASE = "https://rag-doc-search-1.onrender.com";
+// Handles GitHub Pages, same-origin Render serving, and local dev, so no manual
+// URL edits are needed per environment. The backend serves the frontend itself
+// locally on port 9752 (see main.py).
+window.API_BASE = (() => {
+  const host = window.location.hostname;
+
+  // Local Development (uvicorn runs on port 9752 in this repo)
+  if (host === "localhost" || host === "127.0.0.1") {
+    return "http://localhost:9752";
+  }
+
+  // Served directly from the Render web service -> same-origin, no CORS
+  if (host.includes("onrender.com")) {
+    return "";
+  }
+
+  // GitHub Pages / External Frontend -> Canonical Render Backend
+  return "https://rag-doc-search-1.onrender.com";
+})();
