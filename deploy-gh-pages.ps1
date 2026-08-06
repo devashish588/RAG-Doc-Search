@@ -2,8 +2,13 @@
 # Run from PowerShell in the repo root:
 #   .\deploy-gh-pages.ps1
 #
-# The gh-pages worktree is created OUTSIDE the repo (in the user temp dir) so
-# that `git -C <worktree>` never resolves back to the main repository.
+# How it works:
+#   * A DETACHED worktree is created in the user temp dir. We NEVER delete the
+#     worktree's `.git` file (that would make `git -C` walk up and operate on
+#     whichever repo sits above the temp dir). Files are cleared with
+#     `git rm -rf .` instead.
+#   * After committing the frontend, the `gh-pages` branch is re-pointed at the
+#     new commit and force-pushed (the branch is a build artifact).
 #
 # Before running:
 #   1. Edit frontend/config.js and set window.API_BASE to your Render backend URL.
@@ -17,35 +22,24 @@ if (-not (Test-Path $frontend)) {
     exit 1
 }
 
-$wt = Join-Path $env:TEMP "opencode"
+# Detached worktree in the temp dir (outside the repo, keeps .git intact).
+$work = Join-Path $env:TEMP "opencode-gh-pages-deploy"
 
-# Clean any stale worktree registration then prep the branch.
-git -C $repoRoot worktree prune ""
-git -C $repoRoot fetch origin gh-pages 2>&1 | Out-Null
-git -C $repoRoot rev-parse --verify origin/gh-pages 2>&1 | Out-Null
-if ($LASTEXITCODE -eq 0) {
-    git -C $repoRoot branch -f gh-pages origin/gh-pages 2>&1 | Out-Null
-} else {
-    git -C $repoRoot rev-parse --verify gh-pages 2>&1 | Out-Null
-    if ($LASTEXITCODE -ne 0) {
-        git -C $repoRoot branch gh-pages HEAD 2>&1 | Out-Null
-    }
-}
-
-$work = Join-Path $wt "gh-pages"
+git -C $repoRoot worktree prune
 Remove-Item -LiteralPath $work -Recurse -Force -ErrorAction SilentlyContinue
-git -C $repoRoot worktree add -f $work gh-pages
+git -C $repoRoot worktree add --detach $work HEAD
 
 try {
-    # Replace the branch contents with the frontend folder.
-    Get-ChildItem -LiteralPath $work -Force | Remove-Item -Recurse -Force
+    # Clear tracked files WITHOUT removing .git, then copy in the frontend.
+    git -C $work rm -rf . 2>&1 | Out-Null
     Copy-Item -Path "$frontend\*" -Destination $work -Recurse -Force
 
     git -C $work add -A
     git -C $work diff --cached --quiet
     if ($LASTEXITCODE -ne 0) {
         git -C $work commit -m "Deploy frontend to GitHub Pages"
-        git -C $work push origin gh-pages
+        git -C $work branch -f gh-pages HEAD
+        git -C $work push --force origin gh-pages
         Write-Output "Deployed. Site will appear at https://devashish588.github.io/RAG-Doc-Search/"
     } else {
         Write-Output "No changes to deploy. GitHub Pages is up to date."
