@@ -1,6 +1,11 @@
 import os
 from pathlib import Path
 
+# Pin native runtimes to a single thread: Render free has 1 vCPU, and ONNX
+# thread arenas waste scarce memory on a 512 MB instance.
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+
 try:
     from dotenv import load_dotenv
     load_dotenv()

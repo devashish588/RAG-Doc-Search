@@ -51,6 +51,7 @@ def _fastembed_embeddings() -> Embeddings:
         model_name=EMBEDDING_MODEL,
         cache_dir=str(_FASTEMBED_CACHE_DIR),
         providers=["CPUExecutionProvider"],
+        threads=1,
     )
 
 
