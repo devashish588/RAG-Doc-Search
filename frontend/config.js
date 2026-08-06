@@ -6,4 +6,4 @@
 // SEPARATE HOSTING (frontend static host + backend API host):
 //   Set this to the deployed backend URL WITHOUT a trailing slash, e.g.:
 //     "https://my-backend.onrender.com"
-window.API_BASE = "https://rag-doc-search.onrender.com";
+window.API_BASE = "https://rag-doc-search-1.onrender.com";
