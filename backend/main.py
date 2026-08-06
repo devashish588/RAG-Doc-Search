@@ -19,7 +19,7 @@ from backend.llm import llm_available
 from backend.retrieval import run_search
 from backend.schemas import DeleteResponse, DocumentStatus, HealthResponse, SearchRequest, SearchResponse, UploadResponse
 from backend.vector_store import get_embeddings
-from backend.settings import CHROMA_DIR, EMBEDDING_BACKEND, MAX_UPLOAD_MB, OPENROUTER_MODEL, SUPPORTED_EXTENSIONS, UPLOAD_DIR, ensure_runtime_dirs
+from backend.settings import CHROMA_DIR, EMBEDDING_BACKEND, EMBEDDING_WARMUP, MAX_UPLOAD_MB, OPENROUTER_MODEL, SUPPORTED_EXTENSIONS, UPLOAD_DIR, ensure_runtime_dirs
 from backend.webapp import FRONTEND_DIR, build_index_html
 
 
@@ -35,7 +35,8 @@ def _warmup_embeddings():
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     ensure_runtime_dirs()
-    threading.Thread(target=_warmup_embeddings, daemon=True).start()
+    if EMBEDDING_WARMUP:
+        threading.Thread(target=_warmup_embeddings, daemon=True).start()
     yield
 
 

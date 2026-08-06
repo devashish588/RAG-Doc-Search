@@ -15,6 +15,7 @@ CHROMA_DIR = DATA_DIR / "chroma_db"
 COLLECTION_NAME           = os.getenv("CHROMA_COLLECTION", "rag_documents")
 EMBEDDING_MODEL           = os.getenv("EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5")
 EMBEDDING_BACKEND         = os.getenv("EMBEDDING_BACKEND", "auto").strip().lower()
+EMBEDDING_WARMUP          = os.getenv("EMBEDDING_WARMUP", "false").strip().lower() in {"1", "true", "yes", "on"}
 HASHING_EMBEDDING_DIMS    = int(os.getenv("HASHING_EMBEDDING_DIMENSIONS", "1024"))
 
 CHUNK_SIZE    = int(os.getenv("CHUNK_SIZE", "2000"))  # Increased from 1000
