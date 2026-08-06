@@ -8,11 +8,12 @@ Semantic document search using FastAPI, LangChain, HuggingFace embeddings, and C
 - Process uploads in a background ingestion task.
 - Extract text with LangChain loaders.
 - Split documents into overlapping chunks.
-- Embed chunks with `sentence-transformers` (all-MiniLM-L6-v2) when available.
+- Embed chunks with `fastembed` (ONNX, `BAAI/bge-small-en-v1.5`) by default.
 - Fall back to local hashing embeddings when offline.
 - Store vectors and metadata in a persistent ChromaDB collection.
 - Search by meaning instead of exact keywords.
-- Rerank results with a Cross-Encoder so substantive chunks beat summaries.
+- Rerank results with a Cross-Encoder so substantive chunks beat summaries
+  (optional; requires `sentence-transformers` + PyTorch, off by default).
 - Generate grounded answers with an LLM via OpenRouter (optional).
 - View retrieved source chunks in the browser UI.
 
@@ -163,9 +164,10 @@ Deploy with Render:
    - a **1 GB persistent disk** mounted at `data/` (survives redeploys)
 3. In the service's **Environment** tab, set `OPENROUTER_API_KEY` to your key
    (it's marked as a secret in `render.yaml`).
-4. Deploy. First request may be slow while torch + the embedding and reranker
-   models initialize; pick a plan with **at least 1 GB RAM** (`ember`/`starter`
-   or higher). Set `EMBEDDING_BACKEND=hashing` to skip the model download.
+4. Deploy. First request may be slow while fastembed downloads its model into
+   the persistent disk (`data/fastembed_cache/`). fastembed's ONNX runtime is
+   lightweight (~120 MB RAM), so the free 512 MB plan suffices. Set
+   `EMBEDDING_BACKEND=hashing` to skip the model download entirely.
 
 Your backend URL will look like `https://rag-doc-search.onrender.com`.
 
@@ -189,10 +191,11 @@ extra CORS setup is needed.
 Notes:
 
 - The first upload can take longer because the embedding model is loaded. If the
-  `sentence-transformers` model is not available locally, the app automatically
+  `fastembed` model is not available locally, the app automatically
   falls back to a fully local hashing-based embedding backend so search still
   works offline.
-- The embedding model downloads on first use (~90 MB). Set
+- The embedding model downloads on first use (~130 MB ONNX, cached at
+  `data/fastembed_cache/`). Set
   `EMBEDDING_BACKEND=hashing` to force the local no-download fallback.
 - `CHROMA_COLLECTION`, `CHUNK_SIZE`, `MAX_UPLOAD_MB`, `OPENROUTER_MODEL`, and
   friends are configurable via environment variables (see `backend/settings.py`).

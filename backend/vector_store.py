@@ -1,7 +1,6 @@
 import re
 from functools import lru_cache
 from threading import RLock
-from typing import Any
 
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
@@ -9,11 +8,14 @@ from langchain_core.embeddings import Embeddings
 from backend.settings import (
     CHROMA_DIR,
     COLLECTION_NAME,
+    DATA_DIR,
     EMBEDDING_BACKEND,
     EMBEDDING_MODEL,
     HASHING_EMBEDDING_DIMS,
     ensure_runtime_dirs,
 )
+
+_FASTEMBED_CACHE_DIR = DATA_DIR / "fastembed_cache"
 
 _VECTOR_LOCK = RLock()
 
@@ -37,57 +39,42 @@ class HashingEmbeddings(Embeddings):
 
 
 @lru_cache(maxsize=1)
-def _sentence_transformer_embeddings(*, local_files_only: bool) -> Embeddings:
-    from sentence_transformers import SentenceTransformer
+def _fastembed_embeddings(*, local_files_only: bool) -> Embeddings:
+    """FastEmbed (ONNX) embeddings - lightweight, no PyTorch.
 
-    kwargs: dict = {"model_name_or_path": EMBEDDING_MODEL}
-    if local_files_only:
-        kwargs["local_files_only"] = True
-    try:
-        model = SentenceTransformer(**kwargs)
-    except TypeError:
-        kwargs.pop("local_files_only", None)
-        model = SentenceTransformer(**kwargs)
-    return _SentenceTransformerEmbeddings(model)
+    The `local_files_only` flag is accepted for compatibility but ignored:
+    fastembed always reuses its on-disk cache and only downloads a model when
+    it is missing from `cache_dir`.
+    """
+    from langchain_community.embeddings import FastEmbedEmbeddings
 
-
-class _SentenceTransformerEmbeddings(Embeddings):
-    """Embeddings interface backed directly by sentence-transformers."""
-
-    def __init__(self, model: Any) -> None:
-        self._model = model
-
-    def embed_documents(self, texts: list[str]) -> list[list[float]]:
-        return self._model.encode(
-            texts, convert_to_numpy=True, show_progress_bar=False, normalize_embeddings=True
-        ).tolist()
-
-    def embed_query(self, text: str) -> list[float]:
-        return self.embed_documents([text])[0]
+    return FastEmbedEmbeddings(
+        model_name=EMBEDDING_MODEL,
+        cache_dir=str(_FASTEMBED_CACHE_DIR),
+        providers=["CPUExecutionProvider"],
+    )
 
 
 # ---------------------------------------------------------------------------
 # Backend resolution
 # ---------------------------------------------------------------------------
 
-# vectorstore.py
 @lru_cache(maxsize=1)
 def get_embedding_backend() -> str:
     if EMBEDDING_BACKEND in {"hash", "hashing"}:
         return "hashing"
     try:
-        # Allow downloading from Hugging Face if not cached locally
-        _sentence_transformer_embeddings(local_files_only=False)
-        return "huggingface"
+        _fastembed_embeddings(local_files_only=False)
+        return "fastembed"
     except Exception as exc:
-        print(f"Failed to load SentenceTransformer: {exc}")
+        print(f"Failed to load FastEmbed: {exc}")
         return "hashing"
 
 
 @lru_cache(maxsize=1)
 def get_embeddings() -> Embeddings:
-    if get_embedding_backend() == "huggingface":
-        return _sentence_transformer_embeddings(local_files_only=False)
+    if get_embedding_backend() == "fastembed":
+        return _fastembed_embeddings(local_files_only=False)
     return HashingEmbeddings()
 
 # ---------------------------------------------------------------------------
@@ -97,7 +84,7 @@ def get_embeddings() -> Embeddings:
 def _collection_name() -> str:
     """Namespace collection by backend so switching backends never mixes vectors."""
     backend = get_embedding_backend()
-    if backend == "huggingface":
+    if backend == "fastembed":
         slug = re.sub(r"[^a-zA-Z0-9]+", "_", EMBEDDING_MODEL.split("/")[-1]).strip("_").lower()
         return f"{COLLECTION_NAME}_{backend}_{slug}"
     return f"{COLLECTION_NAME}_{backend}"

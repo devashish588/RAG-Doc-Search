@@ -20,14 +20,10 @@ services:
         value: openai/gpt-4o-mini
       - key: EMBEDDING_BACKEND
         value: auto
+      # Cross-Encoder reranker needs PyTorch (sentence-transformers); disabled
+      # since we run fastembed-only to stay inside 512 MB RAM.
       - key: RERANK_ENABLED
-        value: "true"
-      # Persist downloaded HF models on the disk so they survive restarts
-      # (avoids ~170 MB re-download + memory spike on every boot).
-      - key: HF_HOME
-        value: /opt/render/project/src/data/hf_cache
-      - key: TRANSFORMERS_CACHE
-        value: /opt/render/project/src/data/hf_cache
+        value: "false"
     disk:
       name: rag-data
       mountPath: /opt/render/project/src/data

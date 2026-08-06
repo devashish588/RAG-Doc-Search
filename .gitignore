@@ -16,5 +16,6 @@ vector_store/
 logs/
 data/uploads/*
 data/chroma_db/*
+data/fastembed_cache/*
 !data/uploads/.gitkeep
 !data/chroma_db/.gitkeep
