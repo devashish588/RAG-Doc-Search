@@ -8,7 +8,7 @@ services:
   - type: web
     name: rag-doc-search
     runtime: python
-    plan: starter # upgrade to standard (>=1 GB RAM) if torch + both models OOM
+    plan: standard # >=1 GB RAM needed for torch + embedding + reranker models
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
@@ -22,6 +22,12 @@ services:
         value: auto
       - key: RERANK_ENABLED
         value: "true"
+      # Persist downloaded HF models on the disk so they survive restarts
+      # (avoids ~170 MB re-download + memory spike on every boot).
+      - key: HF_HOME
+        value: /opt/render/project/src/data/hf_cache
+      - key: TRANSFORMERS_CACHE
+        value: /opt/render/project/src/data/hf_cache
     disk:
       name: rag-data
       mountPath: /opt/render/project/src/data

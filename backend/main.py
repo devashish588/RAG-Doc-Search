@@ -15,11 +15,9 @@ from backend.ingestion import (
     register_document,
 )
 from backend.llm import llm_available
-from backend.reranker import reranker_available
 from backend.retrieval import run_search
 from backend.schemas import DeleteResponse, DocumentStatus, HealthResponse, SearchRequest, SearchResponse, UploadResponse
-from backend.settings import CHROMA_DIR, MAX_UPLOAD_MB, OPENROUTER_MODEL, RERANK_MODEL, SUPPORTED_EXTENSIONS, UPLOAD_DIR, ensure_runtime_dirs
-from backend.vector_store import get_embedding_backend
+from backend.settings import CHROMA_DIR, EMBEDDING_BACKEND, MAX_UPLOAD_MB, OPENROUTER_MODEL, RERANK_ENABLED, RERANK_MODEL, SUPPORTED_EXTENSIONS, UPLOAD_DIR, ensure_runtime_dirs
 from backend.webapp import FRONTEND_DIR, build_index_html
 
 
@@ -64,9 +62,9 @@ def health() -> HealthResponse:
     return HealthResponse(
         status="ok",
         vector_store=str(CHROMA_DIR),
-        embedding_backend=get_embedding_backend(),
+        embedding_backend=EMBEDDING_BACKEND,
         answer_model=OPENROUTER_MODEL if llm_available() else None,
-        reranker_model=RERANK_MODEL if reranker_available() else None,
+        reranker_model=RERANK_MODEL if RERANK_ENABLED else None,
     )
 
 
