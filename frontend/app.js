@@ -9,12 +9,35 @@ const resultsBox   = $('resultsBox');
 const docsBox      = $('docsBox');
 const sourceSelect = $('sourceSelect');
 
-async function api(path, options) {
-  const res = await fetch(API_BASE + path, options);
-  const ct  = res.headers.get('content-type') || '';
-  const body = ct.includes('application/json')
-    ? await res.json()
-    : await res.text();
+const MAX_RETRIES = 3;
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function isRetryable(status) {
+  return status === 502 || status === 503 || status === 504;
+}
+
+async function api(path, options, attempt = 1) {
+  let res, body;
+  try {
+    res = await fetch(API_BASE + path, options);
+    const ct  = res.headers.get('content-type') || '';
+    body = ct.includes('application/json')
+      ? await res.json()
+      : await res.text();
+  } catch (err) {
+    // Network-level failure (e.g. Render cold start drops the connection).
+    if (attempt < MAX_RETRIES) {
+      await sleep(3000 + attempt * 4000);
+      return api(path, options, attempt + 1);
+    }
+    throw err;
+  }
+  // Server was waking up / momentarily unavailable — retry.
+  if (isRetryable(res.status) && attempt < MAX_RETRIES) {
+    await sleep(3000 + attempt * 4000);
+    return api(path, options, attempt + 1);
+  }
   if (!res.ok) throw new Error(body?.detail ?? `Request failed (${res.status})`);
   return body;
 }
