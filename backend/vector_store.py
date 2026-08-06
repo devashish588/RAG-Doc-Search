@@ -1,6 +1,7 @@
 import re
 from functools import lru_cache
 from threading import RLock
+from typing import Any
 
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
@@ -36,39 +37,58 @@ class HashingEmbeddings(Embeddings):
 
 
 @lru_cache(maxsize=1)
-def _huggingface_embeddings(*, local_files_only: bool) -> Embeddings:
-    from langchain_huggingface import HuggingFaceEmbeddings
-    return HuggingFaceEmbeddings(
-        model_name=EMBEDDING_MODEL,
-        model_kwargs={"local_files_only": local_files_only},
-    )
+def _sentence_transformer_embeddings(*, local_files_only: bool) -> Embeddings:
+    from sentence_transformers import SentenceTransformer
+
+    kwargs: dict = {"model_name_or_path": EMBEDDING_MODEL}
+    if local_files_only:
+        kwargs["local_files_only"] = True
+    try:
+        model = SentenceTransformer(**kwargs)
+    except TypeError:
+        kwargs.pop("local_files_only", None)
+        model = SentenceTransformer(**kwargs)
+    return _SentenceTransformerEmbeddings(model)
+
+
+class _SentenceTransformerEmbeddings(Embeddings):
+    """Embeddings interface backed directly by sentence-transformers."""
+
+    def __init__(self, model: Any) -> None:
+        self._model = model
+
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        return self._model.encode(
+            texts, convert_to_numpy=True, show_progress_bar=False, normalize_embeddings=True
+        ).tolist()
+
+    def embed_query(self, text: str) -> list[float]:
+        return self.embed_documents([text])[0]
 
 
 # ---------------------------------------------------------------------------
 # Backend resolution
 # ---------------------------------------------------------------------------
 
+# vectorstore.py
 @lru_cache(maxsize=1)
 def get_embedding_backend() -> str:
-    if EMBEDDING_BACKEND in {"hash", "hashing", "local"}:
+    if EMBEDDING_BACKEND in {"hash", "hashing"}:
         return "hashing"
-    if EMBEDDING_BACKEND in {"hf", "huggingface"}:
-        _huggingface_embeddings(local_files_only=False)
-        return "huggingface"
-    # auto: try cached local model first, fall back to hashing
     try:
-        _huggingface_embeddings(local_files_only=True)
+        # Allow downloading from Hugging Face if not cached locally
+        _sentence_transformer_embeddings(local_files_only=False)
         return "huggingface"
-    except Exception:
+    except Exception as exc:
+        print(f"Failed to load SentenceTransformer: {exc}")
         return "hashing"
 
 
 @lru_cache(maxsize=1)
 def get_embeddings() -> Embeddings:
     if get_embedding_backend() == "huggingface":
-        return _huggingface_embeddings(local_files_only=(EMBEDDING_BACKEND != "huggingface"))
+        return _sentence_transformer_embeddings(local_files_only=False)
     return HashingEmbeddings()
-
 
 # ---------------------------------------------------------------------------
 # Chroma collection
@@ -120,9 +140,41 @@ def search_similar(
 ) -> list[tuple[Document, float]]:
     store = get_vector_store()
     filters = {"source": source} if source else None
+    
+    # Use MMR search to ensure diverse chunks (e.g., Page 1, Page 2, Page 3)
     try:
+        docs = store.max_marginal_relevance_search(
+            query, 
+            k=k, 
+            fetch_k=12,  # Fetch top 20 similar candidates first
+            lambda_mult=0.5,  # 0.5 balances relevance and diversity
+            filter=filters
+        )
+        # Assign default score placeholder since MMR returns Documents
+        return [(doc, 1.0) for doc in docs]
+    except Exception:
+        # Fallback to standard similarity search
         pairs = store.similarity_search_with_relevance_scores(query, k=k, filter=filters)
         return [(doc, _clamp(score)) for doc, score in pairs]
-    except Exception:
-        pairs = store.similarity_search_with_score(query, k=k, filter=filters)
-        return [(doc, _clamp(1 / (1 + max(0.0, float(d))))) for doc, d in pairs]
+
+
+def delete_by_document(document_id: str) -> int:
+    """Remove every indexed chunk belonging to a document. Returns count deleted."""
+    store = get_vector_store()
+    collection = getattr(store, "_collection", None)
+    ids: list[str] = []
+    if collection is not None:
+        try:
+            ids = list(collection.get(where={"document_id": document_id}).get("ids", []))
+        except Exception:
+            ids = []
+    if not ids:
+        return 0
+    with _VECTOR_LOCK:
+        try:
+            collection.delete(ids=ids)
+        except Exception:
+            store.delete(ids=ids)
+        if callable(getattr(store, "persist", None)):
+            store.persist()
+    return len(ids)

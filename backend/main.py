@@ -5,18 +5,22 @@ from uuid import uuid4
 from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, Response
+from fastapi.staticfiles import StaticFiles
 
 from backend.ingestion import (
+    delete_document,
     get_document_status,
     ingest_document,
     list_document_statuses,
     register_document,
 )
+from backend.llm import llm_available
+from backend.reranker import reranker_available
 from backend.retrieval import run_search
-from backend.schemas import DocumentStatus, HealthResponse, SearchRequest, SearchResponse, UploadResponse
-from backend.settings import CHROMA_DIR, MAX_UPLOAD_MB, SUPPORTED_EXTENSIONS, UPLOAD_DIR, ensure_runtime_dirs
+from backend.schemas import DeleteResponse, DocumentStatus, HealthResponse, SearchRequest, SearchResponse, UploadResponse
+from backend.settings import CHROMA_DIR, MAX_UPLOAD_MB, OPENROUTER_MODEL, RERANK_MODEL, SUPPORTED_EXTENSIONS, UPLOAD_DIR, ensure_runtime_dirs
 from backend.vector_store import get_embedding_backend
-from backend.webapp import build_index_html
+from backend.webapp import FRONTEND_DIR, build_index_html
 
 
 @asynccontextmanager
@@ -61,6 +65,8 @@ def health() -> HealthResponse:
         status="ok",
         vector_store=str(CHROMA_DIR),
         embedding_backend=get_embedding_backend(),
+        answer_model=OPENROUTER_MODEL if llm_available() else None,
+        reranker_model=RERANK_MODEL if reranker_available() else None,
     )
 
 
@@ -106,6 +112,14 @@ def document_status(document_id: str) -> DocumentStatus:
     return DocumentStatus(**record)
 
 
+@app.delete("/documents/{document_id}", response_model=DeleteResponse)
+def delete_document_endpoint(document_id: str) -> DeleteResponse:
+    result = delete_document(document_id)
+    if not result:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found.")
+    return DeleteResponse(**result)
+
+
 @app.post("/search", response_model=SearchResponse)
 def search(request: SearchRequest) -> SearchResponse:
     try:
@@ -133,3 +147,13 @@ async def _save_upload(upload: UploadFile, dest: Path) -> None:
                     detail=f"File exceeds the {MAX_UPLOAD_MB} MB limit.",
                 )
             fh.write(chunk)
+
+
+# ---------------------------------------------------------------------------
+# Local single-origin UI: serve the frontend/ directory at root.
+# Registered last so all API routes above take priority. Safe to remove when
+# the frontend is hosted separately.
+# ---------------------------------------------------------------------------
+
+if FRONTEND_DIR.exists():
+    app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")

@@ -42,7 +42,16 @@ class SearchResponse(BaseModel):
     latency_ms: float
 
 
+class DeleteResponse(BaseModel):
+    document_id: str
+    filename: str
+    deleted_chunks: int
+    message: str
+
+
 class HealthResponse(BaseModel):
     status: str
     vector_store: str
     embedding_backend: str
+    answer_model: str | None = None
+    reranker_model: str | None = None

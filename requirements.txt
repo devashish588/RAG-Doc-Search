@@ -3,6 +3,7 @@ torch
 fastapi>=0.115.0
 uvicorn[standard]>=0.30.0
 python-multipart>=0.0.9
+python-dotenv>=1.0.0
 
 langchain>=0.3.0
 langchain-community>=0.3.0
@@ -12,3 +13,4 @@ langchain-text-splitters>=0.3.0
 chromadb>=0.5.0
 scikit-learn>=1.4.0
 pypdf>=4.0.0
+sentence-transformers>=3.0.0

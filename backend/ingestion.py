@@ -8,7 +8,7 @@ from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from backend.settings import CHUNK_OVERLAP, CHUNK_SIZE, SUPPORTED_EXTENSIONS
-from backend.vector_store import add_documents
+from backend.vector_store import add_documents, delete_by_document
 
 _DOCS: dict[str, dict[str, Any]] = {}
 _LOCK = RLock()
@@ -64,6 +64,27 @@ def get_document_status(document_id: str) -> dict[str, Any] | None:
 def list_document_statuses() -> list[dict[str, Any]]:
     with _LOCK:
         return [_public(r) for r in _DOCS.values()]
+
+
+def delete_document(document_id: str) -> dict[str, Any] | None:
+    with _LOCK:
+        record = _DOCS.get(document_id)
+        if not record:
+            return None
+        filename = record["filename"]
+        stored_path = Path(record["stored_path"])
+        _DOCS.pop(document_id, None)
+
+    deleted_chunks = delete_by_document(document_id)
+    if stored_path.exists():
+        stored_path.unlink(missing_ok=True)
+
+    return {
+        "document_id": document_id,
+        "filename": filename,
+        "deleted_chunks": deleted_chunks,
+        "message": "Document deleted.",
+    }
 
 
 # ---------------------------------------------------------------------------
