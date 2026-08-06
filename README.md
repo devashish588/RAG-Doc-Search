@@ -149,44 +149,42 @@ Content-Type: application/json
 
 ## Deploying (frontend and backend separately)
 
-### 1. Backend — needs persistent disk for ChromaDB and uploads
+### 1. Backend — Render (needs persistent disk for ChromaDB and uploads)
 
-The backend keeps the Chroma vector database and uploaded files on local disk
+The backend keeps the Chroma vector database and uploaded files on disk
 (`data/`), so it needs a long-running host with a persistent filesystem.
-Serverless (Vercel, Netlify Functions) is NOT suitable.
+Serverless hosts (Vercel, Netlify Functions) are NOT suitable.
 
-Recommended platforms:
+Deploy with Render:
 
-- Render (Web Service), Railway, or Fly.io — deploy from the repo root with the
-  start command `uvicorn main:app --host 0.0.0.0 --port $PORT` (see `Procfile`).
-- Or any VPS (DigitalOcean, AWS EC2, Hetzner) running the same command.
+1. Push this repo to GitHub (done).
+2. In Render: **New → Blueprint** and pick the repo. `render.yaml` provisions:
+   - the Web Service with `uvicorn main:app --host 0.0.0.0 --port $PORT`
+   - a **1 GB persistent disk** mounted at `data/` (survives redeploys)
+3. In the service's **Environment** tab, set `OPENROUTER_API_KEY` to your key
+   (it's marked as a secret in `render.yaml`).
+4. Deploy. First request may be slow while torch + the embedding and reranker
+   models initialize; pick a plan with **at least 1 GB RAM** (`ember`/`starter`
+   or higher). Set `EMBEDDING_BACKEND=hashing` to skip the model download.
 
-Notes:
+Your backend URL will look like `https://rag-doc-search.onrender.com`.
 
-- The embedding model downloads on first use (~90 MB). Add `EMBEDDING_MODEL`,
-  `EMBEDDING_BACKEND=hashing` to force the local no-download fallback, or bump
-  the instance's memory if cold starts are slow.
-- `CHROMA_COLLECTION`, `CHUNK_SIZE`, and `MAX_UPLOAD_MB` are configurable via
-  environment variables (see `backend/settings.py`).
-- If you ever redeploy from scratch, the Chroma data is wiped — keep `data/`
-  backed up or attach persistent storage.
+### 2. Frontend — GitHub Pages (static, no build)
 
-### 2. Frontend — static hosting, no build step
+Project Pages serve at `https://<user>.github.io/RAG-Doc-Search/`, so `config.js`
+must point at the Render backend:
 
-The `frontend/` folder is a plain static site. Host it on:
+1. `frontend/config.js`: set `window.API_BASE = "https://<your-render-url>"`.
+2. Run the deploy script (PowerShell, from the repo root):
+   ```powershell
+   .\deploy-gh-pages.ps1
+   ```
+   This pushes the `frontend/` folder to a `gh-pages` branch.
+3. In GitHub: **Settings → Pages → Build and deployment → Branch → `gh-pages` / `/root`** → Save.
+4. Open `https://<user>.github.io/RAG-Doc-Search/`.
 
-- Netlify Drop (drag the `frontend/` folder in), Vercel, Cloudflare Pages, or
-  GitHub Pages.
-
-Before deploying:
-
-1. Open `frontend/config.js`.
-2. Set `window.API_BASE` to your deployed backend URL, e.g.
-   `"https://my-backend.onrender.com"` (no trailing slash).
-3. Deploy the `frontend/` folder.
-
-The backend already allows cross-origin requests, so no extra CORS setup is
-needed.
+The backend already allows cross-origin requests (`allow_origins=["*"]`), so no
+extra CORS setup is needed.
 
 Notes:
 

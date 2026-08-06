@@ -1,0 +1,28 @@
+# Render Blueprint — one-click backend deployment.
+#
+# Use this file by connecting your GitHub repo in Render:
+#   New -> Blueprint -> select this repo.
+# It provisions the web service and a persistent disk mounted at data/ so the
+# ChromaDB index and uploads survive redeploys.
+services:
+  - type: web
+    name: rag-doc-search
+    runtime: python
+    plan: starter # upgrade to standard (>=1 GB RAM) if torch + both models OOM
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: OPENROUTER_API_KEY
+        sync: false # secret — fill in manually in the Render dashboard
+      - key: OPENROUTER_MODEL
+        value: openai/gpt-4o-mini
+      - key: EMBEDDING_BACKEND
+        value: auto
+      - key: RERANK_ENABLED
+        value: "true"
+    disk:
+      name: rag-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
