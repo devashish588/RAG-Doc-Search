@@ -52,7 +52,17 @@ def rerank(
             return pairs[:top_k]
         texts = [doc.page_content for doc, _ in pairs]
         logits = get_reranker().predict([(query, text) for text in texts])
-        scored = [(pairs[i], _sigmoid(logits[i])) for i in range(len(pairs))]
+        scores = [_sigmoid(float(logit)) for logit in logits]
+        # Min-max normalize within the candidate pool: cross-encoder logits are
+        # unbounded and often all-negative, so raw sigmoid scores sit far below
+        # the bi-encoder 0..1 scale (and below MIN_RELEVANCE_SCORE). Normalizing
+        # keeps relative ordering while restoring a usable 0..1 range.
+        lo, hi = min(scores), max(scores)
+        if hi > lo:
+            scores = [(s - lo) / (hi - lo) for s in scores]
+        else:
+            scores = [1.0] * len(scores)
+        scored = [(pairs[i], round(scores[i], 4)) for i in range(len(pairs))]
         scored.sort(key=lambda item: item[1], reverse=True)
         return [(doc, score) for (doc, _), score in scored[:top_k]]
     except Exception:

@@ -7,7 +7,7 @@ from backend.llm import generate_answer
 from backend.reranker import rerank
 from backend.schemas import SearchRequest, SearchResponse, SearchResult
 from backend.settings import RERANK_CANDIDATES
-from backend.vector_store import search_similar
+from backend.vector_store import get_vector_store, search_similar
 
 
 def _page(metadata: dict[str, Any]) -> int | None:
@@ -44,26 +44,89 @@ def _answer(query: str, results: list[SearchResult]) -> str:
 
 MIN_RELEVANCE_SCORE = 0.35
 
-# retrieval.py
+def _fetch_adjacent_chunks(results: list[SearchResult]) -> list[SearchResult]:
+    """Append the immediately following chunk for each retrieved chunk so
+    multi-page lists/answers aren't cut off at a chunk boundary.
+
+    Lists that span pages get split across chunks; the second half often scores
+    too low to surface on its own, so it is pulled in by its document_id/chunk
+    sequence index instead.
+    """
+    store = get_vector_store()
+    collection = getattr(store, "_collection", None)
+    if collection is None:
+        return results
+
+    expanded = list(results)
+    seen_ids = {f"{r.metadata.get('document_id')}:{r.metadata.get('chunk')}" for r in results}
+
+    for r in results:
+        doc_id = r.metadata.get("document_id")
+        chunk_num = r.metadata.get("chunk")
+        if not doc_id or not isinstance(chunk_num, int):
+            continue
+        next_id = f"{doc_id}:{chunk_num + 1}"
+        if next_id in seen_ids:
+            continue
+        try:
+            fetched = collection.get(ids=[next_id], include=["documents", "metadatas"])
+        except Exception:
+            continue  # no such chunk, or lookup failed — move on
+        docs = fetched.get("documents") or []
+        metas = fetched.get("metadatas") or []
+        if not docs:
+            continue
+        next_text = docs[0]
+        next_meta = metas[0] if metas else {}
+        seen_ids.add(next_id)
+        expanded.append(
+            SearchResult(
+                text=next_text,
+                source=str(next_meta.get("source", r.source)),
+                page=_page(next_meta),
+                score=round(r.score * 0.9, 4),  # slightly lower weighting
+                metadata=next_meta,
+            )
+        )
+    return expanded
+
+
 def run_search(request: SearchRequest) -> SearchResponse:
     query = " ".join(request.query.split())
     if not query:
         raise ValueError("Query cannot be empty.")
+
     start = perf_counter()
-    pairs = search_similar(query=query, k=request.top_k, source=request.source)
-    
-    # Deduplicate results based on page content
-    seen_texts = set()
-    unique_results = []
+    # Fetch a generous pool so MMR + rerank + dedup never starve the final count
+    candidate_k = max(request.top_k * 2, RERANK_CANDIDATES)
+    pairs = search_similar(query=query, k=candidate_k, source=request.source)
+
+    # Rescore candidates with the Cross-Encoder, keeping the full sorted pool
+    # so deduplication below picks the best-scoring unique chunks.
+    pairs = rerank(query, pairs, top_k=candidate_k)
+
+    # Deduplicate chunks based on normalized text content
+    seen_text = set()
+    unique_pairs = []
     for doc, score in pairs:
-        clean_text = doc.page_content.strip()
-        if clean_text not in seen_texts:
-            seen_texts.add(clean_text)
-            unique_results.append(_to_result(doc, score))
-            
+        normalized_text = doc.page_content.strip()
+        if normalized_text in seen_text:
+            continue
+        seen_text.add(normalized_text)
+        unique_pairs.append((doc, score))
+        if len(unique_pairs) == request.top_k:
+            break
+
+    # Drop low-relevance noise
+    filtered_pairs = [(doc, score) for doc, score in unique_pairs if score >= MIN_RELEVANCE_SCORE]
+    results = [_to_result(doc, score) for doc, score in filtered_pairs]
+
+    # Expand retrieved chunks to include continuation pages/chunks
+    results = _fetch_adjacent_chunks(results)
+
     return SearchResponse(
         query=query,
-        answer=_answer(query, unique_results),
-        results=unique_results,
+        answer=_answer(query, results),
+        results=results,
         latency_ms=round((perf_counter() - start) * 1000, 2),
     )

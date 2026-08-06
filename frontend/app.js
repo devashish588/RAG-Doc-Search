@@ -129,7 +129,7 @@ $('uploadBtn').addEventListener('click', async () => {
 
 $('searchBtn').addEventListener('click', async () => {
   const query  = $('queryInput').value.trim();
-  const top_k  = Number($('topKInput').value || 5);
+  const top_k  = Number($('topKInput').value || 8);
   const source = sourceSelect.value;
   if (!query) { searchStatus.textContent = 'Type a question first.'; return; }
   $('searchBtn').disabled = true;

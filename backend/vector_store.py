@@ -133,27 +133,28 @@ def _clamp(score: float) -> float:
     return round(max(0.0, min(float(score), 1.0)), 4)
 
 
+# backend/vectorstore.py
+
 def search_similar(
     query: str,
-    k: int = 5,
+    k: int = 8,
     source: str | None = None,
 ) -> list[tuple[Document, float]]:
     store = get_vector_store()
     filters = {"source": source} if source else None
     
-    # Use MMR search to ensure diverse chunks (e.g., Page 1, Page 2, Page 3)
     try:
+        # MMR search retrieves varied content across the document
         docs = store.max_marginal_relevance_search(
-            query, 
-            k=k, 
-            fetch_k=12,  # Fetch top 20 similar candidates first
-            lambda_mult=0.5,  # 0.5 balances relevance and diversity
+            query,
+            k=k,
+            fetch_k=max(20, k),  # Fetch 20+ candidate chunks first (must be >= k)
+            lambda_mult=0.5,     # 0.5 balances query relevance with context diversity
             filter=filters
         )
-        # Assign default score placeholder since MMR returns Documents
         return [(doc, 1.0) for doc in docs]
     except Exception:
-        # Fallback to standard similarity search
+        # Fallback to similarity search if MMR fails
         pairs = store.similarity_search_with_relevance_scores(query, k=k, filter=filters)
         return [(doc, _clamp(score)) for doc, score in pairs]
 

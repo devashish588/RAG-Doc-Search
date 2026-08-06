@@ -17,8 +17,8 @@ EMBEDDING_MODEL           = os.getenv("EMBEDDING_MODEL", "sentence-transformers/
 EMBEDDING_BACKEND         = os.getenv("EMBEDDING_BACKEND", "auto").strip().lower()
 HASHING_EMBEDDING_DIMS    = int(os.getenv("HASHING_EMBEDDING_DIMENSIONS", "1024"))
 
-CHUNK_SIZE     = int(os.getenv("CHUNK_SIZE", "1000"))
-CHUNK_OVERLAP  = int(os.getenv("CHUNK_OVERLAP", "200"))
+CHUNK_SIZE    = int(os.getenv("CHUNK_SIZE", "2000"))  # Increased from 1000
+CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "400"))  # Increased from 200
 MAX_UPLOAD_MB  = int(os.getenv("MAX_UPLOAD_MB", "50"))
 
 SUPPORTED_EXTENSIONS = {".pdf", ".txt", ".md"}

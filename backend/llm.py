@@ -11,18 +11,17 @@ def llm_available() -> bool:
 
 def _messages(query: str, results: list[SearchResult]) -> list[dict[str, str]]:
     context = "\n\n".join(
-        f"--- CHUNK [{i + 1}] (Source: {r.source}, Page: {r.page or 'N/A'}) ---\n{r.text}"
-        for i, r in enumerate(results)  # Pass all retrieved chunks to the LLM
+        f"[{i + 1}] {r.source}" + (f" (page {r.page})" if r.page else "") + f":\n{r.text}"
+        for i, r in enumerate(results)
     )
     system = (
-        "You are an exact, document-bound QA assistant. You MUST answer the user's question "
-        "using ONLY the provided Context below.\n\n"
-        "STRICT RULES:\n"
-        "1. Do NOT use outside knowledge or make assumptions.\n"
-        "2. If the answer is not directly stated in the Context, respond ONLY with: "
-        "'I cannot answer this question based on the provided document.'\n"
-        "3. Do not invent details or extrapolate.\n"
-        "4. Cite your sources using [1], [2], etc., corresponding to the chunk numbers."
+        "You are a factual QA assistant. Answer the user's question clearly and concisely "
+        "using ONLY the provided Context.\n\n"
+        "FORMATTING RULES:\n"
+        "1. Do NOT use bullet points starting with asterisks (*) or hyphens (-).\n"
+        "2. Use bold titles for headings and major key points (e.g., **1. Section Title:**).\n"
+        "3. Keep descriptions in numbered lists or clear paragraphs under bold headers.\n"
+        "4. Always cite sources as [1], [2], etc."
     )
     user = f"Context:\n{context}\n\nQuestion:\n{query}"
     return [
@@ -31,7 +30,6 @@ def _messages(query: str, results: list[SearchResult]) -> list[dict[str, str]]:
     ]
 
 def generate_answer(query: str, results: list[SearchResult]) -> str | None:
-    ...
     payload = {
         "model": OPENROUTER_MODEL,
         "messages": _messages(query, results),
