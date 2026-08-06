@@ -54,4 +54,3 @@ class HealthResponse(BaseModel):
     vector_store: str
     embedding_backend: str
     answer_model: str | None = None
-    reranker_model: str | None = None

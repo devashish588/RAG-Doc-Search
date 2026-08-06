@@ -34,9 +34,8 @@ def generate_answer(query: str, results: list[SearchResult]) -> str | None:
         "model": OPENROUTER_MODEL,
         "messages": _messages(query, results),
         "max_tokens": 768,
-        "temperature": 0.0,  # <-- Set to 0.0 for deterministic factual responses
+        "temperature": 0.0,
     }
-    ...
     req = request.Request(
         f"{OPENROUTER_BASE_URL}/chat/completions",
         data=json.dumps(payload).encode("utf-8"),

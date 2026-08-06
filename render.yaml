@@ -8,7 +8,7 @@ services:
   - type: web
     name: rag-doc-search
     runtime: python
-    plan: standard # >=1 GB RAM needed for torch + embedding + reranker models
+    plan: starter # free plan (512 MB) is enough: fastembed/ONNX is light, no torch
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
@@ -20,10 +20,6 @@ services:
         value: openai/gpt-4o-mini
       - key: EMBEDDING_BACKEND
         value: auto
-      # Cross-Encoder reranker needs PyTorch (sentence-transformers); disabled
-      # since we run fastembed-only to stay inside 512 MB RAM.
-      - key: RERANK_ENABLED
-        value: "false"
     disk:
       name: rag-data
       mountPath: /opt/render/project/src/data

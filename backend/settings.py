@@ -30,13 +30,6 @@ OPENROUTER_API_KEY  = os.getenv("OPENROUTER_API_KEY", "").strip()
 OPENROUTER_MODEL    = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")
 OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
 
-# Cross-Encoder reranker. Bi-encoder retrieval first pulls RERANK_CANDIDATES
-# candidates, which are then rescored pairwise (query, chunk) and the top
-# RERANK_CANDIDATES-capped slice is kept. Set RERANK_ENABLED=false to disable.
-RERANK_ENABLED    = os.getenv("RERANK_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
-RERANK_MODEL      = os.getenv("RERANK_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2")
-RERANK_CANDIDATES = int(os.getenv("RERANK_CANDIDATES", "20"))
-
 
 def ensure_runtime_dirs() -> None:
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)

@@ -39,12 +39,11 @@ class HashingEmbeddings(Embeddings):
 
 
 @lru_cache(maxsize=1)
-def _fastembed_embeddings(*, local_files_only: bool) -> Embeddings:
+def _fastembed_embeddings() -> Embeddings:
     """FastEmbed (ONNX) embeddings - lightweight, no PyTorch.
 
-    The `local_files_only` flag is accepted for compatibility but ignored:
-    fastembed always reuses its on-disk cache and only downloads a model when
-    it is missing from `cache_dir`.
+    fastembed reuses its on-disk cache and only downloads a model when it is
+    missing from `cache_dir`.
     """
     from langchain_community.embeddings import FastEmbedEmbeddings
 
@@ -64,7 +63,7 @@ def get_embedding_backend() -> str:
     if EMBEDDING_BACKEND in {"hash", "hashing"}:
         return "hashing"
     try:
-        _fastembed_embeddings(local_files_only=False)
+        _fastembed_embeddings()
         return "fastembed"
     except Exception as exc:
         print(f"Failed to load FastEmbed: {exc}")
@@ -74,7 +73,7 @@ def get_embedding_backend() -> str:
 @lru_cache(maxsize=1)
 def get_embeddings() -> Embeddings:
     if get_embedding_backend() == "fastembed":
-        return _fastembed_embeddings(local_files_only=False)
+        return _fastembed_embeddings()
     return HashingEmbeddings()
 
 # ---------------------------------------------------------------------------

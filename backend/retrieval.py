@@ -4,9 +4,7 @@ from typing import Any
 from langchain_core.documents import Document
 
 from backend.llm import generate_answer
-from backend.reranker import rerank
 from backend.schemas import SearchRequest, SearchResponse, SearchResult
-from backend.settings import RERANK_CANDIDATES
 from backend.vector_store import get_vector_store, search_similar
 
 
@@ -97,13 +95,7 @@ def run_search(request: SearchRequest) -> SearchResponse:
         raise ValueError("Query cannot be empty.")
 
     start = perf_counter()
-    # Fetch a generous pool so MMR + rerank + dedup never starve the final count
-    candidate_k = max(request.top_k * 2, RERANK_CANDIDATES)
-    pairs = search_similar(query=query, k=candidate_k, source=request.source)
-
-    # Rescore candidates with the Cross-Encoder, keeping the full sorted pool
-    # so deduplication below picks the best-scoring unique chunks.
-    pairs = rerank(query, pairs, top_k=candidate_k)
+    pairs = search_similar(query=query, k=request.top_k, source=request.source)
 
     # Deduplicate chunks based on normalized text content
     seen_text = set()

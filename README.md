@@ -12,8 +12,8 @@ Semantic document search using FastAPI, LangChain, HuggingFace embeddings, and C
 - Fall back to local hashing embeddings when offline.
 - Store vectors and metadata in a persistent ChromaDB collection.
 - Search by meaning instead of exact keywords.
-- Rerank results with a Cross-Encoder so substantive chunks beat summaries
-  (optional; requires `sentence-transformers` + PyTorch, off by default).
+- Retrieve diverse chunks with MMR, deduplicate, and add adjacent chunks so
+  multi-page lists aren't cut off.
 - Generate grounded answers with an LLM via OpenRouter (optional).
 - View retrieved source chunks in the browser UI.
 
@@ -75,14 +75,11 @@ OPENROUTER_MODEL=openai/gpt-4o-mini
 missing or the API call fails, the app silently falls back to the plain
 context-based answer.
 
-## Reranker
+## Search pipeline
 
-Bi-encoder retrieval pulls 20 candidate chunks (configurable via
-`RERANK_CANDIDATES`), then a Cross-Encoder
-(`cross-encoder/ms-marco-MiniLM-L-6-v2`) rescored each `(query, chunk)` pair so
-substantive answers rank above summaries. The top `top_k` survive, then a
-`MIN_RELEVANCE_SCORE` cutoff drops noise. Disable with `RERANK_ENABLED=false`;
-the reranker auto-disables if the model cannot load.
+MMR retrieval pulls diverse chunks, which are then deduplicated by text
+content and pruned by a `MIN_RELEVANCE_SCORE` cutoff. Adjacent chunks are pulled
+in so multi-page lists aren't cut off at a chunk boundary.
 
 ## Run locally (single origin)
 
