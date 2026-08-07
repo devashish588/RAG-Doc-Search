@@ -89,11 +89,11 @@ python main.py
 
 Open the app:
 
-- http://127.0.0.1:9752
+- http://127.0.0.1:9826
 
 API docs:
 
-- http://127.0.0.1:9752/docs
+- http://127.0.0.1:9826/docs
 
 ## Run locally (frontend and backend separately)
 
@@ -112,7 +112,7 @@ python -m http.server 5500
 
 Open http://127.0.0.1:5500. Because `frontend/config.js` sets `API_BASE = ""`
 by default, the UI will call the backend on the same origin and fail. For
-separate local ports set `API_BASE` to `http://127.0.0.1:9752`.
+separate local ports set `API_BASE` to `http://127.0.0.1:9826`.
 
 ## API
 
