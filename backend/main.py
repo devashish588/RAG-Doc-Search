@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile, status
+from fastapi import FastAPI, File, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -11,10 +11,10 @@ from fastapi.staticfiles import StaticFiles
 from backend.ingestion import (
     delete_document,
     get_document_status,
-    ingest_document,
     list_document_statuses,
     register_document,
 )
+from backend.ingestion_queue import start as start_ingestion_worker, submit as submit_job
 from backend.llm import llm_available
 from backend.retrieval import run_search
 from backend.schemas import DeleteResponse, DocumentStatus, HealthResponse, SearchRequest, SearchResponse, UploadResponse
@@ -35,6 +35,7 @@ def _warmup_embeddings():
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     ensure_runtime_dirs()
+    start_ingestion_worker()
     if EMBEDDING_WARMUP:
         threading.Thread(target=_warmup_embeddings, daemon=True).start()
     yield
@@ -81,7 +82,7 @@ def health() -> HealthResponse:
 
 
 @app.post("/upload", response_model=UploadResponse, status_code=status.HTTP_202_ACCEPTED)
-async def upload_document(background_tasks: BackgroundTasks, file: UploadFile = File(...)) -> UploadResponse:
+async def upload_document(file: UploadFile = File(...)) -> UploadResponse:
     if not file.filename:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A filename is required.")
 
@@ -99,7 +100,13 @@ async def upload_document(background_tasks: BackgroundTasks, file: UploadFile = 
     await _save_upload(file, dest)
 
     register_document(document_id=doc_id, filename=name, stored_path=dest)
-    background_tasks.add_task(ingest_document, doc_id, dest, name)
+    if not submit_job(doc_id, dest, name):
+        delete_document(doc_id)
+        dest.unlink(missing_ok=True)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Ingestion queue is full. Please try again shortly.",
+        )
 
     return UploadResponse(
         document_id=doc_id,
