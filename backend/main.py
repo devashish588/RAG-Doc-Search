@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 from uuid import uuid4
@@ -22,15 +23,17 @@ from backend.vector_store import get_embeddings
 from backend.settings import CHROMA_DIR, EMBEDDING_BACKEND, EMBEDDING_WARMUP, MAX_UPLOAD_MB, OPENROUTER_MODEL, SUPPORTED_EXTENSIONS, UPLOAD_DIR, ensure_runtime_dirs
 from backend.webapp import FRONTEND_DIR, build_index_html
 
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+log = logging.getLogger(__name__)
+
 
 def _warmup():
     try:
-        print("Warming up embeddings + vector store...")
         get_vector_store()
         get_embeddings().embed_query("warmup query")
-        print("Warmup complete: embeddings + vector store resident")
+        log.info("Warmup complete: embeddings + vector store resident")
     except Exception as exc:
-        print(f"Warmup failed: {exc}")
+        log.error("Warmup failed: %s", exc)
 
 
 @asynccontextmanager
@@ -45,7 +48,7 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(
     title="RAG Document Search",
-    description="Semantic document search with LangChain, HuggingFace embeddings, and ChromaDB.",
+    description="Semantic document search with FastAPI, LangChain, fastembed (ONNX), and ChromaDB.",
     version="1.0.0",
     lifespan=lifespan,
 )

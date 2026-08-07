@@ -1,6 +1,6 @@
 # RAG Document Search Engine
 
-Semantic document search using FastAPI, LangChain, HuggingFace embeddings, and ChromaDB.
+Semantic document search using FastAPI, LangChain, fastembed (ONNX), and ChromaDB.
 
 ## Features
 
@@ -110,9 +110,9 @@ Terminal 2 — frontend with any static file server:
 python -m http.server 5500
 ```
 
-Open http://127.0.0.1:5500. Because `frontend/config.js` sets `API_BASE = ""`
-by default, the UI will call the backend on the same origin and fail. For
-separate local ports set `API_BASE` to `http://127.0.0.1:9826`.
+Open http://127.0.0.1:5500. `frontend/config.js` auto-detects the environment:
+on localhost it targets `http://localhost:9826`, on Render it uses same-origin,
+and anywhere else it points at the canonical Render backend.
 
 ## API
 
@@ -166,21 +166,21 @@ Deploy with Render:
    lightweight (~120 MB RAM), so the free 512 MB plan suffices. Set
    `EMBEDDING_BACKEND=hashing` to skip the model download entirely.
 
-Your backend URL will look like `https://rag-doc-search.onrender.com`.
+Your backend URL will look like `https://rag-doc-search-1.onrender.com`.
 
 ### 2. Frontend — GitHub Pages (static, no build)
 
-Project Pages serve at `https://<user>.github.io/RAG-Doc-Search/`, so `config.js`
-must point at the Render backend:
+Project Pages serve at `https://<user>.github.io/RAG-Doc-Search/`. The
+`config.js` file auto-detects its host and points GitHub Pages at the canonical
+Render backend, so no manual URL edit is needed.
 
-1. `frontend/config.js`: set `window.API_BASE = "https://<your-render-url>"`.
-2. Run the deploy script (PowerShell, from the repo root):
+1. Run the deploy script (PowerShell, from the repo root):
    ```powershell
    .\deploy-gh-pages.ps1
    ```
    This pushes the `frontend/` folder to a `gh-pages` branch.
-3. In GitHub: **Settings → Pages → Build and deployment → Branch → `gh-pages` / `/root`** → Save.
-4. Open `https://<user>.github.io/RAG-Doc-Search/`.
+2. In GitHub: **Settings → Pages → Build and deployment → Branch → `gh-pages` / `/root`** → Save.
+3. Open `https://<user>.github.io/RAG-Doc-Search/`.
 
 The backend already allows cross-origin requests (`allow_origins=["*"]`), so no
 extra CORS setup is needed.

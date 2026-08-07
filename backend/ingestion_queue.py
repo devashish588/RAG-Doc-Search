@@ -5,11 +5,14 @@ spawning a second service. A single daemon worker consumes jobs off a bounded
 queue, so uploads return immediately and ingestion happens on one thread at a
 time — keeping peak RAM low on the single-instance free plan.
 """
+import logging
 import os
 import queue
 import threading
 
 from backend.ingestion import ingest_document
+
+log = logging.getLogger(__name__)
 
 _QUEUE_SIZE = int(os.getenv("INGESTION_QUEUE_SIZE", "8"))
 
@@ -28,7 +31,7 @@ def _run() -> None:
             document_id, stored_path, filename = job
             ingest_document(document_id, stored_path, filename)
         except Exception as exc:  # keep the worker alive across any failure
-            print(f"Ingestion worker error: {exc}")
+            log.exception("Ingestion worker error: %s", exc)
         finally:
             _q.task_done()
 

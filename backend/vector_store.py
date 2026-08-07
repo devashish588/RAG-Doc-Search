@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 from functools import lru_cache
@@ -15,6 +16,8 @@ from backend.settings import (
     HASHING_EMBEDDING_DIMS,
     ensure_runtime_dirs,
 )
+
+log = logging.getLogger(__name__)
 
 _FASTEMBED_CACHE_DIR = DATA_DIR / "fastembed_cache"
 
@@ -69,7 +72,7 @@ def get_embedding_backend() -> str:
         _fastembed_embeddings()
         return "fastembed"
     except Exception as exc:
-        print(f"Failed to load FastEmbed: {exc}")
+        log.warning("Failed to load FastEmbed, falling back to hashing: %s", exc)
         return "hashing"
 
 
@@ -96,14 +99,11 @@ def _collection_name() -> str:
 def get_vector_store():
     from langchain_chroma import Chroma
     ensure_runtime_dirs()
-    print("Creating Chroma...")
-    store = Chroma(
+    return Chroma(
         collection_name=_collection_name(),
         persist_directory=str(CHROMA_DIR),
         embedding_function=get_embeddings(),
     )
-    print("Chroma created")
-    return store
 
 
 # ---------------------------------------------------------------------------
@@ -122,7 +122,6 @@ def add_documents(documents: list[Document], ids: list[str]) -> int:
             chunk_ids  = ids[i:i + batch]
             store.add_documents(documents=chunk_docs, ids=chunk_ids)
             added += len(chunk_docs)
-            print(f"Indexed {added}/{len(documents)}")
         if callable(getattr(store, "persist", None)):
             store.persist()
     return added
@@ -131,8 +130,6 @@ def add_documents(documents: list[Document], ids: list[str]) -> int:
 def _clamp(score: float) -> float:
     return round(max(0.0, min(float(score), 1.0)), 4)
 
-
-# backend/vectorstore.py
 
 def search_similar(
     query: str,
