@@ -20,6 +20,8 @@ services:
         value: openai/gpt-4o-mini
       - key: EMBEDDING_BACKEND
         value: auto
+      - key: PYTHONUNBUFFERED
+        value: "1"
     disk:
       name: rag-data
       mountPath: /opt/render/project/src/data

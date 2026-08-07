@@ -109,8 +109,12 @@ def add_documents(documents: list[Document], ids: list[str]) -> int:
     if not documents:
         return 0
     with _VECTOR_LOCK:
+        print("Creating vector store")
         store = get_vector_store()
+        print("Vector store created")
+        print("Adding", len(documents), "chunks")
         store.add_documents(documents=documents, ids=ids)
+        print("Finished adding")
         if callable(getattr(store, "persist", None)):
             store.persist()
     return len(documents)

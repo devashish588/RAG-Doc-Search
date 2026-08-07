@@ -127,12 +127,27 @@ def _chunk(documents: list[Document], document_id: str, filename: str) -> tuple[
 def ingest_document(document_id: str, stored_path: Path, filename: str) -> None:
     """Load, chunk, embed, and index one uploaded document (runs in background)."""
     try:
+        print("=" * 60)
+        print("INGEST START")
+        print("=" * 60)
         _update(document_id, status="processing", message="Extracting text and building embeddings.", error=None)
+
+        print("STEP 1 -> Loading file:", stored_path)
         docs = _load(stored_path)
+        print("STEP 2 -> Loaded pages:", len(docs))
+
         chunks, ids = _chunk(docs, document_id, filename)
+        print("STEP 3 -> Chunks:", len(chunks))
+
         if not chunks:
             raise ValueError("No extractable text found in the uploaded document.")
+
         count = add_documents(chunks, ids)
+        print("STEP 4 -> Indexed:", count)
+
         _update(document_id, status="complete", chunks_indexed=count, message=f"Indexed {count} chunks.", error=None)
+        print("DONE")
     except Exception as exc:
+        import traceback
+        traceback.print_exc()
         _update(document_id, status="failed", message="Ingestion failed.", error=str(exc))
