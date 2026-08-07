@@ -102,7 +102,7 @@ function renderSearch(data) {
 async function loadHealth() {
   try {
     const d = await api('/health');
-    healthPill.textContent = `API ok · ${d.embedding_backend}${d.reranker_model ? ' · reranker' : ''}`;
+    healthPill.textContent = `API ok · ${d.embedding_backend}`;
   } catch (e) {
     healthPill.textContent = `API error · ${e.message}`;
   }
