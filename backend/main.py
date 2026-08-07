@@ -1,4 +1,3 @@
-import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 from uuid import uuid4
@@ -10,11 +9,12 @@ from fastapi.staticfiles import StaticFiles
 
 from backend.ingestion import (
     delete_document,
+    find_active_duplicate,
     get_document_status,
     list_document_statuses,
     register_document,
 )
-from backend.ingestion_queue import start as start_ingestion_worker, submit as submit_job
+from backend.ingestion_queue import start as start_ingestion_worker, stop as stop_ingestion_worker, submit as submit_job
 from backend.llm import llm_available
 from backend.retrieval import run_search
 from backend.schemas import DeleteResponse, DocumentStatus, HealthResponse, SearchRequest, SearchResponse, UploadResponse
@@ -23,22 +23,24 @@ from backend.settings import CHROMA_DIR, EMBEDDING_BACKEND, EMBEDDING_WARMUP, MA
 from backend.webapp import FRONTEND_DIR, build_index_html
 
 
-def _warmup_embeddings():
+def _warmup():
     try:
-        print("Warming up embedding model...")
+        print("Warming up embeddings + vector store...")
+        get_vector_store()
         get_embeddings().embed_query("warmup query")
-        print("Embedding model pre-loaded")
+        print("Warmup complete: embeddings + vector store resident")
     except Exception as exc:
-        print(f"Embedding warmup failed: {exc}")
+        print(f"Warmup failed: {exc}")
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     ensure_runtime_dirs()
-    start_ingestion_worker()
     if EMBEDDING_WARMUP:
-        threading.Thread(target=_warmup_embeddings, daemon=True).start()
+        _warmup()
+    start_ingestion_worker()
     yield
+    stop_ingestion_worker()
 
 
 app = FastAPI(
@@ -97,9 +99,17 @@ async def upload_document(file: UploadFile = File(...)) -> UploadResponse:
     ensure_runtime_dirs()
     doc_id = uuid4().hex
     dest   = UPLOAD_DIR / f"{doc_id}_{name}"
-    await _save_upload(file, dest)
+    content_hash = await _save_upload(file, dest)
 
-    register_document(document_id=doc_id, filename=name, stored_path=dest)
+    duplicate = find_active_duplicate(content_hash)
+    if duplicate:
+        dest.unlink(missing_ok=True)
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Document already being indexed: '{duplicate['filename']}'.",
+        )
+
+    register_document(document_id=doc_id, filename=name, stored_path=dest, content_hash=content_hash)
     if not submit_job(doc_id, dest, name):
         delete_document(doc_id)
         dest.unlink(missing_ok=True)
@@ -151,9 +161,12 @@ def search(request: SearchRequest) -> SearchResponse:
 # Upload helper
 # ---------------------------------------------------------------------------
 
-async def _save_upload(upload: UploadFile, dest: Path) -> None:
+async def _save_upload(upload: UploadFile, dest: Path) -> str:
+    import hashlib
+
     max_bytes = MAX_UPLOAD_MB * 1024 * 1024
     written   = 0
+    hasher    = hashlib.sha256()
     with dest.open("wb") as fh:
         while chunk := await upload.read(1024 * 1024):
             written += len(chunk)
@@ -163,7 +176,9 @@ async def _save_upload(upload: UploadFile, dest: Path) -> None:
                     status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
                     detail=f"File exceeds the {MAX_UPLOAD_MB} MB limit.",
                 )
+            hasher.update(chunk)
             fh.write(chunk)
+    return hasher.hexdigest()
 
 
 # ---------------------------------------------------------------------------

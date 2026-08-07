@@ -15,13 +15,20 @@ _QUEUE_SIZE = int(os.getenv("INGESTION_QUEUE_SIZE", "8"))
 
 _q = queue.Queue(maxsize=_QUEUE_SIZE)
 _thread: threading.Thread | None = None
+_SENTINEL = None
 
 
 def _run() -> None:
     while True:
-        document_id, stored_path, filename = _q.get()
+        job = _q.get()
+        if job is _SENTINEL:
+            _q.task_done()
+            break
         try:
+            document_id, stored_path, filename = job
             ingest_document(document_id, stored_path, filename)
+        except Exception as exc:  # keep the worker alive across any failure
+            print(f"Ingestion worker error: {exc}")
         finally:
             _q.task_done()
 
@@ -31,6 +38,14 @@ def start() -> None:
     if _thread is None or not _thread.is_alive():
         _thread = threading.Thread(target=_run, name="ingestion-worker", daemon=True)
         _thread.start()
+
+
+def stop() -> None:
+    try:
+        _q.put_nowait(_SENTINEL)
+    except queue.Full:
+        pass
+    _q.join()
 
 
 def submit(document_id: str, stored_path, filename: str) -> bool:

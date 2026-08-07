@@ -39,11 +39,12 @@ def _update(document_id: str, **fields: Any) -> None:
 # Public registry API
 # ---------------------------------------------------------------------------
 
-def register_document(document_id: str, filename: str, stored_path: Path) -> dict[str, Any]:
+def register_document(document_id: str, filename: str, stored_path: Path, content_hash: str | None = None) -> dict[str, Any]:
     record: dict[str, Any] = {
         "document_id":   document_id,
         "filename":      filename,
         "stored_path":   str(stored_path),
+        "content_hash":  content_hash,
         "status":        "queued",
         "chunks_indexed": 0,
         "message":       "Document queued for ingestion.",
@@ -53,6 +54,17 @@ def register_document(document_id: str, filename: str, stored_path: Path) -> dic
     with _LOCK:
         _DOCS[document_id] = record
     return _public(record)
+
+
+def find_active_duplicate(content_hash: str | None) -> dict[str, Any] | None:
+    """Return an existing queued/processing document with the same content."""
+    if not content_hash:
+        return None
+    with _LOCK:
+        for record in _DOCS.values():
+            if record.get("content_hash") == content_hash and record.get("status") in {"queued", "processing"}:
+                return _public(record)
+    return None
 
 
 def get_document_status(document_id: str) -> dict[str, Any] | None:
