@@ -94,11 +94,14 @@ def _collection_name() -> str:
 def get_vector_store():
     from langchain_chroma import Chroma
     ensure_runtime_dirs()
-    return Chroma(
+    print("Creating Chroma...")
+    store = Chroma(
         collection_name=_collection_name(),
         persist_directory=str(CHROMA_DIR),
         embedding_function=get_embeddings(),
     )
+    print("Chroma created")
+    return store
 
 
 # ---------------------------------------------------------------------------

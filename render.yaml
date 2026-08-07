@@ -20,6 +20,8 @@ services:
         value: openai/gpt-4o-mini
       - key: EMBEDDING_BACKEND
         value: auto
+      - key: EMBEDDING_WARMUP
+        value: "true"
       - key: PYTHONUNBUFFERED
         value: "1"
     disk:
