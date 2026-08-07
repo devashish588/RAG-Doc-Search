@@ -1,3 +1,4 @@
+import os
 import re
 from functools import lru_cache
 from threading import RLock
@@ -52,6 +53,7 @@ def _fastembed_embeddings() -> Embeddings:
         cache_dir=str(_FASTEMBED_CACHE_DIR),
         providers=["CPUExecutionProvider"],
         threads=1,
+        batch_size=int(os.getenv("FASTEMBED_BATCH_SIZE", "2")),
     )
 
 
@@ -111,16 +113,19 @@ def get_vector_store():
 def add_documents(documents: list[Document], ids: list[str]) -> int:
     if not documents:
         return 0
+    batch = int(os.getenv("EMBEDDING_BATCH_SIZE", "4"))
+    added = 0
     with _VECTOR_LOCK:
-        print("Creating vector store")
         store = get_vector_store()
-        print("Vector store created")
-        print("Adding", len(documents), "chunks")
-        store.add_documents(documents=documents, ids=ids)
-        print("Finished adding")
+        for i in range(0, len(documents), batch):
+            chunk_docs = documents[i:i + batch]
+            chunk_ids  = ids[i:i + batch]
+            store.add_documents(documents=chunk_docs, ids=chunk_ids)
+            added += len(chunk_docs)
+            print(f"Indexed {added}/{len(documents)}")
         if callable(getattr(store, "persist", None)):
             store.persist()
-    return len(documents)
+    return added
 
 
 def _clamp(score: float) -> float:
