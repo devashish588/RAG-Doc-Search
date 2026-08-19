@@ -29,10 +29,11 @@ def test_upload_validation():
     # Invalid extension
     response = client.post(
         "/upload",
-        files={"file": ("malicious_script.exe", b"print('hack')", "application/x-msdownload")}
+        files={"file": ("malicious_script.exe", b"print hack", "application/x-msdownload")}
     )
     assert response.status_code == 400
-    assert "Unsupported file type" in response.json()["detail"]
+    data = response.json()
+    assert "Unsupported file type" in data["error"]["message"]
 
     # Valid TXT file upload
     response = client.post(

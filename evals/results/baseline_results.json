@@ -2,7 +2,7 @@
   "metadata": {
     "evaluation_phase": "Phase 0 - Baseline Freeze & Measurement",
     "git_tag": "v1.0-baseline",
-    "timestamp": "2026-08-19T18:42:22Z",
+    "timestamp": "2026-08-19T19:09:45Z",
     "chunk_size": 1200,
     "chunk_overlap": 200,
     "embedding_backend": "auto",
@@ -14,15 +14,15 @@
       "recall@5": 1.0,
       "recall@10": 1.0,
       "mrr": 0.8867,
-      "answer_correctness": 0.2909,
+      "answer_correctness": 0.2896,
       "faithfulness": 1.0,
-      "citation_coverage": 0.78,
-      "citation_accuracy": 0.78,
+      "citation_coverage": 0.76,
+      "citation_accuracy": 0.76,
       "abstention_accuracy": 0.1667,
       "latency_ms": {
-        "mean": 2118.71,
-        "p50": 1954.48,
-        "p95": 3806.21
+        "mean": 2263.66,
+        "p50": 2217.15,
+        "p95": 4685.46
       }
     },
     "by_category": {
@@ -31,40 +31,40 @@
         "recall@1": 0.6667,
         "recall@5": 1.0,
         "mrr": 0.8333,
-        "answer_correctness": 0.4614,
-        "mean_latency_ms": 2158.04
+        "answer_correctness": 0.4572,
+        "mean_latency_ms": 2144.54
       },
       "exact-term": {
         "count": 10,
         "recall@1": 0.7,
         "recall@5": 1.0,
         "mrr": 0.8333,
-        "answer_correctness": 0.1309,
-        "mean_latency_ms": 1637.91
+        "answer_correctness": 0.1255,
+        "mean_latency_ms": 2088.98
       },
       "multi-hop": {
         "count": 10,
         "recall@1": 1.0,
         "recall@5": 1.0,
         "mrr": 1.0,
-        "answer_correctness": 0.2989,
-        "mean_latency_ms": 2722.48
+        "answer_correctness": 0.2838,
+        "mean_latency_ms": 3072.41
       },
       "unanswerable": {
         "count": 10,
         "recall@1": 1.0,
         "recall@5": 1.0,
         "mrr": 1.0,
-        "answer_correctness": 0.1777,
-        "mean_latency_ms": 1931.65
+        "answer_correctness": 0.1933,
+        "mean_latency_ms": 1784.73
       },
       "ambiguous": {
         "count": 5,
         "recall@1": 0.4,
         "recall@5": 1.0,
         "mrr": 0.7,
-        "answer_correctness": 0.3097,
-        "mean_latency_ms": 2128.89
+        "answer_correctness": 0.3188,
+        "mean_latency_ms": 2310.74
       }
     }
   },
@@ -143,7 +143,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 2255.48,
+      "latency_ms": 2338.39,
       "metrics": {
         "recall@1": 0.0,
         "recall@5": 1.0,
@@ -236,7 +236,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 4887.46,
+      "latency_ms": 1344.59,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -317,7 +317,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 2237.19,
+      "latency_ms": 1706.78,
       "metrics": {
         "recall@1": 0.0,
         "recall@5": 1.0,
@@ -398,7 +398,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1738.6,
+      "latency_ms": 2575.26,
       "metrics": {
         "recall@1": 0.0,
         "recall@5": 1.0,
@@ -473,7 +473,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1429.56,
+      "latency_ms": 1393.78,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -491,7 +491,7 @@
       "question": "What HTTP status code is returned when an upload is successfully accepted for processing?",
       "type": "single-hop",
       "expected_answer": "HTTP status code 202 ACCEPTED is returned.",
-      "actual_answer": "**HTTP Status Code for Successful Upload:**\nThe HTTP status code returned when an upload is successfully accepted for processing is **202 ACCEPTED** [2].",
+      "actual_answer": "**HTTP Status Code for Successful Upload:** The HTTP status code returned when an upload is successfully accepted for processing is **202 ACCEPTED** [2].",
       "retrieved_results": [
         {
           "text": "ingestion_queue.py may become saturated. In this scenario, the API responds with HTTP status 503\nSERVICE UNAVAILABLE and detail message Ingestion queue is full.\n5. File Upload Size Limits ERR-413\nFiles exceeding MAX_UPLOAD_MB (default 50 MB) trigger HTTP status 413 REQUEST ENTITY TOO\nLARGE. The uploaded temporary file is unlinked immediately to protect disk storage.",
@@ -548,7 +548,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1752.63,
+      "latency_ms": 1270.07,
       "metrics": {
         "recall@1": 0.0,
         "recall@5": 1.0,
@@ -629,7 +629,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1453.85,
+      "latency_ms": 2274.54,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -716,7 +716,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 2393.22,
+      "latency_ms": 2696.17,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -809,7 +809,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1362.18,
+      "latency_ms": 2930.79,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -890,7 +890,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1712.63,
+      "latency_ms": 1192.69,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -977,7 +977,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1906.65,
+      "latency_ms": 2443.67,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -1064,7 +1064,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 2437.63,
+      "latency_ms": 2302.37,
       "metrics": {
         "recall@1": 0.0,
         "recall@5": 1.0,
@@ -1151,7 +1151,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 2052.85,
+      "latency_ms": 1561.78,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -1169,7 +1169,7 @@
       "question": "What document page numbering convention is used for stored PDF chunk metadata?",
       "type": "single-hop",
       "expected_answer": "Stored page numbers in chunk metadata are 1-based (derived by adding 1 to PyPDFLoader 0-based page index).",
-      "actual_answer": "**Document Page Numbering Convention:**\n\nThe page numbering for stored PDF chunk metadata is based on a 1-based page number system. This means that the page number is derived from the 0-based index used by the PyPDFLoader, with the formula being: page number = (0-based index + 1) [1].",
+      "actual_answer": "**Document Page Numbering Convention:**\n\nThe page numbering for stored PDF chunk metadata is derived from a 0-based index used by the PyPDFLoader. Specifically, the page number is represented as a 1-based page number, which is calculated by adding 1 to the 0-based index. This means that the first page of a PDF document is indexed as page 1 in the metadata, while the actual index used internally starts from 0 [1].",
       "retrieved_results": [
         {
           "text": "Database and Storage Specifications for RAG Document Search\n1. STORAGE DIRECTORY LAYOUT:\n- Root Data Directory: data/\n- Uploads Directory: data/uploads/\n- Vector Database Directory: data/chroma_db/\n- FastEmbed Cache Directory: data/fastembed_cache/\n2. CHROMADB VECTOR COLLECTION SPECIFICATION:\n- Primary Collection Namespace: `rag_documents_fastembed_bge_small_en_v1_5` when running FastEmbed ONNX backend.\n- Fallback Collection Namespace: `rag_documents_hashing` when running scikit-learn HashingEmbeddings fallback.\n- ChromaDB Version: 0.5.23\n- Metadata Fields Stored Per Vector Chunk:\n* document_id: Unique 32-character hexadecimal UUID string identifying the parent file.\n* source: Original filename of the document (e.g. troubleshooting_guide.pdf).\n* chunk: Integer sequence index starting from 0 representing the chunk position.\n* page: 1-based page number for PDF documents (derived from 0-based PyPDFLoader index + 1).",
@@ -1244,13 +1244,13 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 2545.36,
+      "latency_ms": 3200.96,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
         "recall@10": 1.0,
         "mrr": 1.0,
-        "answer_correctness": 0.375,
+        "answer_correctness": 0.3125,
         "faithfulness": 1.0,
         "abstention_score": 1.0,
         "citation_coverage": 1.0,
@@ -1325,7 +1325,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 2205.28,
+      "latency_ms": 2936.3,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -1343,7 +1343,7 @@
       "question": "What exact environment variable sets the minimum upload size limit?",
       "type": "exact-term",
       "expected_answer": "MAX_UPLOAD_MB",
-      "actual_answer": "**Minimum Upload Size Limit:**\n\nThe maximum upload size limit is configured by the environment variable **MAX_UPLOAD_MB**, which is set to a default of 50 MB [1].",
+      "actual_answer": "**Minimum Upload Size Limit:**\n\nThe maximum upload size limit is configured by the environment variable **MAX_UPLOAD_MB**. This variable sets the limit to 50 MB by default [1].",
       "retrieved_results": [
         {
           "text": "RAG Document Search API Reference Specifications\nAPI BASE CONFIGURATION:\n- Backend Web Server: FastAPI with Uvicorn\n- Local Development Port: 9826 (http://127.0.0.1:9826)\n- Alternate UI Server Port: 5500 (http://127.0.0.1:5500)\n- CORS Policy: `allow_origins=[\"*\"]`, `allow_methods=[\"*\"]`, `allow_credentials=True`\nENDPOINTS:\n1. POST /upload\n- Summary: Upload a PDF, TXT, or Markdown file for background ingestion.\n- Supported File Extensions: .pdf, .txt, .md\n- Max File Size Limit: 50 MB (Configured by MAX_UPLOAD_MB environment variable)\n- Response Code on Success: 202 ACCEPTED\n- Response Schema: {\"document_id\": \"hex_string\", \"filename\": \"example.pdf\", \"status\": \"queued\", \"message\": \"Upload accepted.\"}\n- Error Codes:\n* 400 BAD REQUEST: Missing filename or unsupported file extension.\n* 409 CONFLICT: Duplicate document active in queue (Matching SHA-256 content_hash).\n* 413 REQUEST ENTITY TOO LARGE: File exceeds maximum allowed upload size (50MB).\n* 503 SERVICE UNAVAILABLE: Ingestion worker queue is full.",
@@ -1406,7 +1406,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1408.0,
+      "latency_ms": 1845.93,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -1424,7 +1424,7 @@
       "question": "What exact error message detail is returned when worker queue saturation occurs?",
       "type": "exact-term",
       "expected_answer": "Ingestion queue is full.",
-      "actual_answer": "When the worker queue becomes saturated, the API responds with HTTP status 503 SERVICE UNAVAILABLE and the detail message \"Ingestion queue is full.\" [1]",
+      "actual_answer": "When the worker queue becomes saturated, the API responds with HTTP status 503 SERVICE UNAVAILABLE and the detail message \"Ingestion queue is full\" [1].",
       "retrieved_results": [
         {
           "text": "ingestion_queue.py may become saturated. In this scenario, the API responds with HTTP status 503\nSERVICE UNAVAILABLE and detail message Ingestion queue is full.\n5. File Upload Size Limits ERR-413\nFiles exceeding MAX_UPLOAD_MB (default 50 MB) trigger HTTP status 413 REQUEST ENTITY TOO\nLARGE. The uploaded temporary file is unlinked immediately to protect disk storage.",
@@ -1481,7 +1481,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1557.06,
+      "latency_ms": 1599.19,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -1562,7 +1562,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1581.1,
+      "latency_ms": 2247.76,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -1643,7 +1643,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 2341.11,
+      "latency_ms": 1262.95,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -1724,7 +1724,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1454.05,
+      "latency_ms": 1268.68,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -1817,7 +1817,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1358.59,
+      "latency_ms": 4685.46,
       "metrics": {
         "recall@1": 0.0,
         "recall@5": 1.0,
@@ -1904,7 +1904,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1422.03,
+      "latency_ms": 1677.12,
       "metrics": {
         "recall@1": 0.0,
         "recall@5": 1.0,
@@ -1991,7 +1991,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 2299.66,
+      "latency_ms": 1635.71,
       "metrics": {
         "recall@1": 0.0,
         "recall@5": 1.0,
@@ -2072,7 +2072,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1611.46,
+      "latency_ms": 1739.33,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -2090,7 +2090,7 @@
       "question": "What exact REST endpoint retrieves full ingestion status for all documents?",
       "type": "exact-term",
       "expected_answer": "GET /documents",
-      "actual_answer": "**1. Endpoint for Ingestion Status:**\nThe REST endpoint that retrieves full ingestion status for all documents is **GET /documents**. This endpoint returns a listing of the ingestion status for all registered documents with a response code of 200 OK [1].",
+      "actual_answer": "**1. Endpoint for Ingestion Status:**\nThe REST endpoint that retrieves full ingestion status for all documents is **GET /documents**. This endpoint returns a listing of the ingestion status for all registered documents. The response code for a successful request is 200 OK, and the response schema includes an array of DocumentStatus objects containing details such as document_id, filename, status, chunks_indexed, message, error, and uploaded_at [1].",
       "retrieved_results": [
         {
           "text": "2. GET /documents\n- Summary: Retrieve ingestion status listing for all registered documents.\n- Response Code: 200 OK\n- Response Schema: Array of DocumentStatus objects containing document_id, filename, status, chunks_indexed, message, error, uploaded_at.\n3. GET /documents/{document_id}\n- Summary: Retrieve ingestion status for a specific document ID.\n- Error Code: 404 NOT FOUND if document_id does not exist.\n4. DELETE /documents/{document_id}\n- Summary: Delete a document, purge its vectors from ChromaDB, and remove uploaded file from disk.\n- Response Schema: {\"document_id\": \"hex_string\", \"filename\": \"example.pdf\", \"deleted_chunks\": 12, \"message\": \"Document deleted.\"}\n- Error Code: 404 NOT FOUND if document_id is not found.\n5. POST /search\n- Summary: Execute semantic vector search and generate LLM answer.\n- Request Payload: {\"query\": \"string\", \"top_k\": 5, \"source\": \"optional_filename.pdf\"}\n- Response Schema: {\"query\": \"string\", \"answer\": \"string\", \"results\": [...], \"latency_ms\": 45.2}\n- Error Codes:\n* 400 BAD REQUEST: Empty query.\n* 500 INTERNAL SERVER ERROR: Vector store search or LLM generation failure.",
@@ -2147,13 +2147,13 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1346.03,
+      "latency_ms": 2927.65,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
         "recall@10": 1.0,
         "mrr": 1.0,
-        "answer_correctness": 0.1111,
+        "answer_correctness": 0.0571,
         "faithfulness": 1.0,
         "abstention_score": 1.0,
         "citation_coverage": 1.0,
@@ -2165,7 +2165,7 @@
       "question": "How does document hashing prevent duplicate processing and what HTTP status is returned if a duplicate is found?",
       "type": "multi-hop",
       "expected_answer": "Uploaded documents are hashed using SHA-256 (content_hash). If an active document with the same content hash is currently in queued or processing state, the POST /upload endpoint rejects the new upload with an HTTP 409 CONFLICT status code.",
-      "actual_answer": "**Document Hashing and Duplicate Prevention:**\n\n1. **Hashing Mechanism:** The RAG Document Search system uses SHA-256 to hash the content of uploaded files, creating a unique `content_hash` for each document.\n2. **Duplicate Check:** When a file is uploaded, the system checks if an active upload with the same content hash already exists in either the `queued` or `processing` status.\n3. **Response on Duplicate:** If a duplicate is detected, the system returns a `409 CONFLICT` HTTP status code, indicating that a document with the same content is already in the queue or being processed [1].",
+      "actual_answer": "**Document Hashing and Duplicate Processing:**\n\n1. **Hashing Mechanism:** The RAG Document Search system uses SHA-256 to hash the content of uploaded files, creating a unique `content_hash` for each document. This ensures that each document can be uniquely identified based on its content.\n\n2. **Duplicate Detection:** When a file is uploaded, the system checks if an active upload with the same `content_hash` already exists in either the `queued` or `processing` status. If a match is found, it indicates that the document is a duplicate.\n\n3. **HTTP Status for Duplicates:** If a duplicate document is detected, the system responds with a `409 CONFLICT` HTTP status code, indicating that the upload cannot proceed due to the presence of a duplicate document in the queue [1].",
       "retrieved_results": [
         {
           "text": "# RAG Document Search - System Architecture & Component Specification\n## 1. System Overview\nThe RAG Document Search system is a decoupled web application designed for semantic document retrieval and AI-powered question answering. The backend is built using FastAPI, LangChain, fastembed (ONNX runtime), and ChromaDB.\n## 2. Ingestion Engine & Queue Lifecycle\n- **Document Loaders**: PyPDFLoader for `.pdf` files, TextLoader (UTF-8 encoding) for `.txt` and `.md` files.\n- **Chunking Strategy**: `RecursiveCharacterTextSplitter` configured with `CHUNK_SIZE=1200` characters and `CHUNK_OVERLAP=200` characters. Separators used are `[\"\\n\\n\", \"\\n\", \". \", \" \", \"\"]`.\n- **Deduplication**: Files uploaded are hashed using SHA-256 (`content_hash`). If an active upload with the exact same content hash exists in `queued` or `processing` status, the endpoint returns a `409 CONFLICT` response code.\n- **Worker Queue**: Ingestion jobs are pushed to an in-process bounded worker queue (`ingestion_queue.py`). Document status transitions through `queued` -> `processing` -> `complete` (or `failed`).",
@@ -2240,13 +2240,13 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 2647.29,
+      "latency_ms": 2256.23,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
         "recall@10": 1.0,
         "mrr": 1.0,
-        "answer_correctness": 0.3455,
+        "answer_correctness": 0.2836,
         "faithfulness": 1.0,
         "abstention_score": 1.0,
         "citation_coverage": 1.0,
@@ -2258,7 +2258,7 @@
       "question": "What happens when FastEmbed model download fails, and how does ChromaDB adjust its vector collection namespace?",
       "type": "multi-hop",
       "expected_answer": "When FastEmbed download fails or is offline, the system falls back to HashingEmbeddings (1024 dimensions). To avoid mixing vector spaces, ChromaDB changes its collection namespace from rag_documents_fastembed_bge_small_en_v1_5 to rag_documents_hashing.",
-      "actual_answer": "**1. FastEmbed Model Download Failure:**\nWhen the FastEmbed model download fails due to network timeouts, the system automatically switches to a fallback mechanism. The environment variable `EMBEDDING_BACKEND` should be set to `hashing`, which allows the engine to utilize local HashingEmbeddings instead of FastEmbed. This fallback uses scikit-learn's HashingVectorizer with 1024 dimensions, ensuring that the process continues without failure [2].\n\n**2. ChromaDB Vector Collection Namespace Adjustment:**\nIn the event that FastEmbed is unavailable, ChromaDB adjusts its vector collection namespace from the primary collection `rag_documents_fastembed_bge_small_en_v1_5` to the fallback collection `rag_documents_hashing`. This ensures that the system can still function and index documents using the alternative embedding method [1].",
+      "actual_answer": "**1. FastEmbed Model Download Failure:**\nWhen the FastEmbed model download fails due to network timeouts, the system is configured to switch to a fallback mechanism. The environment variable `EMBEDDING_BACKEND` is set to `hashing`, which allows the engine to automatically use local HashingEmbeddings instead of FastEmbed. This fallback utilizes the scikit-learn `HashingVectorizer` with 1024 dimensions, ensuring that the system continues to function without interruption despite the failure of the FastEmbed model download.\n\n**2. ChromaDB Vector Collection Namespace Adjustment:**\nIn the event that FastEmbed is unavailable, ChromaDB adjusts its vector collection namespace from the primary collection `rag_documents_fastembed_bge_small_en_v1_5` to the fallback collection `rag_documents_hashing`. This adjustment allows the system to maintain its functionality and continue processing documents using the alternative embedding method [1], [2], [3].",
       "retrieved_results": [
         {
           "text": "Database and Storage Specifications for RAG Document Search\n1. STORAGE DIRECTORY LAYOUT:\n- Root Data Directory: data/\n- Uploads Directory: data/uploads/\n- Vector Database Directory: data/chroma_db/\n- FastEmbed Cache Directory: data/fastembed_cache/\n2. CHROMADB VECTOR COLLECTION SPECIFICATION:\n- Primary Collection Namespace: `rag_documents_fastembed_bge_small_en_v1_5` when running FastEmbed ONNX backend.\n- Fallback Collection Namespace: `rag_documents_hashing` when running scikit-learn HashingEmbeddings fallback.\n- ChromaDB Version: 0.5.23\n- Metadata Fields Stored Per Vector Chunk:\n* document_id: Unique 32-character hexadecimal UUID string identifying the parent file.\n* source: Original filename of the document (e.g. troubleshooting_guide.pdf).\n* chunk: Integer sequence index starting from 0 representing the chunk position.\n* page: 1-based page number for PDF documents (derived from 0-based PyPDFLoader index + 1).",
@@ -2315,13 +2315,13 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 3606.07,
+      "latency_ms": 3423.6,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
         "recall@10": 1.0,
         "mrr": 1.0,
-        "answer_correctness": 0.2286,
+        "answer_correctness": 0.2254,
         "faithfulness": 1.0,
         "abstention_score": 1.0,
         "citation_coverage": 1.0,
@@ -2333,7 +2333,7 @@
       "question": "What memory constraints exist on Render free tier, and what environment variables are configured to prevent memory exhaustion during embedding generation?",
       "type": "multi-hop",
       "expected_answer": "Render free tier provides 512 MB RAM. To prevent memory exhaustion during ONNX embedding generation, OMP_NUM_THREADS=1 and TOKENIZERS_PARALLELISM=false are set in settings.py.",
-      "actual_answer": "**Memory Constraints on Render Free Tier:**\n\n1. The Render free tier provides **512 MB of RAM** and **1 vCPU**.\n2. To prevent Out-Of-Memory (OOM) crashes, specific environment variables are configured.\n\n**Environment Variables Configured:**\n\n1. `OMP_NUM_THREADS=1`: This setting constrains the native ONNX runtime to a single thread.\n2. `TOKENIZERS_PARALLELISM=false`: This setting is also enforced in `settings.py` to manage memory consumption effectively [1][2].",
+      "actual_answer": "**Memory Constraints on Render Free Tier:**\n\n1. The Render free tier provides **512 MB of RAM** and **1 vCPU**.\n2. To prevent Out-Of-Memory (OOM) crashes, specific configurations are enforced.\n\n**Environment Variables Configured:**\n\n1. `OMP_NUM_THREADS=1`: This setting constrains the native ONNX runtime to a single thread.\n2. `TOKENIZERS_PARALLELISM=false`: This setting is also configured in `settings.py` to help manage memory consumption effectively [1][2].",
       "retrieved_results": [
         {
           "text": "RAG Document Search Troubleshooting and\nOperations Guide\n1. Render Deployment and Memory Optimization\nRender free tier provides 512 MB of RAM and 1 vCPU. To prevent Out-Of-Memory (OOM) crashes, the\nnative ONNX runtime is constrained to a single thread using OMP_NUM_THREADS=1 and\nTOKENIZERS_PARALLELISM=false in settings.py.\n2. Persistent Disk Volume Setup\nChromaDB data and uploaded files reside under data/. On Render, a 1 GB persistent disk must be\nmounted at data/ to ensure indexed documents and FastEmbed model cache survive application\nredeployments.\n3. Offline Fallback and Hashing Embeddings\nIf fastembed fails to download model BAAI/bge-small-en-v1.5 due to network timeouts, set\nEMBEDDING_BACKEND=hashing in environment variables. The engine automatically switches to\nlocal HashingEmbeddings (1024 dimensions) without failing.\n4. Queue Saturation Error ERR-503\nWhen multiple document uploads occur simultaneously, the bounded worker queue in\ningestion_queue.py may become saturated. In this scenario, the API responds with HTTP status 503\nSERVICE UNAVAILABLE and detail message Ingestion queue is full.\n5. File Upload Size Limits ERR-413",
@@ -2402,13 +2402,13 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1954.48,
+      "latency_ms": 2510.9,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
         "recall@10": 1.0,
         "mrr": 1.0,
-        "answer_correctness": 0.3659,
+        "answer_correctness": 0.3488,
         "faithfulness": 1.0,
         "abstention_score": 1.0,
         "citation_coverage": 1.0,
@@ -2420,7 +2420,7 @@
       "question": "What parameters control candidate fetching during MMR retrieval, and how does the engine ensure multi-page lists are not split at chunk boundaries?",
       "type": "multi-hop",
       "expected_answer": "MMR fetches fetch_k=20 initial candidates to return target k=8 chunks with lambda_mult=0.5. To prevent multi-page lists from being cut off at boundaries, adjacent chunk expansion automatically fetches chunk N+1 for every retrieved chunk N.",
-      "actual_answer": "**1. MMR Parameters for Candidate Fetching:**\nThe parameters that control candidate fetching during Maximal Marginal Relevance (MMR) retrieval are as follows:\n- Initial candidate fetch: `fetch_k=20`\n- Target result count: `k=8`\n- Diversity balancing coefficient: `lambda_mult=0.5` [1].\n\n**2. Ensuring Multi-Page Lists Are Not Split:**\nTo prevent boundary cutoff for multi-page lists, the retrieval engine automatically attempts to fetch an adjacent chunk `N+1` for every retrieved chunk with index `N` from ChromaDB [1].",
+      "actual_answer": "**1. MMR Parameters for Candidate Fetching:**\nThe parameters that control candidate fetching during Maximal Marginal Relevance (MMR) retrieval are as follows:\n- **Initial Candidate Fetch (`fetch_k`)**: 20 candidates are initially fetched.\n- **Target Result Count (`k`)**: The engine aims to return 8 results.\n- **Diversity Balancing Coefficient (`lambda_mult`)**: Set to 0.5, this parameter balances relevance and diversity in the results.\n\n**2. Ensuring Multi-Page Lists Are Not Split:**\nTo prevent boundary cutoff for multi-page lists, the retrieval engine automatically attempts to fetch an adjacent chunk (specifically chunk `N+1`) from ChromaDB for every retrieved chunk with index `N`. This approach ensures that the context is maintained across chunks and that users receive complete information without interruptions at the boundaries.",
       "retrieved_results": [
         {
           "text": "## 3. Retrieval Pipeline & MMR Parameters\n- **Embedding Backend**: Primary backend is `FastEmbedEmbeddings` utilizing `BAAI/bge-small-en-v1.5` (ONNX format). When offline or when fastembed is unavailable, it gracefully falls back to `HashingEmbeddings` (scikit-learn `HashingVectorizer` with 1024 features).\n- **Retrieval Strategy**: Dense vector similarity with Maximal Marginal Relevance (`max_marginal_relevance_search`).\n- **MMR Parameters**: Initial candidate fetch `fetch_k=20`, target result count `k=8`, diversity balancing coefficient `lambda_mult=0.5`.\n- **Score Filtering**: Low-relevance chunks below `MIN_RELEVANCE_SCORE=0.35` are filtered out.\n- **Adjacent Chunk Expansion**: For every retrieved chunk with index `N`, the retrieval engine automatically attempts to fetch adjacent chunk `N+1` from ChromaDB to prevent boundary cutoff for multi-page lists.",
@@ -2483,17 +2483,17 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 2022.41,
+      "latency_ms": 2368.68,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
         "recall@10": 1.0,
         "mrr": 1.0,
-        "answer_correctness": 0.3077,
+        "answer_correctness": 0.2778,
         "faithfulness": 1.0,
         "abstention_score": 1.0,
-        "citation_coverage": 1.0,
-        "citation_accuracy": 1.0
+        "citation_coverage": 0.0,
+        "citation_accuracy": 0.0
       }
     },
     {
@@ -2570,7 +2570,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 2973.22,
+      "latency_ms": 3084.75,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -2588,7 +2588,7 @@
       "question": "How are PDF files processed differently from text files during ingestion in terms of loaders and page metadata?",
       "type": "multi-hop",
       "expected_answer": "PDF files are loaded using PyPDFLoader and convert 0-based page indices to 1-based page metadata stored in ChromaDB, whereas text and markdown files are loaded using TextLoader (UTF-8) with default page count 1.",
-      "actual_answer": "**1. Document Loaders:**\nPDF files and text files are processed using different loaders during the ingestion phase. The RAG Document Search system utilizes:\n- **PDF Files:** Processed using the `PyPDFLoader`.\n- **Text Files:** Processed using the `TextLoader`, which supports UTF-8 encoding.\n\n**2. Page Metadata:**\nThe handling of page metadata also differs between the two file types:\n- **PDF Files:** Each chunk of a PDF document includes a page number, which is derived from the 0-based index of the `PyPDFLoader` and is represented as a 1-based page number.\n- **Text Files:** No page metadata is associated with text files, as they do not have a page structure like PDFs.\n\nThis distinction ensures that the system accurately captures and represents the structure and content of each file type during the ingestion process.",
+      "actual_answer": "**1. Document Loaders:**\n\nPDF files and text files are processed using different loaders during the ingestion phase:\n\n- **PDF Files:** The loader used is **PyPDFLoader**, which is specifically designed for handling `.pdf` files.\n- **Text Files:** The loader used is **TextLoader**, which supports `.txt` and `.md` files with UTF-8 encoding.\n\n**2. Page Metadata:**\n\nThe handling of page metadata differs between PDF files and text files:\n\n- **PDF Files:** Each chunk of a PDF document includes a **page number** that is derived from the 0-based index of the PyPDFLoader, adjusted to be 1-based for user-friendly representation.\n- **Text Files:** There is no page metadata associated with text files, as they are typically treated as continuous text without pagination.\n\nThis distinction ensures that PDF files retain their structural integrity during processing, while text files are ingested as flat text without page references [1][2].",
       "retrieved_results": [
         {
           "text": "# RAG Document Search - System Architecture & Component Specification\n## 1. System Overview\nThe RAG Document Search system is a decoupled web application designed for semantic document retrieval and AI-powered question answering. The backend is built using FastAPI, LangChain, fastembed (ONNX runtime), and ChromaDB.\n## 2. Ingestion Engine & Queue Lifecycle\n- **Document Loaders**: PyPDFLoader for `.pdf` files, TextLoader (UTF-8 encoding) for `.txt` and `.md` files.\n- **Chunking Strategy**: `RecursiveCharacterTextSplitter` configured with `CHUNK_SIZE=1200` characters and `CHUNK_OVERLAP=200` characters. Separators used are `[\"\\n\\n\", \"\\n\", \". \", \" \", \"\"]`.\n- **Deduplication**: Files uploaded are hashed using SHA-256 (`content_hash`). If an active upload with the exact same content hash exists in `queued` or `processing` status, the endpoint returns a `409 CONFLICT` response code.\n- **Worker Queue**: Ingestion jobs are pushed to an in-process bounded worker queue (`ingestion_queue.py`). Document status transitions through `queued` -> `processing` -> `complete` (or `failed`).",
@@ -2675,17 +2675,17 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 4358.05,
+      "latency_ms": 5212.79,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
         "recall@10": 1.0,
         "mrr": 1.0,
-        "answer_correctness": 0.1471,
+        "answer_correctness": 0.1389,
         "faithfulness": 1.0,
         "abstention_score": 1.0,
-        "citation_coverage": 0.0,
-        "citation_accuracy": 0.0
+        "citation_coverage": 1.0,
+        "citation_accuracy": 1.0
       }
     },
     {
@@ -2756,7 +2756,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 2998.53,
+      "latency_ms": 4879.14,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -2774,7 +2774,7 @@
       "question": "Where is the FastEmbed model cached on disk and how does Render persistent disk prevent redownloading on redeployment?",
       "type": "multi-hop",
       "expected_answer": "FastEmbed models are cached in data/fastembed_cache/. Mounting a 1 GB persistent disk at data/ ensures the ONNX model files survive application redeployments without redownloading.",
-      "actual_answer": "**1. FastEmbed Model Cache Location:**  \nThe FastEmbed model cache is stored in the directory `data/fastembed_cache/` on disk [2].\n\n**2. Role of Render Persistent Disk:**  \nTo prevent the need for redownloading the FastEmbed model during application redeployments, a 1 GB persistent disk must be mounted at `data/`. This setup ensures that the indexed documents and the FastEmbed model cache remain intact across redeployments [1].",
+      "actual_answer": "**1. FastEmbed Model Cache Location:**  \nThe FastEmbed model cache is stored in the directory `data/fastembed_cache/` on disk [2].\n\n**2. Role of Render Persistent Disk:**  \nTo ensure that indexed documents and the FastEmbed model cache survive application redeployments, a 1 GB persistent disk must be mounted at `data/`. This setup prevents the need to redownload the FastEmbed model during redeployments [1].",
       "retrieved_results": [
         {
           "text": "RAG Document Search Troubleshooting and\nOperations Guide\n1. Render Deployment and Memory Optimization\nRender free tier provides 512 MB of RAM and 1 vCPU. To prevent Out-Of-Memory (OOM) crashes, the\nnative ONNX runtime is constrained to a single thread using OMP_NUM_THREADS=1 and\nTOKENIZERS_PARALLELISM=false in settings.py.\n2. Persistent Disk Volume Setup\nChromaDB data and uploaded files reside under data/. On Render, a 1 GB persistent disk must be\nmounted at data/ to ensure indexed documents and FastEmbed model cache survive application\nredeployments.\n3. Offline Fallback and Hashing Embeddings\nIf fastembed fails to download model BAAI/bge-small-en-v1.5 due to network timeouts, set\nEMBEDDING_BACKEND=hashing in environment variables. The engine automatically switches to\nlocal HashingEmbeddings (1024 dimensions) without failing.\n4. Queue Saturation Error ERR-503\nWhen multiple document uploads occur simultaneously, the bounded worker queue in\ningestion_queue.py may become saturated. In this scenario, the API responds with HTTP status 503\nSERVICE UNAVAILABLE and detail message Ingestion queue is full.\n5. File Upload Size Limits ERR-413",
@@ -2837,13 +2837,13 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1948.18,
+      "latency_ms": 2434.99,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
         "recall@10": 1.0,
         "mrr": 1.0,
-        "answer_correctness": 0.2973,
+        "answer_correctness": 0.2778,
         "faithfulness": 1.0,
         "abstention_score": 1.0,
         "citation_coverage": 1.0,
@@ -2855,7 +2855,7 @@
       "question": "What generation parameters are sent to OpenRouter API and what fallback answer is returned if the API key is missing?",
       "type": "multi-hop",
       "expected_answer": "OpenRouter API request uses temperature=0.0 and max_tokens=768 with model openai/gpt-4o-mini. If OPENROUTER_API_KEY is empty or calls fail, the engine falls back to displaying top context snippets formatted directly.",
-      "actual_answer": "**1. Generation Parameters:**\nThe generation parameters sent to the OpenRouter API are:\n- `temperature=0.0`\n- `max_tokens=768` [1].\n\n**2. Fallback Answer:**\nIf the `OPENROUTER_API_KEY` is empty or if API calls fail, the engine falls back to plain context synthesis, listing the top matching sources [1].",
+      "actual_answer": "**1. Generation Parameters:**\nThe generation parameters sent to the OpenRouter API are:\n- `temperature=0.0`\n- `max_tokens=768` [1].\n\n**2. Fallback Behavior:**\nIf the `OPENROUTER_API_KEY` is empty or if API calls fail, the engine falls back to plain context synthesis, which lists the top matching sources [1].",
       "retrieved_results": [
         {
           "text": "## 4. LLM Integration & OpenRouter Protocol\n- **Generation Model**: OpenRouter API (`OPENROUTER_MODEL=openai/gpt-4o-mini`, `OPENROUTER_BASE_URL=https://openrouter.ai/api/v1`).\n- **Fallback Behavior**: When `OPENROUTER_API_KEY` is empty or API calls fail, the engine falls back to plain context synthesis listing top matching sources.\n- **Generation Parameters**: `temperature=0.0`, `max_tokens=768`.",
@@ -2912,13 +2912,13 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 2576.85,
+      "latency_ms": 2335.86,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
         "recall@10": 1.0,
         "mrr": 1.0,
-        "answer_correctness": 0.4324,
+        "answer_correctness": 0.4211,
         "faithfulness": 1.0,
         "abstention_score": 1.0,
         "citation_coverage": 1.0,
@@ -2930,7 +2930,7 @@
       "question": "What HTTP status codes occur when file size is exceeded vs when the background ingestion queue is full?",
       "type": "multi-hop",
       "expected_answer": "Exceeding max upload file size returns HTTP 413 REQUEST ENTITY TOO LARGE, while worker queue saturation returns HTTP 503 SERVICE UNAVAILABLE.",
-      "actual_answer": "**1. HTTP Status Codes for File Size Exceeded:**\nWhen a file exceeds the maximum allowed upload size of 50 MB, the API responds with HTTP status **413 REQUEST ENTITY TOO LARGE**.\n\n**2. HTTP Status Codes for Ingestion Queue Full:**\nIf the background ingestion queue is full, the API responds with HTTP status **503 SERVICE UNAVAILABLE**. [1][2]",
+      "actual_answer": "**1. HTTP Status Code for Exceeded File Size:**\nWhen a file exceeds the maximum allowed upload size of 50 MB, the API responds with HTTP status **413 REQUEST ENTITY TOO LARGE**.\n\n**2. HTTP Status Code for Full Ingestion Queue:**\nIf the background ingestion queue is full, the API responds with HTTP status **503 SERVICE UNAVAILABLE** [1][2].",
       "retrieved_results": [
         {
           "text": "ingestion_queue.py may become saturated. In this scenario, the API responds with HTTP status 503\nSERVICE UNAVAILABLE and detail message Ingestion queue is full.\n5. File Upload Size Limits ERR-413\nFiles exceeding MAX_UPLOAD_MB (default 50 MB) trigger HTTP status 413 REQUEST ENTITY TOO\nLARGE. The uploaded temporary file is unlinked immediately to protect disk storage.",
@@ -2987,7 +2987,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 2139.7,
+      "latency_ms": 2217.15,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -3062,7 +3062,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1464.57,
+      "latency_ms": 1443.28,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -3161,7 +3161,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1851.56,
+      "latency_ms": 2469.46,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -3236,7 +3236,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1774.93,
+      "latency_ms": 2009.61,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -3254,7 +3254,7 @@
       "question": "What Docker container image base tag is used in production deployment?",
       "type": "unanswerable",
       "expected_answer": "I cannot answer this based on the provided documents. Docker configuration is not detailed in the baseline documentation corpus.",
-      "actual_answer": "The provided context does not specify the Docker container image base tag used in production deployment. Therefore, I cannot provide an answer to that question.",
+      "actual_answer": "The provided context does not specify the Docker container image base tag used in production deployment. Therefore, I cannot provide an answer to that question based on the available information.",
       "retrieved_results": [
         {
           "text": "6. GET /health\n- Summary: Endpoint reporting backend system health and configuration status.\n- Response Schema: {\"status\": \"ok\", \"vector_store\": \"data/chroma_db\", \"embedding_backend\": \"fastembed\", \"answer_model\": \"openai/gpt-4o-mini\"}",
@@ -3323,13 +3323,13 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1906.79,
+      "latency_ms": 1490.86,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
         "recall@10": 1.0,
         "mrr": 1.0,
-        "answer_correctness": 0.1852,
+        "answer_correctness": 0.2069,
         "faithfulness": 1.0,
         "abstention_score": 0.0,
         "citation_coverage": 0.0,
@@ -3341,7 +3341,7 @@
       "question": "What semantic chunking threshold is used to split paragraphs by embedding distance?",
       "type": "unanswerable",
       "expected_answer": "I cannot answer this based on the provided documents. The baseline uses RecursiveCharacterTextSplitter, not semantic chunking.",
-      "actual_answer": "**Semantic Chunking Threshold:**\n\nThe semantic chunking threshold used to split paragraphs is defined by the `CHUNK_SIZE` and `CHUNK_OVERLAP` parameters. Specifically, the `CHUNK_SIZE` is set to **1200 characters**, and the `CHUNK_OVERLAP` is set to **200 characters**. This configuration allows for effective chunking of text while maintaining some overlap between chunks to ensure context is preserved during retrieval [3].",
+      "actual_answer": "**Semantic Chunking Threshold:**\n\nThe chunking strategy utilizes a `CHUNK_SIZE` of 1200 characters and a `CHUNK_OVERLAP` of 200 characters. This means that each chunk will contain up to 1200 characters, with an overlap of 200 characters between consecutive chunks to maintain context and coherence in the document retrieval process [3].",
       "retrieved_results": [
         {
           "text": "## 3. Retrieval Pipeline & MMR Parameters\n- **Embedding Backend**: Primary backend is `FastEmbedEmbeddings` utilizing `BAAI/bge-small-en-v1.5` (ONNX format). When offline or when fastembed is unavailable, it gracefully falls back to `HashingEmbeddings` (scikit-learn `HashingVectorizer` with 1024 features).\n- **Retrieval Strategy**: Dense vector similarity with Maximal Marginal Relevance (`max_marginal_relevance_search`).\n- **MMR Parameters**: Initial candidate fetch `fetch_k=20`, target result count `k=8`, diversity balancing coefficient `lambda_mult=0.5`.\n- **Score Filtering**: Low-relevance chunks below `MIN_RELEVANCE_SCORE=0.35` are filtered out.\n- **Adjacent Chunk Expansion**: For every retrieved chunk with index `N`, the retrieval engine automatically attempts to fetch adjacent chunk `N+1` from ChromaDB to prevent boundary cutoff for multi-page lists.",
@@ -3422,13 +3422,13 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 2470.45,
+      "latency_ms": 2112.57,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
         "recall@10": 1.0,
         "mrr": 1.0,
-        "answer_correctness": 0.0732,
+        "answer_correctness": 0.0811,
         "faithfulness": 1.0,
         "abstention_score": 0.0,
         "citation_coverage": 1.0,
@@ -3440,7 +3440,7 @@
       "question": "What is the maximum token context length for the Anthropic Claude 3.5 Sonnet model in this app?",
       "type": "unanswerable",
       "expected_answer": "I cannot answer this based on the provided documents. The default model specified is openai/gpt-4o-mini via OpenRouter.",
-      "actual_answer": "The provided context does not contain any information regarding the maximum token context length for the Anthropic Claude 3.5 Sonnet model. Therefore, I cannot provide an answer to your question based on the available information.",
+      "actual_answer": "The provided context does not contain any information regarding the maximum token context length for the Anthropic Claude 3.5 Sonnet model. Therefore, I cannot provide an answer to your question.",
       "retrieved_results": [
         {
           "text": "3. EMBEDDING DIMENSIONS & THREAD SAFETY:\n- FastEmbed ONNX Model: BAAI/bge-small-en-v1.5 producing 384-dimensional dense vectors.\n- Hashing Embeddings Fallback: scikit-learn HashingVectorizer producing 1024-dimensional sparse-dense vectors.\n- Process Concurrency: Thread locks `_VECTOR_LOCK` and `_LOCK` manage safe concurrent modifications during background document indexing and deletions.\n- Memory Limits & Thread Settings: `OMP_NUM_THREADS=1` and `TOKENIZERS_PARALLELISM=false` are explicitly enforced in `settings.py` to keep memory consumption under 512 MB on Render hosting.",
@@ -3515,13 +3515,13 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 2480.88,
+      "latency_ms": 1877.8,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
         "recall@10": 1.0,
         "mrr": 1.0,
-        "answer_correctness": 0.1515,
+        "answer_correctness": 0.125,
         "faithfulness": 1.0,
         "abstention_score": 0.0,
         "citation_coverage": 0.0,
@@ -3596,7 +3596,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1918.42,
+      "latency_ms": 1912.84,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -3683,7 +3683,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1369.43,
+      "latency_ms": 1714.15,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -3701,7 +3701,7 @@
       "question": "What Prometheus metric port is exposed for scraping ingestion queue depth?",
       "type": "unanswerable",
       "expected_answer": "I cannot answer this based on the provided documents. Prometheus metrics endpoints are not documented.",
-      "actual_answer": "**Prometheus Metric Port for Ingestion Queue Depth:**\n\nThe Prometheus metric port exposed for scraping ingestion queue depth is **9826**. This is the local development port for the backend web server, which is built using FastAPI with Uvicorn [2].",
+      "actual_answer": "The provided context does not contain information regarding a Prometheus metric port for scraping ingestion queue depth. Therefore, I cannot provide an answer to your question based on the available information.",
       "retrieved_results": [
         {
           "text": "ingestion_queue.py may become saturated. In this scenario, the API responds with HTTP status 503\nSERVICE UNAVAILABLE and detail message Ingestion queue is full.\n5. File Upload Size Limits ERR-413\nFiles exceeding MAX_UPLOAD_MB (default 50 MB) trigger HTTP status 413 REQUEST ENTITY TOO\nLARGE. The uploaded temporary file is unlinked immediately to protect disk storage.",
@@ -3764,17 +3764,17 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1998.34,
+      "latency_ms": 1232.69,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
         "recall@10": 1.0,
         "mrr": 1.0,
-        "answer_correctness": 0.069,
+        "answer_correctness": 0.2222,
         "faithfulness": 1.0,
         "abstention_score": 0.0,
-        "citation_coverage": 1.0,
-        "citation_accuracy": 1.0
+        "citation_coverage": 0.0,
+        "citation_accuracy": 0.0
       }
     },
     {
@@ -3845,7 +3845,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 2081.17,
+      "latency_ms": 1584.06,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -3863,7 +3863,7 @@
       "question": "What is the default port for running the application?",
       "type": "ambiguous",
       "expected_answer": "The application supports two default ports depending on context: port 9826 for the unified FastAPI backend/local server, and port 5500 for serving the static frontend separately via http.server.",
-      "actual_answer": "**Default Port for Running the Application:** The default port for local development of the application is 9826, accessible at http://127.0.0.1:9826 [2].",
+      "actual_answer": "**Default Port for Running the Application:** The default port for running the application in local development is **9826** (http://127.0.0.1:9826) [2].",
       "retrieved_results": [
         {
           "text": "## 4. LLM Integration & OpenRouter Protocol\n- **Generation Model**: OpenRouter API (`OPENROUTER_MODEL=openai/gpt-4o-mini`, `OPENROUTER_BASE_URL=https://openrouter.ai/api/v1`).\n- **Fallback Behavior**: When `OPENROUTER_API_KEY` is empty or API calls fail, the engine falls back to plain context synthesis listing top matching sources.\n- **Generation Parameters**: `temperature=0.0`, `max_tokens=768`.",
@@ -3926,13 +3926,13 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1202.54,
+      "latency_ms": 1560.87,
       "metrics": {
         "recall@1": 0.0,
         "recall@5": 1.0,
         "recall@10": 1.0,
         "mrr": 0.5,
-        "answer_correctness": 0.24,
+        "answer_correctness": 0.25,
         "faithfulness": 1.0,
         "abstention_score": 0.5,
         "citation_coverage": 1.0,
@@ -3944,7 +3944,7 @@
       "question": "What embedding dimensions are used in the system?",
       "type": "ambiguous",
       "expected_answer": "The vector dimensions depend on the active embedding backend: FastEmbed (BAAI/bge-small-en-v1.5) uses 384 dimensions, whereas the offline HashingEmbeddings fallback uses 1024 dimensions.",
-      "actual_answer": "**Embedding Dimensions Used in the System:**\n\n1. **FastEmbed ONNX Model:** Produces 384-dimensional dense vectors using the model `BAAI/bge-small-en-v1.5`.\n2. **Hashing Embeddings Fallback:** Utilizes scikit-learn's `HashingVectorizer` to produce 1024-dimensional sparse-dense vectors when the FastEmbed model is unavailable [1][2].",
+      "actual_answer": "**Embedding Dimensions Used in the System:**\n\n1. **FastEmbed ONNX Model:** Produces 384-dimensional dense vectors using the model `BAAI/bge-small-en-v1.5`.\n2. **Hashing Embeddings Fallback:** Produces 1024-dimensional sparse-dense vectors using the scikit-learn `HashingVectorizer` [1][2].",
       "retrieved_results": [
         {
           "text": "3. EMBEDDING DIMENSIONS & THREAD SAFETY:\n- FastEmbed ONNX Model: BAAI/bge-small-en-v1.5 producing 384-dimensional dense vectors.\n- Hashing Embeddings Fallback: scikit-learn HashingVectorizer producing 1024-dimensional sparse-dense vectors.\n- Process Concurrency: Thread locks `_VECTOR_LOCK` and `_LOCK` manage safe concurrent modifications during background document indexing and deletions.\n- Memory Limits & Thread Settings: `OMP_NUM_THREADS=1` and `TOKENIZERS_PARALLELISM=false` are explicitly enforced in `settings.py` to keep memory consumption under 512 MB on Render hosting.",
@@ -4013,13 +4013,13 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1894.14,
+      "latency_ms": 3147.32,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
         "recall@10": 1.0,
         "mrr": 1.0,
-        "answer_correctness": 0.2895,
+        "answer_correctness": 0.3235,
         "faithfulness": 1.0,
         "abstention_score": 0.5,
         "citation_coverage": 1.0,
@@ -4100,7 +4100,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 1617.54,
+      "latency_ms": 2180.89,
       "metrics": {
         "recall@1": 1.0,
         "recall@5": 1.0,
@@ -4118,7 +4118,7 @@
       "question": "What answer is generated when a search query is executed?",
       "type": "ambiguous",
       "expected_answer": "If OPENROUTER_API_KEY is configured, an LLM-generated answer using gpt-4o-mini is produced. If no key is present or the API fails, a plain context summary showing top matching snippets is returned.",
-      "actual_answer": "**Answer Generation in Search Query Execution:**\n\nWhen a search query is executed using the POST /search endpoint, the response generated includes the following components:\n\n1. **Query:** The original search query string.\n2. **Answer:** The generated answer based on the semantic vector search.\n3. **Results:** An array of results relevant to the query.\n4. **Latency:** The time taken to process the query in milliseconds.\n\nThe response schema for this operation is structured as follows: {\"query\": \"string\", \"answer\": \"string\", \"results\": [...], \"latency_ms\": 45.2} [1].",
+      "actual_answer": "**Answer Generation in Search Query Execution:**\n\nWhen a search query is executed using the POST /search endpoint, the response generated includes the following elements:\n\n1. **Query:** The original search query string.\n2. **Answer:** The generated answer based on the query.\n3. **Results:** An array of results relevant to the query.\n4. **Latency:** The time taken to process the query in milliseconds.\n\nThe response schema for this operation is structured as follows: {\"query\": \"string\", \"answer\": \"string\", \"results\": [...], \"latency_ms\": 45.2} [1].",
       "retrieved_results": [
         {
           "text": "2. GET /documents\n- Summary: Retrieve ingestion status listing for all registered documents.\n- Response Code: 200 OK\n- Response Schema: Array of DocumentStatus objects containing document_id, filename, status, chunks_indexed, message, error, uploaded_at.\n3. GET /documents/{document_id}\n- Summary: Retrieve ingestion status for a specific document ID.\n- Error Code: 404 NOT FOUND if document_id does not exist.\n4. DELETE /documents/{document_id}\n- Summary: Delete a document, purge its vectors from ChromaDB, and remove uploaded file from disk.\n- Response Schema: {\"document_id\": \"hex_string\", \"filename\": \"example.pdf\", \"deleted_chunks\": 12, \"message\": \"Document deleted.\"}\n- Error Code: 404 NOT FOUND if document_id is not found.\n5. POST /search\n- Summary: Execute semantic vector search and generate LLM answer.\n- Request Payload: {\"query\": \"string\", \"top_k\": 5, \"source\": \"optional_filename.pdf\"}\n- Response Schema: {\"query\": \"string\", \"answer\": \"string\", \"results\": [...], \"latency_ms\": 45.2}\n- Error Codes:\n* 400 BAD REQUEST: Empty query.\n* 500 INTERNAL SERVER ERROR: Vector store search or LLM generation failure.",
@@ -4187,13 +4187,13 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 3806.21,
+      "latency_ms": 2761.63,
       "metrics": {
         "recall@1": 0.0,
         "recall@5": 1.0,
         "recall@10": 1.0,
         "mrr": 0.5,
-        "answer_correctness": 0.0517,
+        "answer_correctness": 0.0536,
         "faithfulness": 1.0,
         "abstention_score": 0.5,
         "citation_coverage": 1.0,
@@ -4280,7 +4280,7 @@
           "score": 0.9
         }
       ],
-      "latency_ms": 2124.0,
+      "latency_ms": 1902.99,
       "metrics": {
         "recall@1": 0.0,
         "recall@5": 1.0,
