@@ -1,0 +1,47 @@
+RAG Document Search API Reference Specifications
+
+API BASE CONFIGURATION:
+- Backend Web Server: FastAPI with Uvicorn
+- Local Development Port: 9826 (http://127.0.0.1:9826)
+- Alternate UI Server Port: 5500 (http://127.0.0.1:5500)
+- CORS Policy: `allow_origins=["*"]`, `allow_methods=["*"]`, `allow_credentials=True`
+
+ENDPOINTS:
+
+1. POST /upload
+- Summary: Upload a PDF, TXT, or Markdown file for background ingestion.
+- Supported File Extensions: .pdf, .txt, .md
+- Max File Size Limit: 50 MB (Configured by MAX_UPLOAD_MB environment variable)
+- Response Code on Success: 202 ACCEPTED
+- Response Schema: {"document_id": "hex_string", "filename": "example.pdf", "status": "queued", "message": "Upload accepted."}
+- Error Codes:
+  * 400 BAD REQUEST: Missing filename or unsupported file extension.
+  * 409 CONFLICT: Duplicate document active in queue (Matching SHA-256 content_hash).
+  * 413 REQUEST ENTITY TOO LARGE: File exceeds maximum allowed upload size (50MB).
+  * 503 SERVICE UNAVAILABLE: Ingestion worker queue is full.
+
+2. GET /documents
+- Summary: Retrieve ingestion status listing for all registered documents.
+- Response Code: 200 OK
+- Response Schema: Array of DocumentStatus objects containing document_id, filename, status, chunks_indexed, message, error, uploaded_at.
+
+3. GET /documents/{document_id}
+- Summary: Retrieve ingestion status for a specific document ID.
+- Error Code: 404 NOT FOUND if document_id does not exist.
+
+4. DELETE /documents/{document_id}
+- Summary: Delete a document, purge its vectors from ChromaDB, and remove uploaded file from disk.
+- Response Schema: {"document_id": "hex_string", "filename": "example.pdf", "deleted_chunks": 12, "message": "Document deleted."}
+- Error Code: 404 NOT FOUND if document_id is not found.
+
+5. POST /search
+- Summary: Execute semantic vector search and generate LLM answer.
+- Request Payload: {"query": "string", "top_k": 5, "source": "optional_filename.pdf"}
+- Response Schema: {"query": "string", "answer": "string", "results": [...], "latency_ms": 45.2}
+- Error Codes:
+  * 400 BAD REQUEST: Empty query.
+  * 500 INTERNAL SERVER ERROR: Vector store search or LLM generation failure.
+
+6. GET /health
+- Summary: Endpoint reporting backend system health and configuration status.
+- Response Schema: {"status": "ok", "vector_store": "data/chroma_db", "embedding_backend": "fastembed", "answer_model": "openai/gpt-4o-mini"}
