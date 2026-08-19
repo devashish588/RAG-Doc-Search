@@ -8,6 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 
+from backend.api_errors import HTTPException as _HTTPException, register_error_handlers
+from backend.api_v1 import router as v1_router
 from backend.ingestion import (
     delete_document,
     find_active_duplicate,
@@ -18,6 +20,7 @@ from backend.ingestion import (
 from backend.ingestion_queue import start as start_ingestion_worker, stop as stop_ingestion_worker, submit as submit_job
 from backend.llm import llm_available
 from backend.retrieval import run_search
+from backend.reconciliation import health_check as reconciliation_health_check
 from backend.schemas import DeleteResponse, DocumentStatus, HealthResponse, SearchRequest, SearchResponse, UploadResponse
 from backend.vector_store import get_embeddings
 from backend.settings import CHROMA_DIR, EMBEDDING_BACKEND, EMBEDDING_WARMUP, MAX_UPLOAD_MB, OPENROUTER_MODEL, SUPPORTED_EXTENSIONS, UPLOAD_DIR, ensure_runtime_dirs
@@ -49,7 +52,7 @@ async def lifespan(_: FastAPI):
 app = FastAPI(
     title="RAG Document Search",
     description="Semantic document search with FastAPI, LangChain, fastembed (ONNX), and ChromaDB.",
-    version="1.0.0",
+    version="1.1.0",
     lifespan=lifespan,
 )
 
@@ -61,9 +64,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Register structured error handlers
+register_error_handlers(app)
+
+# Include v1 API router
+app.include_router(v1_router)
+
 
 # ---------------------------------------------------------------------------
-# Routes
+# Legacy routes (backward compatible, delegate to same logic)
 # ---------------------------------------------------------------------------
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
@@ -86,13 +95,19 @@ def health() -> HealthResponse:
     )
 
 
+@app.get("/health/index", response_model=dict)
+def index_health() -> dict:
+    """Index reconciliation health check."""
+    return reconciliation_health_check()
+
+
 @app.post("/upload", response_model=UploadResponse, status_code=status.HTTP_202_ACCEPTED)
 async def upload_document(file: UploadFile = File(...)) -> UploadResponse:
     if not file.filename:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A filename is required.")
 
     name = Path(file.filename).name
-    ext  = Path(name).suffix.lower()
+    ext = Path(name).suffix.lower()
     if ext not in SUPPORTED_EXTENSIONS:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -101,7 +116,7 @@ async def upload_document(file: UploadFile = File(...)) -> UploadResponse:
 
     ensure_runtime_dirs()
     doc_id = uuid4().hex
-    dest   = UPLOAD_DIR / f"{doc_id}_{name}"
+    dest = UPLOAD_DIR / f"{doc_id}_{name}"
     content_hash = await _save_upload(file, dest)
 
     duplicate = find_active_duplicate(content_hash)
@@ -168,8 +183,8 @@ async def _save_upload(upload: UploadFile, dest: Path) -> str:
     import hashlib
 
     max_bytes = MAX_UPLOAD_MB * 1024 * 1024
-    written   = 0
-    hasher    = hashlib.sha256()
+    written = 0
+    hasher = hashlib.sha256()
     with dest.open("wb") as fh:
         while chunk := await upload.read(1024 * 1024):
             written += len(chunk)
