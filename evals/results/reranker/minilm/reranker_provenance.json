@@ -1,0 +1,15 @@
+{
+  "provenance": {
+    "neutral_change": 26,
+    "unchanged": 24
+  },
+  "rank_promotion": {
+    "promoted": 197,
+    "demoted": 193,
+    "unchanged": 110
+  },
+  "failures": {
+    "corrected": [],
+    "degraded": []
+  }
+}

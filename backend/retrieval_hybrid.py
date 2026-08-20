@@ -3,6 +3,7 @@
 Combines DenseRetriever and BM25Retriever using Reciprocal Rank Fusion (RRF).
 """
 import logging
+from time import perf_counter
 from typing import Any
 
 from backend.interfaces import RetrievalResult
@@ -130,12 +131,80 @@ class HybridRRFRetriever:
             source=source,
         )
 
+        return self._fuse(dense_results, bm25_results, effective_top_k_fused)
+
+    def search_with_timing(
+        self,
+        query: str,
+        k: int | None = None,
+        top_k_dense: int | None = None,
+        top_k_sparse: int | None = None,
+        top_k_fused: int | None = None,
+        source: str | None = None,
+    ) -> tuple[list[RetrievalResult], dict[str, float]]:
+        """Search using hybrid RRF and return per-stage latencies in milliseconds.
+
+        Timings are strictly retrieval-only:
+            dense_ms : DenseRetriever.search duration
+            bm25_ms  : BM25Retriever.search duration
+            rrf_ms   : fusion (rank-map + RRF scoring + ordering) duration
+            total_ms : dense_ms + bm25_ms + rrf_ms
+
+        LLM answer generation, adjacent-chunk expansion, and corpus ingestion
+        are NOT included.
+        """
+        timing: dict[str, float] = {
+            "dense_ms": 0.0,
+            "bm25_ms": 0.0,
+            "rrf_ms": 0.0,
+            "total_ms": 0.0,
+        }
+        if not query or not query.strip():
+            return [], timing
+
+        # Use instance defaults if not overridden
+        effective_top_k_dense = top_k_dense if top_k_dense is not None else self.top_k_dense
+        effective_top_k_sparse = top_k_sparse if top_k_sparse is not None else self.top_k_sparse
+        effective_top_k_fused = top_k_fused if top_k_fused is not None else self.top_k_fused
+
+        t0 = perf_counter()
+        dense_results = self._dense_retriever.search(
+            query=query,
+            k=effective_top_k_dense,
+            source=source,
+        )
+        t1 = perf_counter()
+        bm25_results = self._bm25_retriever.search(
+            query=query,
+            k=effective_top_k_sparse,
+            source=source,
+        )
+        t2 = perf_counter()
+        results = self._fuse(dense_results, bm25_results, effective_top_k_fused)
+        t3 = perf_counter()
+
+        timing["dense_ms"] = round((t1 - t0) * 1000, 3)
+        timing["bm25_ms"] = round((t2 - t1) * 1000, 3)
+        timing["rrf_ms"] = round((t3 - t2) * 1000, 3)
+        timing["total_ms"] = round((t3 - t0) * 1000, 3)
+        return results, timing
+
+    def _fuse(
+        self,
+        dense_results: list[RetrievalResult],
+        bm25_results: list[RetrievalResult],
+        top_k_fused: int,
+    ) -> list[RetrievalResult]:
+        """Fuse dense + sparse results via weighted RRF. RRF math unchanged."""
         # Build rank maps for RRF
         dense_rank_map = {r.chunk_id: i + 1 for i, r in enumerate(dense_results)}
         sparse_rank_map = {r.chunk_id: i + 1 for i, r in enumerate(bm25_results)}
 
         # Collect all unique chunk IDs
-        all_chunk_ids = set(dense_rank_map.keys()) | set(sparse_rank_map.keys())
+        all_chunk_ids = set()  # preserve insertion order below via dict
+        for r in dense_results + bm25_results:
+            all_chunk_ids.add(r.chunk_id)
+        all_chunk_ids = list(all_chunk_ids)
 
         # Calculate RRF scores
         fused_scores = {}
@@ -159,7 +228,7 @@ class HybridRRFRetriever:
             if r.chunk_id not in result_lookup:
                 result_lookup[r.chunk_id] = r
 
-        for rank, chunk_id in enumerate(ranked_chunk_ids[:effective_top_k_fused], 1):
+        for rank, chunk_id in enumerate(ranked_chunk_ids[:top_k_fused], 1):
             base_result = result_lookup.get(chunk_id)
             if base_result is None:
                 continue

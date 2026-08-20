@@ -48,6 +48,28 @@ RRF_DENSE_WEIGHT = float(os.getenv("RRF_DENSE_WEIGHT", "0.7"))
 RRF_SPARSE_WEIGHT = float(os.getenv("RRF_SPARSE_WEIGHT", "0.3"))
 RRF_TOP_K = int(os.getenv("RRF_TOP_K", "10"))
 
+# Cross-encoder reranking configuration (Phase 6, opt-in by default)
+# Reranker is DISABLED by default; enable explicitly via env / API mode "hybrid_rerank".
+RERANKER_ENABLED = os.getenv("RERANKER_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+# Lightweight CPU cross-encoder (FlashRank / ONNX). Default is TinyBERT-L-2-v2:
+# ~3 MB model, ~23 ms rerank, ~785 MB peak on this corpus, R@1=0.90 / MRR=0.95.
+# ms-marco-MiniLM-L-12-v2 is stronger (R@1=0.94 / MRR=0.97) but ~28x slower
+# (~648 ms rerank) and ~1141 MB peak - only viable on a larger instance, not the
+# 512 MB free tier. Override via RERANKER_MODEL when latency/RAM budget allows.
+RERANKER_MODEL = os.getenv("RERANKER_MODEL", "ms-marco-TinyBERT-L-2-v2")
+RERANKER_CANDIDATE_K = int(os.getenv("RERANKER_CANDIDATE_K", "20"))
+RERANKER_TOP_K = int(os.getenv("RERANKER_TOP_K", "5"))
+
+# Validate reranker config: candidate pool must be positive and >= final top-k.
+if RERANKER_CANDIDATE_K <= 0:
+    raise ValueError("RERANKER_CANDIDATE_K must be > 0")
+if RERANKER_TOP_K <= 0:
+    raise ValueError("RERANKER_TOP_K must be > 0")
+if RERANKER_TOP_K > RERANKER_CANDIDATE_K:
+    raise ValueError(
+        f"RERANKER_TOP_K ({RERANKER_TOP_K}) must be <= RERANKER_CANDIDATE_K ({RERANKER_CANDIDATE_K})"
+    )
+
 SUPPORTED_EXTENSIONS = {".pdf", ".txt", ".md", ".html", ".htm"}
 
 # OpenRouter answer-generation LLM (optional). Key should live in .env, which

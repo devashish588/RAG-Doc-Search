@@ -17,6 +17,7 @@ from backend.ingestion_queue import start as start_ingestion_worker, stop as sto
 from backend.llm import llm_available
 from backend.models import Chunk, Document, IngestionJob, canonical_chunk_id, canonical_job_id
 from backend.retrieval import run_search, run_search_dense, run_search_bm25, run_search_hybrid
+from backend.reranker import get_reranker
 from backend.schemas import SearchRequest as LegacySearchRequest
 from backend.vector_store import get_embeddings
 from backend.settings import MAX_UPLOAD_MB, SUPPORTED_EXTENSIONS, UPLOAD_DIR, ensure_runtime_dirs
@@ -49,7 +50,7 @@ class AskRequest(BaseModel):
     top_k_sparse: int = Field(default=10, ge=1, le=50)
     top_k_fused: int = Field(default=20, ge=1, le=50)
     top_k_final: int = Field(default=5, ge=1, le=20)
-    retrieval_mode: str = Field(default="hybrid", pattern="^(dense|sparse|hybrid)$")
+    retrieval_mode: str = Field(default="dense", pattern="^(dense|sparse|hybrid|hybrid_rerank)$")
 
 
 class Citation(BaseModel):
@@ -188,6 +189,7 @@ async def ask_v1(request: AskRequest) -> AskResponse:
             )
             bm25_results = []
             rrf_results = []
+            reranker_results = []
             legacy_req = LegacySearchRequest(
                 query=request.question,
                 top_k=request.top_k_dense,
@@ -203,9 +205,44 @@ async def ask_v1(request: AskRequest) -> AskResponse:
                 source=None,
             )
             rrf_results = []
+            reranker_results = []
             legacy_req = LegacySearchRequest(
                 query=request.question,
                 top_k=request.top_k_sparse,
+                source=None,
+            )
+            search_res = run_search(legacy_req)
+        elif request.retrieval_mode == "hybrid_rerank":
+            # Hybrid RRF + Cross-Encoder reranking
+            dense_results = run_search_dense(
+                query=request.question,
+                k=request.top_k_dense,
+                source=None,
+            )
+            bm25_results = run_search_bm25(
+                query=request.question,
+                k=request.top_k_sparse,
+                source=None,
+            )
+            rrf_results = run_search_hybrid(
+                query=request.question,
+                k=request.top_k_fused,
+                top_k_dense=request.top_k_dense,
+                top_k_sparse=request.top_k_sparse,
+                top_k_fused=request.top_k_fused,
+                source=None,
+            )
+            # Rerank the RRF candidate pool (top_k_fused) down to top_k_final.
+            reranker = get_reranker()
+            reranker_results = reranker.rerank(
+                query=request.question,
+                candidates=rrf_results,
+                top_k=request.top_k_final,
+            )
+            # Answer generation uses the reranked context (existing behavior)
+            legacy_req = LegacySearchRequest(
+                query=request.question,
+                top_k=request.top_k_final,
                 source=None,
             )
             search_res = run_search(legacy_req)
@@ -229,6 +266,7 @@ async def ask_v1(request: AskRequest) -> AskResponse:
                 top_k_fused=request.top_k_fused,
                 source=None,
             )
+            reranker_results = []
             # Use dense for answer generation (existing behavior)
             legacy_req = LegacySearchRequest(
                 query=request.question,
@@ -260,7 +298,12 @@ async def ask_v1(request: AskRequest) -> AskResponse:
         status=response_status,
         citations=_build_citations(search_res.results),
         confidence=None,  # Phase 6 will implement
-        retrieval_trace=RetrievalTrace(dense=dense_results, bm25=bm25_results, rrf=rrf_results),
+        retrieval_trace=RetrievalTrace(
+            dense=dense_results,
+            bm25=bm25_results,
+            rrf=rrf_results,
+            reranker=reranker_results,
+        ),
     )
 
 
