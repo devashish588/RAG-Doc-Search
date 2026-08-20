@@ -23,11 +23,13 @@ EMBEDDING_BACKEND         = os.getenv("EMBEDDING_BACKEND", "auto").strip().lower
 EMBEDDING_WARMUP          = os.getenv("EMBEDDING_WARMUP", "false").strip().lower() in {"1", "true", "yes", "on"}
 HASHING_EMBEDDING_DIMS    = int(os.getenv("HASHING_EMBEDDING_DIMENSIONS", "1024"))
 
-CHUNK_SIZE    = int(os.getenv("CHUNK_SIZE", "1200"))  # Kept moderately large for retrieval, trimmed for memory
-CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "200"))  # Reduced to lower embedding memory pressure
+CHUNK_SIZE    = int(os.getenv("CHUNK_SIZE", "1200"))
+CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "200"))
+CHUNKING_STRATEGY = os.getenv("CHUNKING_STRATEGY", "recursive").strip().lower()
+NEAR_DUPLICATE_THRESHOLD = float(os.getenv("NEAR_DUPLICATE_THRESHOLD", "0.95"))
 MAX_UPLOAD_MB  = int(os.getenv("MAX_UPLOAD_MB", "50"))
 
-SUPPORTED_EXTENSIONS = {".pdf", ".txt", ".md"}
+SUPPORTED_EXTENSIONS = {".pdf", ".txt", ".md", ".html", ".htm"}
 
 # OpenRouter answer-generation LLM (optional). Key should live in .env, which
 # is git-ignored, or in the environment. Leave OPENROUTER_API_KEY empty to

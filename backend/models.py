@@ -82,6 +82,25 @@ class Chunk(BaseModel):
             metadata=metadata or {},
         )
 
+    def to_langchain_document(self):
+        """Convert to LangChain Document for vector store indexing."""
+        from langchain_core.documents import Document
+        meta = dict(self.metadata)
+        meta.update(
+            document_id=self.document_id,
+            chunk=self.chunk_index,
+            chunk_strategy=self.chunk_strategy,
+            content_hash=self.content_hash,
+            character_count=self.character_count,
+        )
+        if self.token_count is not None:
+            meta["token_count"] = self.token_count
+        if self.section is not None:
+            meta["section"] = self.section
+        if self.page is not None:
+            meta["page"] = self.page
+        return Document(page_content=self.content, metadata=meta)
+
 
 class IngestionJob(BaseModel):
     """Canonical ingestion job tracking."""
