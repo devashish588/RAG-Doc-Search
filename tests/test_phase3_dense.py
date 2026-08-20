@@ -262,8 +262,7 @@ def test_v1_ask_trace_structure():
     assert "rrf" in trace
     assert "reranker" in trace
 
-    # BM25 is now implemented in Phase 4, RRF and reranker remain empty
-    assert trace["rrf"] == []
+    # RRF is now implemented in Phase 5, reranker remains empty
     assert trace["reranker"] == []
 
     # Dense results have required fields

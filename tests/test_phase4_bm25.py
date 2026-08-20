@@ -397,7 +397,7 @@ def test_v1_ask_dense_mode():
 
 
 def test_v1_ask_both_traces():
-    """Test /v1/ask returns both dense and BM25 traces."""
+    """Test /v1/ask returns dense, BM25, and RRF traces."""
     response = client.post(
         "/v1/ask",
         json={
@@ -412,8 +412,9 @@ def test_v1_ask_both_traces():
     trace = data["retrieval_trace"]
     assert "dense" in trace
     assert "bm25" in trace
-    # RRF and reranker should remain empty in Phase 4
-    assert trace["rrf"] == []
+    assert "rrf" in trace
+    # RRF is now implemented in Phase 5
+    # Reranker remains for Phase 6
     assert trace["reranker"] == []
 
 

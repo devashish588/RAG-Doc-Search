@@ -206,10 +206,9 @@ def test_v1_ask_endpoint_exists():
     assert "citations" in data
     assert "retrieval_trace" in data
     assert "dense" in data["retrieval_trace"]
-    # BM25 is now implemented in Phase 4, so it may have results
-    # RRF and reranker should remain empty
     assert "bm25" in data["retrieval_trace"]
-    assert data["retrieval_trace"]["rrf"] == []
+    assert "rrf" in data["retrieval_trace"]
+    # Reranker should remain empty (Phase 6)
     assert data["retrieval_trace"]["reranker"] == []
 
 
@@ -420,7 +419,7 @@ def test_retrieval_trace_dense_populated():
 
 
 def test_retrieval_trace_future_stages_empty():
-    """RRF and reranker stages are empty (BM25 is now implemented in Phase 4)."""
+    """Reranker stage is empty (RRF is now implemented in Phase 5)."""
     response = client.post(
         "/v1/ask",
         json={"question": "Test question"},
@@ -428,9 +427,7 @@ def test_retrieval_trace_future_stages_empty():
     assert response.status_code == 200
     data = response.json()
     trace = data["retrieval_trace"]
-    # BM25 is now implemented in Phase 4
-    # RRF and reranker should remain empty
-    assert trace["rrf"] == []
+    # RRF is now implemented in Phase 5, reranker remains for Phase 6
     assert trace["reranker"] == []
 
 

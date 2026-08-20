@@ -42,6 +42,12 @@ BM25_B = float(os.getenv("BM25_B", "0.75"))
 BM25_INDEX_VERSION = int(os.getenv("BM25_INDEX_VERSION", "1"))
 BM25_INDEX_DIR = DATA_DIR / "bm25_index"
 
+# RRF hybrid retrieval configuration
+RRF_K = int(os.getenv("RRF_K", "60"))
+RRF_DENSE_WEIGHT = float(os.getenv("RRF_DENSE_WEIGHT", "0.7"))
+RRF_SPARSE_WEIGHT = float(os.getenv("RRF_SPARSE_WEIGHT", "0.3"))
+RRF_TOP_K = int(os.getenv("RRF_TOP_K", "10"))
+
 SUPPORTED_EXTENSIONS = {".pdf", ".txt", ".md", ".html", ".htm"}
 
 # OpenRouter answer-generation LLM (optional). Key should live in .env, which

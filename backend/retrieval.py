@@ -6,11 +6,13 @@ from langchain_core.documents import Document
 from backend.llm import generate_answer
 from backend.retrieval_bm25 import get_bm25_retriever
 from backend.retrieval_dense import DenseRetriever, get_dense_retriever, _to_retrieval_result
+from backend.retrieval_hybrid import get_hybrid_retriever
 from backend.schemas import SearchRequest, SearchResponse, SearchResult
 from backend.vector_store import get_vector_store
 
 DenseRetrieverInstance = get_dense_retriever()
 BM25RetrieverInstance = get_bm25_retriever()
+HybridRetrieverInstance = get_hybrid_retriever()
 
 
 def _page(metadata: dict[str, Any]) -> int | None:
@@ -153,3 +155,26 @@ def run_search_bm25(
     """
     retriever = get_bm25_retriever()
     return retriever.search(query=query, k=k, source=source)
+
+
+def run_search_hybrid(
+    query: str,
+    k: int = 10,
+    top_k_dense: int = 10,
+    top_k_sparse: int = 10,
+    top_k_fused: int = 10,
+    source: str | None = None,
+) -> list:
+    """Direct hybrid RRF search returning canonical RetrievalResult objects.
+
+    Used by /v1/ask for structured trace in hybrid mode.
+    """
+    retriever = get_hybrid_retriever()
+    return retriever.search(
+        query=query,
+        k=k,
+        top_k_dense=top_k_dense,
+        top_k_sparse=top_k_sparse,
+        top_k_fused=top_k_fused,
+        source=source,
+    )
