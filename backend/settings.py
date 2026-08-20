@@ -35,6 +35,13 @@ DENSE_FETCH_K = int(os.getenv("DENSE_FETCH_K", "20"))
 DENSE_MMR_LAMBDA = float(os.getenv("DENSE_MMR_LAMBDA", "0.5"))
 MIN_RELEVANCE_SCORE = float(os.getenv("MIN_RELEVANCE_SCORE", "0.35"))
 
+# BM25 sparse retrieval configuration
+BM25_TOP_K = int(os.getenv("BM25_TOP_K", "10"))
+BM25_K1 = float(os.getenv("BM25_K1", "1.5"))
+BM25_B = float(os.getenv("BM25_B", "0.75"))
+BM25_INDEX_VERSION = int(os.getenv("BM25_INDEX_VERSION", "1"))
+BM25_INDEX_DIR = DATA_DIR / "bm25_index"
+
 SUPPORTED_EXTENSIONS = {".pdf", ".txt", ".md", ".html", ".htm"}
 
 # OpenRouter answer-generation LLM (optional). Key should live in .env, which

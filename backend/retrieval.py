@@ -4,11 +4,13 @@ from typing import Any
 from langchain_core.documents import Document
 
 from backend.llm import generate_answer
+from backend.retrieval_bm25 import get_bm25_retriever
 from backend.retrieval_dense import DenseRetriever, get_dense_retriever, _to_retrieval_result
 from backend.schemas import SearchRequest, SearchResponse, SearchResult
 from backend.vector_store import get_vector_store
 
 DenseRetrieverInstance = get_dense_retriever()
+BM25RetrieverInstance = get_bm25_retriever()
 
 
 def _page(metadata: dict[str, Any]) -> int | None:
@@ -137,4 +139,17 @@ def run_search_dense(
     Used by /v1/ask for structured trace.
     """
     retriever = get_dense_retriever()
+    return retriever.search(query=query, k=k, source=source)
+
+
+def run_search_bm25(
+    query: str,
+    k: int = 10,
+    source: str | None = None,
+) -> list:
+    """Direct BM25 search returning canonical RetrievalResult objects.
+
+    Used by /v1/ask for structured trace.
+    """
+    retriever = get_bm25_retriever()
     return retriever.search(query=query, k=k, source=source)

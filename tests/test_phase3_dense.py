@@ -262,8 +262,7 @@ def test_v1_ask_trace_structure():
     assert "rrf" in trace
     assert "reranker" in trace
 
-    # Future stages empty
-    assert trace["bm25"] == []
+    # BM25 is now implemented in Phase 4, RRF and reranker remain empty
     assert trace["rrf"] == []
     assert trace["reranker"] == []
 

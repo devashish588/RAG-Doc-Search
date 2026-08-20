@@ -12,10 +12,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from backend.bm25_index import get_bm25_index
 from backend.chunking import get_chunker
-from backend.deduplication import Deduplicator, compute_document_hash
+from backend.deduplication import Deduplicator, compute_document_hash, deduplicate_chunks
 from backend.loaders import get_loader, supported_extensions as loader_extensions
-from backend.models import Chunk, Document, IngestionJob, DocumentStatus as ModelDocStatus
+from backend.models import Chunk, Document as ModelDocument, IngestionJob, DocumentStatus as ModelDocStatus
+from langchain_core.documents import Document
 from backend.normalizer import get_normalizer
 from backend.settings import (
     CHUNK_OVERLAP,
@@ -82,7 +84,7 @@ def log_event(event: str, document_id: str, **details: Any) -> None:
 def load_document(path: Path) -> tuple[list, dict[str, Any]]:
     """Load document and return (langchain_documents, metadata)."""
     loader = get_loader(path)
-    docs = loader.load()
+    docs = loader.load(path)
 
     # Extract document-level metadata
     metadata = {
@@ -200,10 +202,20 @@ def ingest_document_v2(
             langchain_chunks.append(lc_doc)
             chunk_ids.append(chunk.id)
 
-        # Embed and index
+        # Embed and index (dense)
         log_event(INGESTION_EVENTS["embedding_started"], document_id, chunk_count=len(langchain_chunks))
         count = add_documents(langchain_chunks, chunk_ids)
         log_event(INGESTION_EVENTS["indexing_completed"], document_id, indexed=count)
+
+        # Index to BM25 (sparse)
+        log_event(INGESTION_EVENTS["indexing_completed"], document_id, indexed=count, index="bm25")
+        try:
+            bm25_index = get_bm25_index()
+            bm25_index.build(kept_chunks)
+            bm25_index.save()
+            log.info("BM25 index built and saved for document %s", document_id)
+        except Exception as exc:
+            log.warning("Failed to build BM25 index for document %s: %s", document_id, exc)
 
         # Mark job complete
         if ingestion_job:
