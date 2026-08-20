@@ -13,3 +13,6 @@ chromadb==0.5.23
 scikit-learn==1.6.0
 pypdf==5.1.0
 fastembed==0.5.1
+
+# Cross-encoder reranker (Phase 6). ONNX-based, CPU-only, no torch dependency.
+flashrank==0.2.10

@@ -44,6 +44,20 @@
           </select>
         </div>
       </div>
+      <div class="row">
+        <div>
+          <label for="modeSelect">Retrieval mode</label>
+          <select id="modeSelect">
+            <option value="dense">Dense (default)</option>
+            <option value="hybrid">Hybrid RRF</option>
+            <option value="hybrid_rerank">Hybrid + Rerank</option>
+          </select>
+        </div>
+        <div>
+          <label for="topKFinalInput">Final k (rerank)</label>
+          <input id="topKFinalInput" type="number" min="1" max="20" value="5" />
+        </div>
+      </div>
       <div class="actions">
         <button class="primary"   id="searchBtn">Search</button>
         <button class="secondary" id="refreshBtn">Refresh Docs</button>
@@ -59,6 +73,10 @@
       <div class="panel">
         <div class="pill" style="margin-bottom:10px">Retrieved Chunks</div>
         <div class="results" id="resultsBox"></div>
+      </div>
+      <div class="panel">
+        <div class="pill" style="margin-bottom:10px">Retrieval Trace</div>
+        <div class="trace" id="traceBox"></div>
       </div>
       <div class="panel">
         <div class="pill" style="margin-bottom:10px">Documents</div>

@@ -6,6 +6,9 @@ const uploadStatus = $('uploadStatus');
 const searchStatus = $('searchStatus');
 const answerBox    = $('answerBox');
 const resultsBox   = $('resultsBox');
+const traceBox     = $('traceBox');
+const modeSelect   = $('modeSelect');
+const topKFinalInput = $('topKFinalInput');
 const docsBox      = $('docsBox');
 const sourceSelect = $('sourceSelect');
 
@@ -78,25 +81,43 @@ function renderDocs(docs) {
   });
 }
 
-function renderSearch(data) {
+function renderCitations(data) {
   answerBox.textContent = data.answer || 'No answer returned.';
   resultsBox.innerHTML  = '';
-  if (!data.results?.length) {
+  const cites = data.citations || [];
+  if (!cites.length) {
     resultsBox.innerHTML = '<div class="muted">No matching chunks found.</div>';
     return;
   }
-  data.results.forEach((item, i) => {
+  cites.forEach((c, i) => {
     const card = document.createElement('div');
     card.className = 'result';
     card.innerHTML = `
       <div class="result-head">
-        <div>#${i + 1} · ${item.source}${item.page ? ' · page ' + item.page : ''}</div>
-        <div>score ${item.score.toFixed(2)}</div>
+        <div>#${i + 1} · ${c.source || '?'}${c.page ? ' · page ' + c.page : ''}</div>
       </div>
-      <div class="result-text">${item.text}</div>
+      <div class="result-text">${c.text_snippet || ''}</div>
     `;
     resultsBox.appendChild(card);
   });
+}
+
+function traceStage(label, items, meta) {
+  if (!items) return '';
+  const n = items.length;
+  const extra = meta && items[0]?.metadata?.[meta];
+  return `<div class="trace-row"><span class="trace-label">${label}</span>`
+       + `<span class="trace-val">${n}${extra ? ' · ' + extra : ''}</span></div>`;
+}
+
+function renderTrace(trace) {
+  if (!trace) { traceBox.innerHTML = '<div class="muted">—</div>'; return; }
+  let html = '';
+  html += traceStage('Dense', trace.dense);
+  html += traceStage('BM25', trace.bm25);
+  html += traceStage('Hybrid RRF', trace.rrf);
+  html += traceStage('Reranker', trace.reranker, 'reranker_status');
+  traceBox.innerHTML = html;
 }
 
 async function loadHealth() {
@@ -151,21 +172,30 @@ $('uploadBtn').addEventListener('click', async () => {
 });
 
 $('searchBtn').addEventListener('click', async () => {
-  const query  = $('queryInput').value.trim();
-  const top_k  = Number($('topKInput').value || 8);
-  const source = sourceSelect.value;
-  if (!query) { searchStatus.textContent = 'Type a question first.'; return; }
+  const question = $('queryInput').value.trim();
+  const top_k    = Number($('topKInput').value || 8);
+  const top_k_final = Number($('topKFinalInput').value || 5);
+  const mode     = modeSelect.value;
+  const source   = sourceSelect.value;
+  if (!question) { searchStatus.textContent = 'Type a question first.'; return; }
   $('searchBtn').disabled = true;
   searchStatus.textContent = 'Searching…';
   try {
-    const payload = { query, top_k, ...(source && { source }) };
-    const d = await api('/search', {
+    const payload = {
+      question,
+      retrieval_mode: mode,
+      top_k_final,
+      top_k,
+      ...(source && { source }),
+    };
+    const d = await api('/v1/ask', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    renderSearch(d);
-    searchStatus.textContent = `Done in ${d.latency_ms} ms`;
+    renderCitations(d);
+    renderTrace(d.retrieval_trace);
+    searchStatus.textContent = `Status: ${d.status}`;
   } catch (e) {
     searchStatus.textContent = `Search failed: ${e.message}`;
   } finally {
