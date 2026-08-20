@@ -29,6 +29,12 @@ CHUNKING_STRATEGY = os.getenv("CHUNKING_STRATEGY", "recursive").strip().lower()
 NEAR_DUPLICATE_THRESHOLD = float(os.getenv("NEAR_DUPLICATE_THRESHOLD", "0.95"))
 MAX_UPLOAD_MB  = int(os.getenv("MAX_UPLOAD_MB", "50"))
 
+# Dense retrieval configuration
+DENSE_TOP_K = int(os.getenv("DENSE_TOP_K", "10"))
+DENSE_FETCH_K = int(os.getenv("DENSE_FETCH_K", "20"))
+DENSE_MMR_LAMBDA = float(os.getenv("DENSE_MMR_LAMBDA", "0.5"))
+MIN_RELEVANCE_SCORE = float(os.getenv("MIN_RELEVANCE_SCORE", "0.35"))
+
 SUPPORTED_EXTENSIONS = {".pdf", ".txt", ".md", ".html", ".htm"}
 
 # OpenRouter answer-generation LLM (optional). Key should live in .env, which

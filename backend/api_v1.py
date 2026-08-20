@@ -16,7 +16,7 @@ from backend.ingestion import (
 from backend.ingestion_queue import start as start_ingestion_worker, stop as stop_ingestion_worker, submit as submit_job
 from backend.llm import llm_available
 from backend.models import Chunk, Document, IngestionJob, canonical_chunk_id, canonical_job_id
-from backend.retrieval import run_search
+from backend.retrieval import run_search, run_search_dense
 from backend.schemas import SearchRequest as LegacySearchRequest
 from backend.vector_store import get_embeddings
 from backend.settings import MAX_UPLOAD_MB, SUPPORTED_EXTENSIONS, UPLOAD_DIR, ensure_runtime_dirs
@@ -177,14 +177,21 @@ async def ingest_document_v1(file: UploadFile = File(...)) -> IngestResponse:
 
 @router.post("/ask", response_model=AskResponse)
 async def ask_v1(request: AskRequest) -> AskResponse:
-    # For Phase 1, only dense retrieval is active
+    # Only dense retrieval is active in Phase 3
     # Other parameters accepted for forward compatibility but not used
-    legacy_req = LegacySearchRequest(
-        query=request.question,
-        top_k=request.top_k_dense,
-        source=None,
-    )
     try:
+        # Get canonical dense retrieval results for structured trace
+        dense_results = run_search_dense(
+            query=request.question,
+            k=request.top_k_dense,
+            source=None,
+        )
+        # Also run full search for answer generation (includes adjacent expansion)
+        legacy_req = LegacySearchRequest(
+            query=request.question,
+            top_k=request.top_k_dense,
+            source=None,
+        )
         search_res = run_search(legacy_req)
     except ValueError as exc:
         raise APIError(
@@ -210,7 +217,7 @@ async def ask_v1(request: AskRequest) -> AskResponse:
         status=response_status,
         citations=_build_citations(search_res.results),
         confidence=None,  # Phase 6 will implement
-        retrieval_trace=_build_trace(search_res.results),
+        retrieval_trace=RetrievalTrace(dense=dense_results),
     )
 
 
