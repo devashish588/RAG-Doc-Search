@@ -3,7 +3,7 @@
 ## 1. Executive Summary
 - **Evaluation Phase**: Phase 0 - Baseline Freeze & Measurement
 - **Git Baseline Tag**: `v1.0-baseline`
-- **Execution Timestamp**: `2026-08-20T08:42:31Z`
+- **Execution Timestamp**: `2026-08-20T12:41:02Z`
 - **Fixed Corpus Files**: `api_reference.txt`, `architecture_overview.md`, `database_and_storage_spec.txt`, `troubleshooting_guide.pdf`
 - **Total Golden Questions Evaluated**: 50
 - **Chunking Configuration**: `CHUNK_SIZE=1200`, `CHUNK_OVERLAP=200`
@@ -14,25 +14,25 @@
 | Metric Category | Metric | Baseline Value | Standard / Target |
 | :--- | :--- | :--- | :--- |
 | **Retrieval** | **Recall@1** | `78.0%` | ≥ 70.0% |
-| **Retrieval** | **Recall@5** | `96.0%` | ≥ 85.0% |
-| **Retrieval** | **Recall@10** | `96.0%` | ≥ 90.0% |
-| **Retrieval** | **MRR (Mean Reciprocal Rank)** | `0.8700` | ≥ 0.7500 |
-| **Generation** | **Answer Correctness Score** | `0.0406` | ≥ 0.8000 |
+| **Retrieval** | **Recall@5** | `100.0%` | ≥ 85.0% |
+| **Retrieval** | **Recall@10** | `100.0%` | ≥ 90.0% |
+| **Retrieval** | **MRR (Mean Reciprocal Rank)** | `0.8867` | ≥ 0.7500 |
+| **Generation** | **Answer Correctness Score** | `0.0396` | ≥ 0.8000 |
 | **Generation** | **Faithfulness / Grounding** | `100.0%` | 100% |
 | **Citation** | **Citation Coverage** | `100.0%` | ≥ 80.0% |
 | **Abstention** | **Abstention Accuracy** | `16.7%` | ≥ 90.0% |
-| **System** | **Mean Latency (ms)** | `438.48 ms` | ≤ 500 ms |
-| **System** | **P95 Latency (ms)** | `739.88 ms` | ≤ 1000 ms |
+| **System** | **Mean Latency (ms)** | `281.08 ms` | ≤ 500 ms |
+| **System** | **P95 Latency (ms)** | `448.22 ms` | ≤ 1000 ms |
 
 ## 3. Detailed Category Breakdown
 
 | Category | Questions | Recall@1 | Recall@5 | MRR | Answer Correctness | Mean Latency (ms) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| `single-hop` | 15 | `66.7%` | `100.0%` | `0.8333` | `0.0340` | `471.68 ms` |
-| `exact-term` | 10 | `70.0%` | `80.0%` | `0.7500` | `0.0124` | `429.69 ms` |
-| `multi-hop` | 10 | `100.0%` | `100.0%` | `1.0000` | `0.0878` | `470.04 ms` |
-| `unanswerable` | 10 | `100.0%` | `100.0%` | `1.0000` | `0.0189` | `410.68 ms` |
-| `ambiguous` | 5 | `40.0%` | `100.0%` | `0.7000` | `0.0662` | `348.97 ms` |
+| `single-hop` | 15 | `66.7%` | `100.0%` | `0.8333` | `0.0337` | `292.28 ms` |
+| `exact-term` | 10 | `70.0%` | `100.0%` | `0.8333` | `0.0131` | `270.60 ms` |
+| `multi-hop` | 10 | `100.0%` | `100.0%` | `1.0000` | `0.0851` | `281.62 ms` |
+| `unanswerable` | 10 | `100.0%` | `100.0%` | `1.0000` | `0.0160` | `279.03 ms` |
+| `ambiguous` | 5 | `40.0%` | `100.0%` | `0.7000` | `0.0662` | `271.47 ms` |
 
 ## 4. Failure Mode Analysis & Baseline Limitations
 
