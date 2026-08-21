@@ -118,6 +118,10 @@ button:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
   max-height: 320px;
   overflow: auto;
 }
+.confidence {
+  font-size: 14px;
+  min-height: 42px;
+}
 .results { display: grid; gap: 12px; margin-top: 12px; }
 .result { border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: #fff; }
 .result-head {

@@ -92,10 +92,13 @@ def test_healthz_lightweight():
 
 
 def test_health():
+    from backend.middleware import reset_limiter
+    reset_limiter(max_requests=100, window_seconds=60)
     resp = client.get("/health")
     assert resp.status_code == 200
     data = resp.json()
     assert data["status"] == "ok"
+    reset_limiter()
 
 
 def test_readyz():
