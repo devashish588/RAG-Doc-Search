@@ -64,7 +64,7 @@ def setup_corpus() -> None:
             continue
         doc_id = f"eval_{file_path.stem}"
         register_document(document_id=doc_id, filename=file_path.name, stored_path=file_path)
-        ingest_document(document_id=doc_id, stored_path=file_path, filename=file_path)
+        ingest_document(document_id=doc_id, stored_path=file_path, filename=file_path.name)
 
 
 def build_eval_bm25_index() -> int:
