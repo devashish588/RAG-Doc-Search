@@ -66,12 +66,24 @@ def _fastembed_embeddings() -> Embeddings:
 
 @lru_cache(maxsize=1)
 def get_embedding_backend() -> str:
+    from backend.settings import ENVIRONMENT
+
     if EMBEDDING_BACKEND in {"hash", "hashing"}:
         return "hashing"
     try:
         _fastembed_embeddings()
         return "fastembed"
     except Exception as exc:
+        if ENVIRONMENT == "production":
+            log.critical(
+                "CRITICAL: FastEmbed unavailable in production (EMBEDDING_BACKEND=%s). "
+                "Install using: pip install -r requirements.txt. Error: %s",
+                EMBEDDING_BACKEND, exc,
+            )
+            raise RuntimeError(
+                f"FastEmbed is required in production but failed to load: {exc}. "
+                "Install using: pip install -r requirements.txt"
+            ) from exc
         log.warning("Failed to load FastEmbed, falling back to hashing: %s", exc)
         return "hashing"
 
@@ -97,7 +109,10 @@ def _collection_name() -> str:
 
 @lru_cache(maxsize=1)
 def get_vector_store():
-    from langchain_chroma import Chroma
+    try:
+        from langchain_chroma import Chroma
+    except ImportError:
+        from langchain_community.vectorstores import Chroma
     ensure_runtime_dirs()
     return Chroma(
         collection_name=_collection_name(),

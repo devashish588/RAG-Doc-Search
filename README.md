@@ -644,6 +644,50 @@ docker compose up
 
 ---
 
+## Runtime Dependency Verification
+
+### Requirements
+
+- Python 3.12+
+- `chromadb` — vector database (declared in `requirements.txt`)
+- `fastembed` — ONNX embeddings (declared in `requirements.txt`)
+- `numpy` — array operations for BM25 and deduplication (declared in `requirements.txt`)
+- `rank-bm25` — BM25 sparse retrieval (declared in `requirements.txt`)
+
+### Validate Installation
+
+```bash
+python -c "import chromadb, fastembed, numpy, rank_bm25; print('Runtime dependencies OK')"
+```
+
+### Startup Validation
+
+On startup, the application validates:
+1. All critical runtime dependencies are importable
+2. FastEmbed initializes successfully (production only)
+3. ChromaDB vector store is accessible
+
+If validation fails, startup logs contain a clear error identifying the missing package and installation command.
+
+### Health Probes
+
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /healthz` | Lightweight liveness (no dependency checks) |
+| `GET /readyz` | Full readiness including dependency health |
+
+The `/readyz` endpoint returns `503` if any critical dependency is missing.
+
+### Memory Requirements
+
+| Tier | Status |
+|------|--------|
+| 512 MB | **UNSUPPORTED** |
+| 1 GB | Minimum practical |
+| 2 GB | Recommended |
+
+---
+
 ## Configuration
 
 All settings are configurable via environment variables. See `.env.example` for the full list.
