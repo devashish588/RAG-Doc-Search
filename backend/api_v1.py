@@ -19,8 +19,21 @@ from backend.models import Chunk, Document, IngestionJob, canonical_chunk_id, ca
 from backend.retrieval import run_search, run_search_dense, run_search_bm25, run_search_hybrid
 from backend.reranker import get_reranker
 from backend.schemas import SearchRequest as LegacySearchRequest
+from backend.schemas import (
+    Confidence,
+    ConfidenceSignals,
+    Citation as SchemaCitation,
+    GroundingMetrics,
+)
+from backend.verifier import get_verifier
+from backend.confidence import get_confidence_estimator
 from backend.vector_store import get_embeddings
-from backend.settings import MAX_UPLOAD_MB, SUPPORTED_EXTENSIONS, UPLOAD_DIR, ensure_runtime_dirs
+from backend.settings import (
+    MAX_UPLOAD_MB,
+    SUPPORTED_EXTENSIONS,
+    UPLOAD_DIR,
+    ensure_runtime_dirs,
+)
 from backend.api_errors import (
     APIError,
     DocumentNotFoundError,
@@ -53,18 +66,12 @@ class AskRequest(BaseModel):
     retrieval_mode: str = Field(default="dense", pattern="^(dense|sparse|hybrid|hybrid_rerank)$")
 
 
-class Citation(BaseModel):
-    chunk_id: str
-    source: str
-    page: int | None = None
-    text_snippet: str
-
-
 class AskResponse(BaseModel):
     answer: str
     status: str  # "answered" | "insufficient_context" | "failed"
-    citations: list[Citation] = []
-    confidence: float | None = None
+    citations: list[SchemaCitation] = []
+    confidence: Confidence | None = None
+    grounding_metrics: GroundingMetrics | None = None
     retrieval_trace: RetrievalTrace
 
 
@@ -108,32 +115,19 @@ async def _save_upload(upload: UploadFile, dest: Path) -> str:
     return hasher.hexdigest()
 
 
-def _build_citations(results) -> list[Citation]:
-    """Build citations from search results."""
+def _build_citations_from_verification(verification_result: dict[str, Any]) -> list[SchemaCitation]:
+    """Build citations from verification output."""
     citations = []
-    for i, r in enumerate(results):
-        citations.append(Citation(
-            chunk_id=r.metadata.get("document_id", "") + ":" + str(r.metadata.get("chunk", i)),
-            source=r.source,
-            page=r.page,
-            text_snippet=r.text[:200],
+    for cite in verification_result.get("citations", []):
+        citations.append(SchemaCitation(
+            claim=cite.get("claim", ""),
+            source=cite.get("source"),
+            page=cite.get("page"),
+            chunk_id=cite.get("chunk_id"),
+            verdict=cite.get("verdict", "unsupported"),
+            text_snippet=cite.get("claim", "")[:200],
         ))
     return citations
-
-
-def _build_trace(results) -> RetrievalTrace:
-    """Build retrieval trace from search results."""
-    dense_results = []
-    for i, r in enumerate(results):
-        dense_results.append(RetrievalResult(
-            chunk_id=r.metadata.get("document_id", "") + ":" + str(r.metadata.get("chunk", i)),
-            score=r.score,
-            rank=i + 1,
-            source=r.source,
-            content=r.text,
-            metadata=r.metadata,
-        ))
-    return RetrievalTrace(dense=dense_results)
 
 
 # ---------------------------------------------------------------------------
@@ -287,17 +281,87 @@ async def ask_v1(request: AskRequest) -> AskResponse:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         ) from exc
 
-    # Determine response status
-    if not search_res.results:
+    # Phase 7: Grounding, Verification, and Confidence Integration
+    verifier = get_verifier()
+    confidence_estimator = get_confidence_estimator()
+
+    # Build evaluation context from search results (the evidence the LLM saw)
+    eval_context = []
+    for i, r in enumerate(search_res.results):
+        chunk_id_str = str(r.metadata.get("document_id", "")) + ":" + str(r.metadata.get("chunk", i))
+        eval_context.append(RetrievalResult(
+            chunk_id=chunk_id_str,
+            score=r.score,
+            rank=i + 1,
+            source=r.source,
+            content=r.text,
+            metadata=r.metadata,
+        ))
+
+    # Verify claims against evidence
+    verification_output = verifier.verify(search_res.answer, eval_context)
+    raw_citations = verification_output.get("citations", [])
+    g_metrics = verification_output.get("metrics", {})
+
+    # Estimate confidence from retrieval signals + grounding
+    trace_dict = {
+        "dense": dense_results,
+        "bm25": bm25_results,
+        "rrf": rrf_results,
+        "reranker": reranker_results,
+    }
+
+    conf_output = confidence_estimator.estimate(
+        dense_results=dense_results,
+        bm25_results=bm25_results,
+        rrf_results=rrf_results,
+        reranker_results=reranker_results,
+        grounding_ratio=g_metrics.get("grounding_ratio", 0.0),
+        retrieval_mode=request.retrieval_mode,
+    )
+
+    schema_citations = _build_citations_from_verification(verification_output)
+
+    conf_obj = Confidence(
+        overall_score=conf_output.overall_score,
+        level=conf_output.level,
+        retrieval_confidence=conf_output.retrieval_confidence,
+        grounding_confidence=conf_output.grounding_confidence,
+        abstention_flag=conf_output.abstention_flag,
+        signals=ConfidenceSignals(
+            dense=conf_output.signals.dense,
+            bm25=conf_output.signals.bm25,
+            rrf=conf_output.signals.rrf,
+            reranker=conf_output.signals.reranker,
+            grounding=conf_output.signals.grounding,
+        ),
+    )
+
+    grounding_metrics_obj = GroundingMetrics(
+        total_claims=g_metrics.get("total_claims", 0),
+        supported_claims=g_metrics.get("supported_claims", 0),
+        unsupported_claims=g_metrics.get("unsupported_claims", 0),
+        grounding_ratio=g_metrics.get("grounding_ratio", 0.0),
+        citation_coverage=g_metrics.get("citation_coverage", 0.0),
+        citation_accuracy=g_metrics.get("citation_accuracy", 0.0),
+    )
+
+    # Determine response status & abstention guardrail
+    if not search_res.results or conf_output.abstention_flag:
         response_status = "insufficient_context"
+        final_answer = "I don't have enough evidence in the provided documents to answer this reliably."
+        final_citations = []
     else:
         response_status = "answered"
+        final_answer = search_res.answer
+        final_citations = schema_citations
 
     return AskResponse(
-        answer=search_res.answer,
+        answer=final_answer,
         status=response_status,
-        citations=_build_citations(search_res.results),
-        confidence=None,  # Phase 6 will implement
+        citations=final_citations,
+        confidence=conf_obj,
+        grounding_metrics=grounding_metrics_obj,
         retrieval_trace=RetrievalTrace(
             dense=dense_results,
             bm25=bm25_results,

@@ -54,3 +54,41 @@ class HealthResponse(BaseModel):
     vector_store: str
     embedding_backend: str
     answer_model: str | None = None
+
+
+# Phase 7: Confidence & Grounding models
+
+class ConfidenceSignals(BaseModel):
+    dense: float | None = None
+    bm25: float | None = None
+    rrf: float | None = None
+    reranker: float | None = None
+    grounding: float | None = None
+
+
+class Confidence(BaseModel):
+    overall_score: float = Field(..., ge=0.0, le=1.0)
+    level: str  # "high" | "medium" | "low"
+    retrieval_confidence: float = Field(..., ge=0.0, le=1.0)
+    grounding_confidence: float = Field(..., ge=0.0, le=1.0)
+    abstention_flag: bool
+    signals: ConfidenceSignals
+
+
+class Citation(BaseModel):
+    claim: str = ""
+    source: str | None = None
+    page: int | None = None
+    chunk_id: str | None = None
+    verdict: str = "supported"  # "supported" | "unsupported"
+    text_snippet: str | None = None
+    text_snippet: str = ""  # backward compat (Phase 3 tests)
+
+
+class GroundingMetrics(BaseModel):
+    total_claims: int = 0
+    supported_claims: int = 0
+    unsupported_claims: int = 0
+    grounding_ratio: float = 0.0
+    citation_coverage: float = 0.0
+    citation_accuracy: float = 0.0
