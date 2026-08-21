@@ -83,8 +83,17 @@ class EvaluationEngine:
         self._cold_start_latencies: dict[str, float] = {}
 
     def detect_llm_status(self) -> str:
-        """Explicitly detect LLM availability."""
-        self.llm_status = "real_llm_active" if llm_available() else "unavailable"
+        """Explicitly detect LLM availability by performing a test generation call."""
+        if not llm_available():
+            self.llm_status = "unavailable"
+            return "unavailable"
+        # Perform test call to confirm API key is active and responding
+        from backend.schemas import SearchResult
+        test_res = generate_answer("What is test?", [SearchResult(text="Test context content.", source="test.txt", score=0.9)])
+        if test_res is not None:
+            self.llm_status = "real_llm_active"
+        else:
+            self.llm_status = "unavailable"
         return self.llm_status
 
     def setup_isolated_corpus(self) -> list[str]:
@@ -106,12 +115,23 @@ class EvaluationEngine:
         print(f"Corpus ingestion complete. Total files: {len(doc_ids)}")
 
         # Rebuild BM25 index from fresh evaluation corpus
+        from backend.loaders import TextLoader, PDFLoader
+        from backend.chunking import RecursiveChunker
+        chunker = RecursiveChunker(chunk_size=1200, chunk_overlap=200)
+        all_chunks = []
+        for file_path in sorted(CORPUS_DIR.glob("*")):
+            if file_path.is_dir() or file_path.name.startswith("."):
+                continue
+            doc_id = f"eval_{file_path.stem}"
+            loader = PDFLoader() if file_path.suffix == ".pdf" else TextLoader()
+            docs = loader.load(file_path)
+            chunks = chunker.chunk(docs, document_id=doc_id, filename=file_path.name)
+            all_chunks.extend(chunks)
+
         bm25_index = get_bm25_index()
-        if bm25_index.is_healthy():
-            num_docs = bm25_index.get_stats().get("num_documents", 0)
-            print(f"BM25 index rebuilt: {num_docs} documents indexed")
-        else:
-            print("WARNING: BM25 index is not healthy after rebuild")
+        bm25_index.build(all_chunks)
+        num_docs = bm25_index.get_stats().get("num_documents", 0)
+        print(f"BM25 index rebuilt: {num_docs} documents, {len(all_chunks)} chunks indexed")
 
         return doc_ids
 
@@ -351,33 +371,22 @@ class EvaluationEngine:
             bm25_results = []
             rrf_results = []
             reranker_results = []
-            # Answer generation
-            legacy_req = SearchRequest(query=question, top_k=top_k, source=None)
-            search_res = run_search(legacy_req)
-            # Validate pipeline: dense should have results
-            assert isinstance(dense_results, list), "Dense mode did not return a list"
-
+            target_results = dense_results
         elif mode == "bm25":
             dense_results = []
             bm25_results = run_search_bm25(query=question, k=top_k, source=None)
             rrf_results = []
             reranker_results = []
-            legacy_req = SearchRequest(query=question, top_k=top_k, source=None)
-            search_res = run_search(legacy_req)
-            assert isinstance(bm25_results, list), "BM25 mode did not return a list"
-
+            target_results = bm25_results
         elif mode == "hybrid":
             dense_results = run_search_dense(query=question, k=top_k, source=None)
             bm25_results = run_search_bm25(query=question, k=top_k, source=None)
             rrf_results = run_search_hybrid(
-                query=question, k=20, top_k_dense=top_k,
-                top_k_sparse=top_k, top_k_fused=20, source=None,
+                query=question, k=10, top_k_dense=top_k,
+                top_k_sparse=top_k, top_k_fused=10, source=None,
             )
             reranker_results = []
-            legacy_req = SearchRequest(query=question, top_k=top_k, source=None)
-            search_res = run_search(legacy_req)
-            assert isinstance(rrf_results, list), "Hybrid mode did not return a list"
-
+            target_results = rrf_results
         elif mode == "hybrid_rerank":
             dense_results = run_search_dense(query=question, k=top_k, source=None)
             bm25_results = run_search_bm25(query=question, k=top_k, source=None)
@@ -389,31 +398,39 @@ class EvaluationEngine:
             reranker_results = reranker.rerank(
                 query=question, candidates=rrf_results, top_k=5,
             )
-            legacy_req = SearchRequest(query=question, top_k=5, source=None)
-            search_res = run_search(legacy_req)
-            assert isinstance(reranker_results, list), "Hybrid_rerank mode did not return a list"
-            # Validate provenance: reranker results should carry RRF metadata
-            for r in reranker_results:
-                if r.metadata.get("reranker_status") is not None:
-                    break  # at least one has reranker provenance
+            target_results = reranker_results
         else:
             raise ValueError(f"Unknown mode: {mode}")
 
-        # Build retrieved list (dicts for metric functions)
+        # Build retrieved list (dicts for metric functions) from target_results
         retrieved_list = [
             {
-                "text": r.text,
+                "text": r.content,
                 "source": r.source,
-                "page": r.page,
+                "page": r.metadata.get("page") if isinstance(r.metadata, dict) else None,
                 "score": r.score,
-                "metadata": r.metadata,
+                "metadata": r.metadata if isinstance(r.metadata, dict) else {},
             }
-            for r in search_res.results
+            for r in target_results
         ]
+
+        # Generate answer from target_results
+        search_results_for_answer = [
+            SearchResult(
+                text=r.content,
+                source=r.source,
+                page=r.metadata.get("page") if isinstance(r.metadata, dict) else None,
+                score=max(0.0, min(1.0, float(r.score) if r.score <= 1.0 else 1.0)),
+                metadata=r.metadata if isinstance(r.metadata, dict) else {},
+            )
+            for r in target_results
+        ]
+        from backend.retrieval import _answer
+        answer = _answer(question, search_results_for_answer)
 
         return {
             "retrieved_list": retrieved_list,
-            "answer": search_res.answer,
+            "answer": answer,
             "dense_results": dense_results,
             "bm25_results": bm25_results,
             "rrf_results": rrf_results,

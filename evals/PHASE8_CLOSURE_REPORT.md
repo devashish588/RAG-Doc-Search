@@ -4,7 +4,7 @@
 
 - **Phase**: Phase 8 — Systematic Benchmarking & Evaluation Engine
 - **Git Tag**: `v1.8-evaluation`
-- **Execution Timestamp**: `2026-08-21T14:15:34Z`
+- **Execution Timestamp**: `2026-08-21T14:57:07Z`
 - **Total Questions Evaluated**: 50 per mode × 4 modes = 200 total evaluations
 - **Retrieval Modes Benchmarked**: `dense`, `bm25`, `hybrid`, `hybrid_rerank`
 
@@ -43,16 +43,21 @@
 
 ## 4. LLM Availability
 
-**Status**: `real_llm_active`
+**Status**: `unavailable`
+
+> [!WARNING]
+> LLM was **unavailable** during this benchmark. Generation-dependent metrics
+> (faithfulness, answer_relevance) are reported as `N/A`.
+> Retrieval metrics and grounding metrics from context-fallback answers are still valid.
 
 ## 5. Overall Retrieval Comparison
 
 | Mode | R@1 | R@5 | R@10 | MRR | NDCG@5 | MAP |
 | :--- | ---: | ---: | ---: | ---: | ---: | ---: |
-| dense | `78.0%` | `100.0%` | `100.0%` | `0.8833` | `0.7314` | `0.7171` |
-| bm25 | `78.0%` | `100.0%` | `100.0%` | `0.8833` | `0.7314` | `0.7171` |
-| hybrid | `78.0%` | `100.0%` | `100.0%` | `0.8833` | `0.7314` | `0.7171` |
-| hybrid_rerank | `78.0%` | `98.0%` | `98.0%` | `0.8680` | `0.7739` | `0.7426` |
+| dense | `78.0%` | `100.0%` | `100.0%` | `0.8833` | `0.7575` | `0.7374` |
+| bm25 | `76.0%` | `100.0%` | `100.0%` | `0.8683` | `0.7105` | `0.6960` |
+| hybrid | `82.0%` | `100.0%` | `100.0%` | `0.9033` | `0.7713` | `0.7529` |
+| hybrid_rerank | `90.0%` | `100.0%` | `100.0%` | `0.9500` | `0.9400` | `0.8967` |
 
 ## 6. Grounding & Generation
 
@@ -78,28 +83,28 @@
 
 | Mode | Mean | P50 | P95 |
 | :--- | ---: | ---: | ---: |
-| dense | `577.2 ms` | `288.9 ms` | `2156.8 ms` |
-| bm25 | `259.5 ms` | `260.2 ms` | `288.4 ms` |
-| hybrid | `385.6 ms` | `304.2 ms` | `913.2 ms` |
-| hybrid_rerank | `547.6 ms` | `287.9 ms` | `2625.8 ms` |
+| dense | `1342.4 ms` | `277.7 ms` | `9259.8 ms` |
+| bm25 | `242.6 ms` | `243.2 ms` | `263.3 ms` |
+| hybrid | `292.8 ms` | `266.8 ms` | `371.9 ms` |
+| hybrid_rerank | `295.7 ms` | `267.2 ms` | `457.1 ms` |
 
 ### Retrieval-Only Latency
 
 | Mode | Mean | P50 | P95 |
 | :--- | ---: | ---: | ---: |
-| dense | `577.1 ms` | `288.7 ms` | `2156.5 ms` |
-| bm25 | `259.4 ms` | `260.0 ms` | `288.3 ms` |
-| hybrid | `385.4 ms` | `303.9 ms` | `913.0 ms` |
-| hybrid_rerank | `547.5 ms` | `287.7 ms` | `2625.7 ms` |
+| dense | `1342.3 ms` | `277.6 ms` | `9259.6 ms` |
+| bm25 | `242.5 ms` | `243.2 ms` | `263.1 ms` |
+| hybrid | `292.7 ms` | `266.7 ms` | `371.7 ms` |
+| hybrid_rerank | `295.6 ms` | `267.1 ms` | `456.9 ms` |
 
 ### Cold Start Latency
 
 | Mode | Cold Start |
 | :--- | ---: |
-| dense | `699.9 ms` |
-| bm25 | `264.2 ms` |
-| hybrid | `273.3 ms` |
-| hybrid_rerank | `329.2 ms` |
+| dense | `396.4 ms` |
+| bm25 | `1259.0 ms` |
+| hybrid | `2332.3 ms` |
+| hybrid_rerank | `2812.2 ms` |
 
 ## 9. Query-Type Breakdown
 
@@ -107,41 +112,41 @@
 
 | Category | Count | R@1 | R@5 | MRR | NDCG@5 | MAP | Grounding | Mean Latency |
 | :--- | :---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| single-hop | 15 | `66.7%` | `100.0%` | `0.8333` | `0.6651` | `0.6279` | `0.0%` | `443.1 ms` |
-| exact-term | 10 | `70.0%` | `100.0%` | `0.8333` | `0.5996` | `0.5784` | `0.0%` | `504.4 ms` |
-| multi-hop | 10 | `100.0%` | `100.0%` | `1.0000` | `0.7640` | `0.7869` | `0.0%` | `497.7 ms` |
-| unanswerable | 10 | `100.0%` | `100.0%` | `1.0000` | `1.0000` | `1.0000` | `0.0%` | `1066.1 ms` |
-| ambiguous | 5 | `40.0%` | `100.0%` | `0.6667` | `0.5915` | `0.5565` | `0.0%` | `306.7 ms` |
+| single-hop | 15 | `66.7%` | `100.0%` | `0.8333` | `0.6814` | `0.6386` | `0.0%` | `3811.3 ms` |
+| exact-term | 10 | `70.0%` | `100.0%` | `0.8333` | `0.6699` | `0.6354` | `0.0%` | `332.4 ms` |
+| multi-hop | 10 | `100.0%` | `100.0%` | `1.0000` | `0.7906` | `0.8127` | `0.0%` | `276.4 ms` |
+| unanswerable | 10 | `100.0%` | `100.0%` | `1.0000` | `1.0000` | `1.0000` | `0.0%` | `266.3 ms` |
+| ambiguous | 5 | `40.0%` | `100.0%` | `0.6667` | `0.6096` | `0.5617` | `0.0%` | `240.0 ms` |
 
 ### bm25
 
 | Category | Count | R@1 | R@5 | MRR | NDCG@5 | MAP | Grounding | Mean Latency |
 | :--- | :---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| single-hop | 15 | `66.7%` | `100.0%` | `0.8333` | `0.6651` | `0.6279` | `0.0%` | `266.4 ms` |
-| exact-term | 10 | `70.0%` | `100.0%` | `0.8333` | `0.5996` | `0.5784` | `0.0%` | `253.4 ms` |
-| multi-hop | 10 | `100.0%` | `100.0%` | `1.0000` | `0.7640` | `0.7869` | `0.0%` | `263.4 ms` |
-| unanswerable | 10 | `100.0%` | `100.0%` | `1.0000` | `1.0000` | `1.0000` | `0.0%` | `258.4 ms` |
-| ambiguous | 5 | `40.0%` | `100.0%` | `0.6667` | `0.5915` | `0.5565` | `0.0%` | `245.4 ms` |
+| single-hop | 15 | `86.7%` | `100.0%` | `0.9333` | `0.7066` | `0.6643` | `0.0%` | `235.8 ms` |
+| exact-term | 10 | `40.0%` | `100.0%` | `0.6833` | `0.5590` | `0.5355` | `0.0%` | `251.5 ms` |
+| multi-hop | 10 | `90.0%` | `100.0%` | `0.9500` | `0.7046` | `0.7193` | `0.0%` | `244.4 ms` |
+| unanswerable | 10 | `100.0%` | `100.0%` | `1.0000` | `1.0000` | `1.0000` | `0.0%` | `240.9 ms` |
+| ambiguous | 5 | `40.0%` | `100.0%` | `0.6167` | `0.4579` | `0.4576` | `0.0%` | `245.2 ms` |
 
 ### hybrid
 
 | Category | Count | R@1 | R@5 | MRR | NDCG@5 | MAP | Grounding | Mean Latency |
 | :--- | :---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| single-hop | 15 | `66.7%` | `100.0%` | `0.8333` | `0.6651` | `0.6279` | `0.0%` | `331.7 ms` |
-| exact-term | 10 | `70.0%` | `100.0%` | `0.8333` | `0.5996` | `0.5784` | `0.0%` | `296.6 ms` |
-| multi-hop | 10 | `100.0%` | `100.0%` | `1.0000` | `0.7640` | `0.7869` | `0.0%` | `308.4 ms` |
-| unanswerable | 10 | `100.0%` | `100.0%` | `1.0000` | `1.0000` | `1.0000` | `0.0%` | `404.0 ms` |
-| ambiguous | 5 | `40.0%` | `100.0%` | `0.6667` | `0.5915` | `0.5565` | `0.0%` | `843.1 ms` |
+| single-hop | 15 | `73.3%` | `100.0%` | `0.8667` | `0.7079` | `0.6697` | `0.0%` | `267.2 ms` |
+| exact-term | 10 | `70.0%` | `100.0%` | `0.8333` | `0.7057` | `0.6628` | `0.0%` | `255.2 ms` |
+| multi-hop | 10 | `100.0%` | `100.0%` | `1.0000` | `0.7847` | `0.8061` | `0.0%` | `299.8 ms` |
+| unanswerable | 10 | `100.0%` | `100.0%` | `1.0000` | `1.0000` | `1.0000` | `0.0%` | `381.0 ms` |
+| ambiguous | 5 | `60.0%` | `100.0%` | `0.7667` | `0.6088` | `0.5821` | `0.0%` | `254.4 ms` |
 
 ### hybrid_rerank
 
 | Category | Count | R@1 | R@5 | MRR | NDCG@5 | MAP | Grounding | Mean Latency |
 | :--- | :---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| single-hop | 15 | `66.7%` | `100.0%` | `0.8333` | `0.7602` | `0.6989` | `0.0%` | `1162.4 ms` |
-| exact-term | 10 | `70.0%` | `90.0%` | `0.7400` | `0.6274` | `0.5706` | `0.0%` | `293.1 ms` |
-| multi-hop | 10 | `100.0%` | `100.0%` | `1.0000` | `0.7754` | `0.7961` | `0.0%` | `291.0 ms` |
-| unanswerable | 10 | `100.0%` | `100.0%` | `1.0000` | `1.0000` | `1.0000` | `0.0%` | `283.2 ms` |
-| ambiguous | 5 | `40.0%` | `100.0%` | `0.7000` | `0.6526` | `0.5964` | `0.0%` | `254.6 ms` |
+| single-hop | 15 | `93.3%` | `100.0%` | `0.9667` | `0.9309` | `0.8726` | `0.0%` | `324.4 ms` |
+| exact-term | 10 | `90.0%` | `100.0%` | `0.9500` | `0.9252` | `0.8700` | `0.0%` | `279.7 ms` |
+| multi-hop | 10 | `80.0%` | `100.0%` | `0.9000` | `0.9091` | `0.8461` | `0.0%` | `313.9 ms` |
+| unanswerable | 10 | `100.0%` | `100.0%` | `1.0000` | `1.0000` | `1.0000` | `0.0%` | `271.3 ms` |
+| ambiguous | 5 | `80.0%` | `100.0%` | `0.9000` | `0.9387` | `0.9167` | `0.0%` | `254.1 ms` |
 
 ## 10. Phase Progression
 
@@ -157,15 +162,16 @@
 | Phase 6 | `v1.6-reranker` | Hybrid+Rerank | Historical | Historical |
 | Phase 7 | `v1.7-grounding` | Hybrid+Rerank+Grounding | Historical | Historical |
 | Phase 8 | `v1.8-evaluation` | dense | `78.0%` | `0.8833` |
-| Phase 8 | `v1.8-evaluation` | bm25 | `78.0%` | `0.8833` |
-| Phase 8 | `v1.8-evaluation` | hybrid | `78.0%` | `0.8833` |
-| Phase 8 | `v1.8-evaluation` | hybrid_rerank | `78.0%` | `0.8680` |
+| Phase 8 | `v1.8-evaluation` | bm25 | `76.0%` | `0.8683` |
+| Phase 8 | `v1.8-evaluation` | hybrid | `82.0%` | `0.9033` |
+| Phase 8 | `v1.8-evaluation` | hybrid_rerank | `90.0%` | `0.9500` |
 
 ## 11. Failure Analysis
 
-- **Retrieval failures** (R@1=0): 44 queries across all modes
+- **Retrieval failures** (R@1=0): 37 queries across all modes
 - **Grounding failures** (grounding=0 on answerable queries): 140
 - **Abstention failures** (unsupported but not abstained): 0
+- **LLM availability**: LLM was unavailable; all answers are context-fallback
 
 ## 12. Architecture Diagram
 
