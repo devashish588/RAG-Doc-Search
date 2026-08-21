@@ -80,6 +80,23 @@ OPENROUTER_MODEL    = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")
 OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
 
 
+# Citation verification & grounding (Phase 7)
+VERIFIER_SUPPORT_THRESHOLD = float(os.getenv("VERIFIER_SUPPORT_THRESHOLD", "0.82"))
+
+# Confidence estimation (Phase 7)
+CONFIDENCE_THRESHOLD = float(os.getenv("CONFIDENCE_THRESHOLD", "0.50"))
+CONFIDENCE_HIGH_THRESHOLD = float(os.getenv("CONFIDENCE_HIGH_THRESHOLD", "0.75"))
+CONFIDENCE_MEDIUM_THRESHOLD = float(os.getenv("CONFIDENCE_MEDIUM_THRESHOLD", "0.40"))
+
+# Confidence component weights (sum to 1.0 for retrieval signals)
+CONF_DENSE_WEIGHT = float(os.getenv("CONF_DENSE_WEIGHT", "0.4"))
+CONF_BM25_WEIGHT = float(os.getenv("CONF_BM25_WEIGHT", "0.3"))
+CONF_RRF_WEIGHT = float(os.getenv("CONF_RRF_WEIGHT", "0.2"))
+CONF_RERANKER_WEIGHT = float(os.getenv("CONF_RERANKER_WEIGHT", "0.1"))
+CONF_RETRIEVAL_WEIGHT = float(os.getenv("CONF_RETRIEVAL_WEIGHT", "0.5"))
+CONF_GROUNDING_WEIGHT = float(os.getenv("CONF_GROUNDING_WEIGHT", "0.5"))
+
+
 def ensure_runtime_dirs() -> None:
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     CHROMA_DIR.mkdir(parents=True, exist_ok=True)

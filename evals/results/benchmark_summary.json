@@ -1,0 +1,363 @@
+{
+  "metadata": {
+    "evaluation_phase": "Phase 8 \u2014 Systematic Benchmarking & Evaluation Engine",
+    "git_tag": "v1.8-evaluation",
+    "timestamp": "2026-08-21T14:15:34Z"
+  },
+  "dataset": {
+    "total_questions": 50,
+    "categories": {
+      "single-hop": 15,
+      "exact-term": 10,
+      "multi-hop": 10,
+      "unanswerable": 10,
+      "ambiguous": 5
+    },
+    "corpus_files": [
+      "api_reference.txt",
+      "architecture_overview.md",
+      "database_and_storage_spec.txt",
+      "troubleshooting_guide.pdf"
+    ]
+  },
+  "environment": {
+    "chunk_size": 1200,
+    "chunk_overlap": 200,
+    "embedding_model": "BAAI/bge-small-en-v1.5",
+    "dense_top_k": 10,
+    "dense_fetch_k": 20,
+    "dense_mmr_lambda": 0.5,
+    "min_relevance_score": 0.35,
+    "bm25_top_k": 10,
+    "bm25_k1": 1.5,
+    "bm25_b": 0.75,
+    "rrf_k": 60,
+    "rrf_dense_weight": 0.7,
+    "rrf_sparse_weight": 0.3,
+    "reranker_model": "ms-marco-TinyBERT-L-2-v2",
+    "reranker_candidate_k": 20,
+    "reranker_top_k": 5,
+    "confidence_threshold": 0.5
+  },
+  "llm_status": "real_llm_active",
+  "cold_start_latencies": {
+    "dense": 699.9,
+    "bm25": 264.17,
+    "hybrid": 273.3,
+    "hybrid_rerank": 329.17
+  },
+  "modes": {
+    "dense": {
+      "mode": "dense",
+      "total_questions": 50,
+      "llm_status": "real_llm_active",
+      "recall_at_1": 0.78,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "mrr": 0.8833,
+      "ndcg_at_5": 0.7314,
+      "map": 0.7171,
+      "grounding_ratio": 0.0,
+      "citation_coverage": 1.0,
+      "citation_accuracy": 1.0,
+      "faithfulness": null,
+      "answer_relevance": null,
+      "abstention_accuracy": 1.0,
+      "false_answer_rate": 0.0,
+      "false_abstention_rate": 1.0,
+      "answerable_coverage": 0.0,
+      "mean_latency_ms": 577.25,
+      "p50_latency_ms": 288.89,
+      "p95_latency_ms": 2156.84,
+      "retrieval_mean_latency_ms": 577.11,
+      "retrieval_p50_latency_ms": 288.72,
+      "retrieval_p95_latency_ms": 2156.52,
+      "by_category": {
+        "single-hop": {
+          "count": 15,
+          "recall@1": 0.6667,
+          "recall@5": 1.0,
+          "mrr": 0.8333,
+          "ndcg@5": 0.6651,
+          "map": 0.6279,
+          "grounding_ratio": 0.0,
+          "mean_latency_ms": 443.1
+        },
+        "exact-term": {
+          "count": 10,
+          "recall@1": 0.7,
+          "recall@5": 1.0,
+          "mrr": 0.8333,
+          "ndcg@5": 0.5996,
+          "map": 0.5784,
+          "grounding_ratio": 0.0,
+          "mean_latency_ms": 504.39
+        },
+        "multi-hop": {
+          "count": 10,
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "mrr": 1.0,
+          "ndcg@5": 0.764,
+          "map": 0.7869,
+          "grounding_ratio": 0.0,
+          "mean_latency_ms": 497.74
+        },
+        "unanswerable": {
+          "count": 10,
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "mrr": 1.0,
+          "ndcg@5": 1.0,
+          "map": 1.0,
+          "grounding_ratio": 0.0,
+          "mean_latency_ms": 1066.14
+        },
+        "ambiguous": {
+          "count": 5,
+          "recall@1": 0.4,
+          "recall@5": 1.0,
+          "mrr": 0.6667,
+          "ndcg@5": 0.5915,
+          "map": 0.5565,
+          "grounding_ratio": 0.0,
+          "mean_latency_ms": 306.68
+        }
+      }
+    },
+    "bm25": {
+      "mode": "bm25",
+      "total_questions": 50,
+      "llm_status": "real_llm_active",
+      "recall_at_1": 0.78,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "mrr": 0.8833,
+      "ndcg_at_5": 0.7314,
+      "map": 0.7171,
+      "grounding_ratio": 0.0,
+      "citation_coverage": 1.0,
+      "citation_accuracy": 1.0,
+      "faithfulness": null,
+      "answer_relevance": null,
+      "abstention_accuracy": 1.0,
+      "false_answer_rate": 0.0,
+      "false_abstention_rate": 1.0,
+      "answerable_coverage": 0.0,
+      "mean_latency_ms": 259.49,
+      "p50_latency_ms": 260.21,
+      "p95_latency_ms": 288.45,
+      "retrieval_mean_latency_ms": 259.35,
+      "retrieval_p50_latency_ms": 260.04,
+      "retrieval_p95_latency_ms": 288.28,
+      "by_category": {
+        "single-hop": {
+          "count": 15,
+          "recall@1": 0.6667,
+          "recall@5": 1.0,
+          "mrr": 0.8333,
+          "ndcg@5": 0.6651,
+          "map": 0.6279,
+          "grounding_ratio": 0.0,
+          "mean_latency_ms": 266.38
+        },
+        "exact-term": {
+          "count": 10,
+          "recall@1": 0.7,
+          "recall@5": 1.0,
+          "mrr": 0.8333,
+          "ndcg@5": 0.5996,
+          "map": 0.5784,
+          "grounding_ratio": 0.0,
+          "mean_latency_ms": 253.44
+        },
+        "multi-hop": {
+          "count": 10,
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "mrr": 1.0,
+          "ndcg@5": 0.764,
+          "map": 0.7869,
+          "grounding_ratio": 0.0,
+          "mean_latency_ms": 263.36
+        },
+        "unanswerable": {
+          "count": 10,
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "mrr": 1.0,
+          "ndcg@5": 1.0,
+          "map": 1.0,
+          "grounding_ratio": 0.0,
+          "mean_latency_ms": 258.38
+        },
+        "ambiguous": {
+          "count": 5,
+          "recall@1": 0.4,
+          "recall@5": 1.0,
+          "mrr": 0.6667,
+          "ndcg@5": 0.5915,
+          "map": 0.5565,
+          "grounding_ratio": 0.0,
+          "mean_latency_ms": 245.38
+        }
+      }
+    },
+    "hybrid": {
+      "mode": "hybrid",
+      "total_questions": 50,
+      "llm_status": "real_llm_active",
+      "recall_at_1": 0.78,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "mrr": 0.8833,
+      "ndcg_at_5": 0.7314,
+      "map": 0.7171,
+      "grounding_ratio": 0.0,
+      "citation_coverage": 1.0,
+      "citation_accuracy": 1.0,
+      "faithfulness": null,
+      "answer_relevance": null,
+      "abstention_accuracy": 1.0,
+      "false_answer_rate": 0.0,
+      "false_abstention_rate": 1.0,
+      "answerable_coverage": 0.0,
+      "mean_latency_ms": 385.62,
+      "p50_latency_ms": 304.19,
+      "p95_latency_ms": 913.19,
+      "retrieval_mean_latency_ms": 385.44,
+      "retrieval_p50_latency_ms": 303.95,
+      "retrieval_p95_latency_ms": 913.01,
+      "by_category": {
+        "single-hop": {
+          "count": 15,
+          "recall@1": 0.6667,
+          "recall@5": 1.0,
+          "mrr": 0.8333,
+          "ndcg@5": 0.6651,
+          "map": 0.6279,
+          "grounding_ratio": 0.0,
+          "mean_latency_ms": 331.72
+        },
+        "exact-term": {
+          "count": 10,
+          "recall@1": 0.7,
+          "recall@5": 1.0,
+          "mrr": 0.8333,
+          "ndcg@5": 0.5996,
+          "map": 0.5784,
+          "grounding_ratio": 0.0,
+          "mean_latency_ms": 296.58
+        },
+        "multi-hop": {
+          "count": 10,
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "mrr": 1.0,
+          "ndcg@5": 0.764,
+          "map": 0.7869,
+          "grounding_ratio": 0.0,
+          "mean_latency_ms": 308.36
+        },
+        "unanswerable": {
+          "count": 10,
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "mrr": 1.0,
+          "ndcg@5": 1.0,
+          "map": 1.0,
+          "grounding_ratio": 0.0,
+          "mean_latency_ms": 404.01
+        },
+        "ambiguous": {
+          "count": 5,
+          "recall@1": 0.4,
+          "recall@5": 1.0,
+          "mrr": 0.6667,
+          "ndcg@5": 0.5915,
+          "map": 0.5565,
+          "grounding_ratio": 0.0,
+          "mean_latency_ms": 843.1
+        }
+      }
+    },
+    "hybrid_rerank": {
+      "mode": "hybrid_rerank",
+      "total_questions": 50,
+      "llm_status": "real_llm_active",
+      "recall_at_1": 0.78,
+      "recall_at_5": 0.98,
+      "recall_at_10": 0.98,
+      "mrr": 0.868,
+      "ndcg_at_5": 0.7739,
+      "map": 0.7426,
+      "grounding_ratio": 0.0,
+      "citation_coverage": 1.0,
+      "citation_accuracy": 1.0,
+      "faithfulness": null,
+      "answer_relevance": null,
+      "abstention_accuracy": 1.0,
+      "false_answer_rate": 0.0,
+      "false_abstention_rate": 1.0,
+      "answerable_coverage": 0.0,
+      "mean_latency_ms": 547.63,
+      "p50_latency_ms": 287.87,
+      "p95_latency_ms": 2625.8,
+      "retrieval_mean_latency_ms": 547.49,
+      "retrieval_p50_latency_ms": 287.72,
+      "retrieval_p95_latency_ms": 2625.67,
+      "by_category": {
+        "single-hop": {
+          "count": 15,
+          "recall@1": 0.6667,
+          "recall@5": 1.0,
+          "mrr": 0.8333,
+          "ndcg@5": 0.7602,
+          "map": 0.6989,
+          "grounding_ratio": 0.0,
+          "mean_latency_ms": 1162.4
+        },
+        "exact-term": {
+          "count": 10,
+          "recall@1": 0.7,
+          "recall@5": 0.9,
+          "mrr": 0.74,
+          "ndcg@5": 0.6274,
+          "map": 0.5706,
+          "grounding_ratio": 0.0,
+          "mean_latency_ms": 293.05
+        },
+        "multi-hop": {
+          "count": 10,
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "mrr": 1.0,
+          "ndcg@5": 0.7754,
+          "map": 0.7961,
+          "grounding_ratio": 0.0,
+          "mean_latency_ms": 290.99
+        },
+        "unanswerable": {
+          "count": 10,
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "mrr": 1.0,
+          "ndcg@5": 1.0,
+          "map": 1.0,
+          "grounding_ratio": 0.0,
+          "mean_latency_ms": 283.23
+        },
+        "ambiguous": {
+          "count": 5,
+          "recall@1": 0.4,
+          "recall@5": 1.0,
+          "mrr": 0.7,
+          "ndcg@5": 0.6526,
+          "map": 0.5964,
+          "grounding_ratio": 0.0,
+          "mean_latency_ms": 254.56
+        }
+      }
+    }
+  }
+}
