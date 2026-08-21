@@ -46,11 +46,11 @@ async function api(path, options, attempt = 1) {
 }
 
 function statusClass(s) {
-  return s === 'complete' ? 'ok' : s === 'failed' ? 'fail' : 'muted';
+  return (s === 'complete' || s === 'indexed') ? 'ok' : (s === 'failed' || s === 'error') ? 'fail' : 'muted';
 }
 
 function safeText(v) {
-  if (v === null || v === undefined || v === '' || v === 'undefined' || v === 'null' || v === 'NaN') return 'ó';
+  if (v === null || v === undefined || v === '' || v === 'undefined' || v === 'null' || v === 'NaN') return '‚Äî';
   return String(v);
 }
 
@@ -63,13 +63,13 @@ function renderDocs(docs) {
   }
   const sources = new Set();
   docs.forEach(doc => {
-    if (doc.status === 'complete') sources.add(doc.filename);
+    if (doc.status === 'complete' || doc.status === 'indexed') sources.add(doc.filename);
     const el = document.createElement('div');
     el.className = 'doc';
     el.innerHTML =
       '<div class="doc-top">' +
         '<strong>' + doc.filename + '</strong>' +
-        '<span class="pill ' + statusClass(doc.status) + '">' + doc.status + ' ∑ ' + (doc.chunks_indexed ?? 0) + ' chunks</span>' +
+        '<span class="pill ' + statusClass(doc.status) + '">' + doc.status + ' ¬∑ ' + (doc.chunks_indexed ?? 0) + ' chunks</span>' +
       '</div>' +
       '<div class="muted">' + (doc.message ?? '') + '</div>' +
       '<div style="margin-top:8px">' +
@@ -86,11 +86,11 @@ function renderDocs(docs) {
 }
 
 function renderConfidence(conf) {
-  if (!conf) { confidenceBox.innerHTML = '<div class="muted">ó</div>'; return; }
+  if (!conf) { confidenceBox.innerHTML = '<div class="muted">√¢‚Ç¨‚Äù</div>'; return; }
   var level = conf.level || 'unknown';
   var color = level === 'high' ? 'ok' : level === 'medium' ? '' : 'fail';
-  var score = typeof conf.overall_score === 'number' ? (conf.overall_score * 100).toFixed(0) + '%' : 'ó';
-  var abstain = conf.abstention_flag ? ' ∑ <span class="fail">Abstained</span>' : '';
+  var score = typeof conf.overall_score === 'number' ? (conf.overall_score * 100).toFixed(0) + '%' : '√¢‚Ç¨‚Äù';
+  var abstain = conf.abstention_flag ? ' ¬∑ <span class="fail">Abstained</span>' : '';
   var html =
     '<div class="doc-top">' +
       '<span class="pill ' + color + '">' + level.charAt(0).toUpperCase() + level.slice(1) + '</span>' +
@@ -98,8 +98,8 @@ function renderConfidence(conf) {
       abstain +
     '</div>' +
     '<div class="muted">' +
-      'Retrieval: ' + (typeof conf.retrieval_confidence === 'number' ? (conf.retrieval_confidence * 100).toFixed(0) + '%' : 'ó') +
-      ' ∑ Grounding: ' + (typeof conf.grounding_confidence === 'number' ? (conf.grounding_confidence * 100).toFixed(0) + '%' : 'ó') +
+      'Retrieval: ' + (typeof conf.retrieval_confidence === 'number' ? (conf.retrieval_confidence * 100).toFixed(0) + '%' : '√¢‚Ç¨‚Äù') +
+      ' ¬∑ Grounding: ' + (typeof conf.grounding_confidence === 'number' ? (conf.grounding_confidence * 100).toFixed(0) + '%' : '√¢‚Ç¨‚Äù') +
     '</div>';
   confidenceBox.innerHTML = html;
 }
@@ -119,7 +119,7 @@ function renderCitations(data) {
     card.className = 'result';
     card.innerHTML =
       '<div class="result-head">' +
-        '<div>#' + (i + 1) + ' ∑ ' + safeText(c.source) + (c.page ? ' ∑ page ' + c.page : '') + '</div>' +
+        '<div>#' + (i + 1) + ' ¬∑ ' + safeText(c.source) + (c.page ? ' ¬∑ page ' + c.page : '') + '</div>' +
         (verdictLabel ? '<span class="pill ' + verdictClass + '">' + verdictLabel + '</span>' : '') +
       '</div>' +
       '<div class="result-text">' + safeText(c.text_snippet || c.claim) + '</div>';
@@ -132,32 +132,40 @@ function traceStage(label, items, meta) {
   var n = items.length;
   var extra = meta && items[0] && items[0].metadata && items[0].metadata[meta];
   return '<div class="trace-row"><span class="trace-label">' + label + '</span>' +
-       '<span class="trace-val">' + n + (extra ? ' ∑ ' + extra : '') + '</span></div>';
+       '<span class="trace-val">' + n + (extra ? ' ¬∑ ' + extra : '') + '</span></div>';
 }
 
 function renderTrace(trace) {
-  if (!trace) { traceBox.innerHTML = '<div class="muted">ó</div>'; return; }
+  if (!trace) { traceBox.innerHTML = '<div class="muted">√¢‚Ç¨‚Äù</div>'; return; }
   var html = '';
   html += traceStage('Dense', trace.dense);
   html += traceStage('BM25', trace.bm25);
   html += traceStage('Hybrid RRF', trace.rrf);
   html += traceStage('Reranker', trace.reranker, 'reranker_status');
-  if (!html) html = '<div class="muted">ó</div>';
+  if (!html) html = '<div class="muted">√¢‚Ç¨‚Äù</div>';
   traceBox.innerHTML = html;
 }
 
 async function loadHealth() {
   try {
     var d = await api('/health');
-    healthPill.textContent = 'API ok ∑ ' + d.embedding_backend;
+    healthPill.textContent = 'API ok ¬∑ ' + d.embedding_backend;
   } catch (e) {
-    healthPill.textContent = 'API error ∑ ' + e.message;
+    healthPill.textContent = 'API error ¬∑ ' + e.message;
   }
 }
 
+let docPollTimer = null;
+
 async function loadDocuments() {
   try {
-    renderDocs(await api('/documents'));
+    const docs = await api('/documents');
+    renderDocs(docs);
+    const active = docs.some(d => d.status === 'queued' || d.status === 'processing' || d.status === 'indexing');
+    if (active) {
+      if (docPollTimer) clearTimeout(docPollTimer);
+      docPollTimer = setTimeout(loadDocuments, 1000);
+    }
   } catch (e) {
     docsBox.innerHTML = '<div class="fail">' + e.message + '</div>';
   }
@@ -183,7 +191,7 @@ $('uploadBtn').addEventListener('click', async function() {
   var file = $('fileInput').files[0];
   if (!file) { uploadStatus.textContent = 'Choose a file first.'; return; }
   $('uploadBtn').disabled = true;
-  uploadStatus.textContent = 'UploadingÖ';
+  uploadStatus.textContent = 'Uploading‚Ä¶';
   try {
     var fd = new FormData();
     fd.append('file', file);
@@ -205,7 +213,7 @@ $('searchBtn').addEventListener('click', async function() {
   var source   = sourceSelect.value;
   if (!question) { searchStatus.textContent = 'Type a question first.'; return; }
   $('searchBtn').disabled = true;
-  searchStatus.textContent = 'SearchingÖ';
+  searchStatus.textContent = 'Searching‚Ä¶';
   try {
     var payload = {
       question: question,
@@ -241,4 +249,4 @@ $('refreshBtn').addEventListener('click', loadDocuments);
 loadHealth();
 loadDocuments();
 setInterval(loadHealth, 15000);
-setInterval(loadDocuments, 15000);
+setInterval(loadDocuments, 15000);

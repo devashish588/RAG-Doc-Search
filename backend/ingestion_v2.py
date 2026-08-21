@@ -159,6 +159,15 @@ def ingest_document_v2(
         chunks = chunker.chunk(normalized_docs, document_id, filename)
         log_event(INGESTION_EVENTS["chunking_completed"], document_id, chunk_count=len(chunks))
 
+        from backend.ingestion import _update
+        _update(
+            document_id,
+            status="indexing",
+            chunks_indexed=len(chunks),
+            message=f"Chunked into {len(chunks)} chunks. Indexing...",
+            error=None,
+        )
+
         if not chunks:
             raise ValueError("No chunks generated from document")
 
