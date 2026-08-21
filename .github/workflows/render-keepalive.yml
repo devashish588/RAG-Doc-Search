@@ -1,0 +1,55 @@
+# Render Keep-Warm Health Check
+#
+# Sends a lightweight GET /healthz request to the Render backend every 5 minutes
+# to reduce inactivity-related cold starts.
+#
+# IMPORTANT: This is a best-effort keep-warm mechanism. Its effectiveness
+# depends on the Render service plan and current platform behavior.
+# It does NOT guarantee zero cold starts.
+#
+# Required: Set RENDER_HEALTH_URL as a repository variable (Settings → Secrets → Variables).
+# Example: https://rag-doc-search-1.onrender.com/healthz
+name: Render Keep-Warm
+
+on:
+  schedule:
+    # Every 5 minutes
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Manual trigger reason'
+        required: false
+
+jobs:
+  keep-warm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Render health check
+        env:
+          HEALTH_URL: ${{ vars.RENDER_HEALTH_URL }}
+        run: |
+          if [ -z "$HEALTH_URL" ]; then
+            echo "::error::RENDER_HEALTH_URL repository variable is not set."
+            echo "Set it in Settings → Secrets and variables → Actions → Variables."
+            exit 1
+          fi
+
+          echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "Endpoint:  $HEALTH_URL"
+
+          START=$(date +%s%N)
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$HEALTH_URL" || echo "000")
+          END=$(date +%s%N)
+          LATENCY_MS=$(( (END - START) / 1000000 ))
+
+          echo "HTTP Status: $HTTP_STATUS"
+          echo "Latency:     ${LATENCY_MS}ms"
+
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "Result: PASS"
+          else
+            echo "::warning::Health check returned HTTP $HTTP_STATUS"
+            echo "Result: FAIL (HTTP $HTTP_STATUS)"
+          fi

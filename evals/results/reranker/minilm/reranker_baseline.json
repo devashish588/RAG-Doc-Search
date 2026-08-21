@@ -1,0 +1,5845 @@
+{
+  "metadata": {
+    "evaluation_phase": "Phase 6 - Cross-Encoder Reranking Evaluation",
+    "git_tag": "feature/phase-06-reranker",
+    "timestamp": "2026-08-20T19:24:55Z",
+    "reranker_model": "ms-marco-MiniLM-L-12-v2",
+    "methodology": "retrieval-only timing, warm-up pass; reranker consumes RRF pool",
+    "cold_reranker_init_ms": 196.785,
+    "memory_mb": {
+      "baseline": 980.2,
+      "after_model_load": 980.2,
+      "peak_during_rerank": 1143.1,
+      "psutil_available": true
+    },
+    "reranker_statuses": {
+      "ok": 50
+    }
+  },
+  "baseline_4way": {
+    "recall@1": {
+      "dense": 0.2,
+      "bm25": 0.76,
+      "hybrid": 0.76,
+      "reranked": 0.94
+    },
+    "recall@5": {
+      "dense": 0.2,
+      "bm25": 1.0,
+      "hybrid": 1.0,
+      "reranked": 1.0
+    },
+    "recall@10": {
+      "dense": 0.2,
+      "bm25": 1.0,
+      "hybrid": 1.0,
+      "reranked": 1.0
+    },
+    "mrr": {
+      "dense": 0.2,
+      "bm25": 0.8683,
+      "hybrid": 0.8683,
+      "reranked": 0.97
+    }
+  },
+  "latency_table": {
+    "dense_retrieval": {
+      "mean": 12.34,
+      "p50": 11.703,
+      "p95": 16.28
+    },
+    "bm25_retrieval": {
+      "mean": 0.436,
+      "p50": 0.423,
+      "p95": 0.642
+    },
+    "rrf_fusion": {
+      "mean": 0.071,
+      "p50": 0.063,
+      "p95": 0.108
+    },
+    "hybrid_total_retrieval": {
+      "mean": 12.272,
+      "p50": 12.11,
+      "p95": 15.941
+    },
+    "reranker": {
+      "mean": 419.367,
+      "p50": 411.284,
+      "p95": 474.899
+    }
+  },
+  "candidate_depth": {
+    "cand5_top5": {
+      "candidate_k": 5,
+      "top_k_final": 5,
+      "metrics": {
+        "recall@1": 0.94,
+        "recall@5": 1.0,
+        "recall@10": 1.0,
+        "mrr": 0.97
+      },
+      "latency": {
+        "mean": 194.093,
+        "p50": 187.647,
+        "p95": 216.26
+      }
+    },
+    "cand10_top5": {
+      "candidate_k": 10,
+      "top_k_final": 5,
+      "metrics": {
+        "recall@1": 0.94,
+        "recall@5": 1.0,
+        "recall@10": 1.0,
+        "mrr": 0.97
+      },
+      "latency": {
+        "mean": 451.079,
+        "p50": 453.996,
+        "p95": 523.764
+      }
+    },
+    "cand20_top5": {
+      "candidate_k": 20,
+      "top_k_final": 5,
+      "metrics": {
+        "recall@1": 0.94,
+        "recall@5": 1.0,
+        "recall@10": 1.0,
+        "mrr": 0.97
+      },
+      "latency": {
+        "mean": 426.908,
+        "p50": 410.488,
+        "p95": 485.406
+      }
+    }
+  },
+  "final_topk": {
+    "cand20_top3": {
+      "candidate_k": 20,
+      "top_k_final": 3,
+      "metrics": {
+        "recall@1": 0.94,
+        "recall@5": 1.0,
+        "mrr": 0.97
+      },
+      "latency": {
+        "mean": 431.344,
+        "p50": 424.163,
+        "p95": 482.825
+      }
+    },
+    "cand20_top5": {
+      "candidate_k": 20,
+      "top_k_final": 5,
+      "metrics": {
+        "recall@1": 0.94,
+        "recall@5": 1.0,
+        "mrr": 0.97
+      },
+      "latency": {
+        "mean": 411.703,
+        "p50": 396.092,
+        "p95": 484.537
+      }
+    },
+    "cand20_top10": {
+      "candidate_k": 20,
+      "top_k_final": 10,
+      "metrics": {
+        "recall@1": 0.94,
+        "recall@5": 1.0,
+        "mrr": 0.97
+      },
+      "latency": {
+        "mean": 465.531,
+        "p50": 470.068,
+        "p95": 566.34
+      }
+    }
+  },
+  "query_type": {
+    "single-hop": {
+      "count": 15,
+      "hybrid": {
+        "recall@1": 0.8667,
+        "recall@5": 1.0,
+        "mrr": 0.9333
+      },
+      "reranked": {
+        "recall@1": 0.9333,
+        "recall@5": 1.0,
+        "mrr": 0.9667
+      }
+    },
+    "exact-term": {
+      "count": 10,
+      "hybrid": {
+        "recall@1": 0.4,
+        "recall@5": 1.0,
+        "mrr": 0.6833
+      },
+      "reranked": {
+        "recall@1": 0.9,
+        "recall@5": 1.0,
+        "mrr": 0.95
+      }
+    },
+    "multi-hop": {
+      "count": 10,
+      "hybrid": {
+        "recall@1": 0.9,
+        "recall@5": 1.0,
+        "mrr": 0.95
+      },
+      "reranked": {
+        "recall@1": 0.9,
+        "recall@5": 1.0,
+        "mrr": 0.95
+      }
+    },
+    "unanswerable": {
+      "count": 10,
+      "hybrid": {
+        "recall@1": 1.0,
+        "recall@5": 1.0,
+        "mrr": 1.0
+      },
+      "reranked": {
+        "recall@1": 1.0,
+        "recall@5": 1.0,
+        "mrr": 1.0
+      }
+    },
+    "ambiguous": {
+      "count": 5,
+      "hybrid": {
+        "recall@1": 0.4,
+        "recall@5": 1.0,
+        "mrr": 0.6167
+      },
+      "reranked": {
+        "recall@1": 1.0,
+        "recall@5": 1.0,
+        "mrr": 1.0
+      }
+    }
+  },
+  "provenance": {
+    "neutral_change": 26,
+    "unchanged": 24
+  },
+  "rank_promotion": {
+    "promoted": 197,
+    "demoted": 193,
+    "unchanged": 110
+  },
+  "failures": {
+    "corrected": [],
+    "degraded": []
+  },
+  "details": [
+    {
+      "id": "q001",
+      "type": "single-hop",
+      "question": "What chunk size is configured for the text splitter?",
+      "expected_answer": "The text splitter is configured with a chunk size of 1200 characters.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_architecture_overview:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_architecture_overview:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 5,
+          "final_rank": 1,
+          "reranker_score": 0.082976
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 3,
+          "final_rank": 2,
+          "reranker_score": 0.000146
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 1,
+          "final_rank": 3,
+          "reranker_score": 0.000131
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 2,
+          "final_rank": 4,
+          "reranker_score": 5.3e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 6,
+          "final_rank": 5,
+          "reranker_score": 2.3e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 9,
+          "final_rank": 6,
+          "reranker_score": 2e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 4,
+          "final_rank": 7,
+          "reranker_score": 1.7e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 8,
+          "final_rank": 8,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 7,
+          "final_rank": 9,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_architecture_overview:1",
+        "reranker_top1": "eval_architecture_overview:0",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q002",
+      "type": "single-hop",
+      "question": "What chunk overlap is used during document ingestion?",
+      "expected_answer": "The chunk overlap is 200 characters.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 1,
+          "final_rank": 1,
+          "reranker_score": 0.930668
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 6,
+          "final_rank": 2,
+          "reranker_score": 0.012543
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 8,
+          "final_rank": 3,
+          "reranker_score": 0.00027
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 7,
+          "final_rank": 4,
+          "reranker_score": 0.00019
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 3,
+          "final_rank": 5,
+          "reranker_score": 5.6e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 4,
+          "final_rank": 6,
+          "reranker_score": 4.5e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 5,
+          "final_rank": 7,
+          "reranker_score": 2.5e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 2,
+          "final_rank": 8,
+          "reranker_score": 1.9e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 9,
+          "final_rank": 9,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_architecture_overview:0",
+        "reranker_top1": "eval_architecture_overview:0",
+        "class": "unchanged",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q003",
+      "type": "single-hop",
+      "question": "What primary embedding model is used by FastEmbedEmbeddings?",
+      "expected_answer": "FastEmbedEmbeddings uses BAAI/bge-small-en-v1.5 in ONNX format.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_database_and_storage_spec:1",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.5
+        }
+      },
+      "hybrid": {
+        "top1": "eval_database_and_storage_spec:1",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.5
+        }
+      },
+      "reranked": {
+        "top1": "eval_architecture_overview:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 5,
+          "final_rank": 1,
+          "reranker_score": 0.983145
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 1,
+          "final_rank": 2,
+          "reranker_score": 0.961004
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 3,
+          "final_rank": 3,
+          "reranker_score": 0.219822
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 4,
+          "reranker_score": 0.20242
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 6,
+          "final_rank": 5,
+          "reranker_score": 0.026474
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 2,
+          "final_rank": 6,
+          "reranker_score": 0.000896
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 4,
+          "final_rank": 7,
+          "reranker_score": 2.7e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 8,
+          "final_rank": 8,
+          "reranker_score": 2.2e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 9,
+          "final_rank": 9,
+          "reranker_score": 1.4e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 7,
+          "final_rank": 10,
+          "reranker_score": 1.4e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_database_and_storage_spec:1",
+        "reranker_top1": "eval_architecture_overview:1",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q004",
+      "type": "single-hop",
+      "question": "What is the default local development port for the backend web server?",
+      "expected_answer": "The default local development port is 9826 (http://127.0.0.1:9826).",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_api_reference:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_api_reference:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_api_reference:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 1,
+          "final_rank": 1,
+          "reranker_score": 0.983316
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 3,
+          "final_rank": 2,
+          "reranker_score": 0.001489
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 3,
+          "reranker_score": 0.000862
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 6,
+          "final_rank": 4,
+          "reranker_score": 0.000442
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 8,
+          "final_rank": 5,
+          "reranker_score": 3.3e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 2,
+          "final_rank": 6,
+          "reranker_score": 2.7e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 4,
+          "final_rank": 7,
+          "reranker_score": 2e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 5,
+          "final_rank": 8,
+          "reranker_score": 1.6e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 7,
+          "final_rank": 9,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 9,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_api_reference:0",
+        "reranker_top1": "eval_api_reference:0",
+        "class": "unchanged",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q005",
+      "type": "single-hop",
+      "question": "What is the maximum allowed document upload size?",
+      "expected_answer": "The maximum allowed file upload size is 50 MB.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_api_reference:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_api_reference:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_api_reference:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 1,
+          "final_rank": 1,
+          "reranker_score": 0.986277
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 2,
+          "final_rank": 2,
+          "reranker_score": 0.979954
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 3,
+          "final_rank": 3,
+          "reranker_score": 0.039273
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 4,
+          "final_rank": 4,
+          "reranker_score": 0.000882
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 9,
+          "final_rank": 5,
+          "reranker_score": 0.000143
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 5,
+          "final_rank": 6,
+          "reranker_score": 7.8e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 7,
+          "final_rank": 7,
+          "reranker_score": 3.6e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 8,
+          "final_rank": 8,
+          "reranker_score": 2.1e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 6,
+          "final_rank": 9,
+          "reranker_score": 1.8e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_api_reference:0",
+        "reranker_top1": "eval_api_reference:0",
+        "class": "unchanged",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q006",
+      "type": "single-hop",
+      "question": "What HTTP status code is returned when an upload is successfully accepted for processing?",
+      "expected_answer": "HTTP status code 202 ACCEPTED is returned.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.5
+        }
+      },
+      "hybrid": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.5
+        }
+      },
+      "reranked": {
+        "top1": "eval_troubleshooting_guide:1",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.5
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 3,
+          "final_rank": 1,
+          "reranker_score": 0.219388
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 2,
+          "final_rank": 2,
+          "reranker_score": 0.039873
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 1,
+          "final_rank": 3,
+          "reranker_score": 0.00341
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 5,
+          "final_rank": 4,
+          "reranker_score": 0.000948
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 4,
+          "final_rank": 5,
+          "reranker_score": 0.000146
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 9,
+          "final_rank": 6,
+          "reranker_score": 4.6e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 8,
+          "final_rank": 7,
+          "reranker_score": 2.7e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 6,
+          "final_rank": 8,
+          "reranker_score": 2.5e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 7,
+          "final_rank": 9,
+          "reranker_score": 2.1e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 10,
+          "final_rank": 10,
+          "reranker_score": 1.3e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_architecture_overview:0",
+        "reranker_top1": "eval_troubleshooting_guide:1",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q007",
+      "type": "single-hop",
+      "question": "Where are runtime vector database files stored on disk?",
+      "expected_answer": "Vector database files are stored in data/chroma_db/.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_database_and_storage_spec:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_database_and_storage_spec:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_database_and_storage_spec:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 1,
+          "final_rank": 1,
+          "reranker_score": 0.29755
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 3,
+          "final_rank": 2,
+          "reranker_score": 0.035877
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 2,
+          "final_rank": 3,
+          "reranker_score": 0.000745
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 6,
+          "final_rank": 4,
+          "reranker_score": 0.000411
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 4,
+          "final_rank": 5,
+          "reranker_score": 7e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 7,
+          "final_rank": 6,
+          "reranker_score": 3.7e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 7,
+          "reranker_score": 3.7e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 5,
+          "final_rank": 8,
+          "reranker_score": 3.6e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 8,
+          "final_rank": 9,
+          "reranker_score": 2.1e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 9,
+          "final_rank": 10,
+          "reranker_score": 1.3e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_database_and_storage_spec:0",
+        "reranker_top1": "eval_database_and_storage_spec:0",
+        "class": "unchanged",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q008",
+      "type": "single-hop",
+      "question": "How many vector dimensions are produced by the BAAI/bge-small-en-v1.5 model?",
+      "expected_answer": "The BAAI/bge-small-en-v1.5 model produces 384-dimensional dense vectors.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_database_and_storage_spec:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_database_and_storage_spec:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_database_and_storage_spec:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 1,
+          "final_rank": 1,
+          "reranker_score": 0.999541
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 3,
+          "final_rank": 2,
+          "reranker_score": 0.802395
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 2,
+          "final_rank": 3,
+          "reranker_score": 0.443853
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 4,
+          "final_rank": 4,
+          "reranker_score": 0.00246
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 9,
+          "final_rank": 5,
+          "reranker_score": 8.2e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 6,
+          "reranker_score": 7.7e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 6,
+          "final_rank": 7,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 8,
+          "final_rank": 8,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 7,
+          "final_rank": 9,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 5,
+          "final_rank": 10,
+          "reranker_score": 1.3e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_database_and_storage_spec:1",
+        "reranker_top1": "eval_database_and_storage_spec:1",
+        "class": "unchanged",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q009",
+      "type": "single-hop",
+      "question": "How many vector dimensions are produced by HashingEmbeddings?",
+      "expected_answer": "HashingEmbeddings produces 1024-dimensional vectors.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_database_and_storage_spec:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_database_and_storage_spec:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_database_and_storage_spec:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 2,
+          "final_rank": 1,
+          "reranker_score": 0.990539
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 5,
+          "final_rank": 2,
+          "reranker_score": 0.387007
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 1,
+          "final_rank": 3,
+          "reranker_score": 0.007983
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 3,
+          "final_rank": 4,
+          "reranker_score": 0.000724
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 6,
+          "final_rank": 5,
+          "reranker_score": 3.6e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 4,
+          "final_rank": 6,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 9,
+          "final_rank": 7,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 8,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 7,
+          "final_rank": 9,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 8,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_database_and_storage_spec:0",
+        "reranker_top1": "eval_database_and_storage_spec:1",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q010",
+      "type": "single-hop",
+      "question": "What is the RAM memory capacity provided on Render free tier?",
+      "expected_answer": "Render free tier provides 512 MB of RAM and 1 vCPU.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_troubleshooting_guide:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_troubleshooting_guide:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_troubleshooting_guide:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 1,
+          "final_rank": 1,
+          "reranker_score": 0.998515
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 2,
+          "final_rank": 2,
+          "reranker_score": 0.007899
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 3,
+          "final_rank": 3,
+          "reranker_score": 1.4e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 7,
+          "final_rank": 4,
+          "reranker_score": 1.4e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 6,
+          "final_rank": 5,
+          "reranker_score": 1.4e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 4,
+          "final_rank": 6,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 5,
+          "final_rank": 7,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 8,
+          "final_rank": 8,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 9,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 9,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_troubleshooting_guide:0",
+        "reranker_top1": "eval_troubleshooting_guide:0",
+        "class": "unchanged",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q011",
+      "type": "single-hop",
+      "question": "Where should persistent disk volume be mounted on Render?",
+      "expected_answer": "A 1 GB persistent disk volume must be mounted at data/ on Render.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_troubleshooting_guide:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_troubleshooting_guide:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_troubleshooting_guide:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 1,
+          "final_rank": 1,
+          "reranker_score": 0.997174
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 2,
+          "final_rank": 2,
+          "reranker_score": 0.000201
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 3,
+          "final_rank": 3,
+          "reranker_score": 1.7e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 7,
+          "final_rank": 4,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 5,
+          "final_rank": 5,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 10,
+          "final_rank": 6,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 4,
+          "final_rank": 7,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 9,
+          "final_rank": 8,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 6,
+          "final_rank": 9,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 8,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_troubleshooting_guide:0",
+        "reranker_top1": "eval_troubleshooting_guide:0",
+        "class": "unchanged",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q012",
+      "type": "single-hop",
+      "question": "What environment variable forces native ONNX runtime to run single-threaded?",
+      "expected_answer": "OMP_NUM_THREADS=1 forces native ONNX runtime to run single-threaded.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_troubleshooting_guide:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_troubleshooting_guide:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_troubleshooting_guide:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 1,
+          "final_rank": 1,
+          "reranker_score": 0.986231
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 7,
+          "final_rank": 2,
+          "reranker_score": 0.001093
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 3,
+          "final_rank": 3,
+          "reranker_score": 0.000362
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 4,
+          "final_rank": 4,
+          "reranker_score": 0.000171
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 8,
+          "final_rank": 5,
+          "reranker_score": 7.4e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 2,
+          "final_rank": 6,
+          "reranker_score": 2.2e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 5,
+          "final_rank": 7,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 9,
+          "final_rank": 8,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 10,
+          "final_rank": 9,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 6,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_troubleshooting_guide:0",
+        "reranker_top1": "eval_troubleshooting_guide:0",
+        "class": "unchanged",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q013",
+      "type": "single-hop",
+      "question": "What separators are used by RecursiveCharacterTextSplitter?",
+      "expected_answer": "Separators used are [\"\\n\\n\", \"\\n\", \". \", \" \", \"\"].",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 1,
+          "final_rank": 1,
+          "reranker_score": 0.85117
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 4,
+          "final_rank": 2,
+          "reranker_score": 2.1e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 7,
+          "final_rank": 3,
+          "reranker_score": 1.7e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 5,
+          "final_rank": 4,
+          "reranker_score": 1.6e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 3,
+          "final_rank": 5,
+          "reranker_score": 1.5e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 2,
+          "final_rank": 6,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 10,
+          "final_rank": 7,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 6,
+          "final_rank": 8,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 9,
+          "final_rank": 9,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 8,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_architecture_overview:0",
+        "reranker_top1": "eval_architecture_overview:0",
+        "class": "unchanged",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q014",
+      "type": "single-hop",
+      "question": "What document page numbering convention is used for stored PDF chunk metadata?",
+      "expected_answer": "Stored page numbers in chunk metadata are 1-based (derived by adding 1 to PyPDFLoader 0-based page index).",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_database_and_storage_spec:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_database_and_storage_spec:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_database_and_storage_spec:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 1,
+          "final_rank": 1,
+          "reranker_score": 0.777315
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 2,
+          "final_rank": 2,
+          "reranker_score": 0.419313
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 6,
+          "final_rank": 3,
+          "reranker_score": 0.002015
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 3,
+          "final_rank": 4,
+          "reranker_score": 0.000745
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 4,
+          "final_rank": 5,
+          "reranker_score": 0.000377
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 5,
+          "final_rank": 6,
+          "reranker_score": 2.3e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 7,
+          "final_rank": 7,
+          "reranker_score": 1.5e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 9,
+          "final_rank": 8,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 8,
+          "final_rank": 9,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 10,
+          "reranker_score": 1.3e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_database_and_storage_spec:0",
+        "reranker_top1": "eval_database_and_storage_spec:0",
+        "class": "unchanged",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q015",
+      "type": "single-hop",
+      "question": "What is the minimum relevance score threshold for retrieved chunks?",
+      "expected_answer": "The minimum relevance score cutoff is MIN_RELEVANCE_SCORE=0.35.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_architecture_overview:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_architecture_overview:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_architecture_overview:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 1,
+          "final_rank": 1,
+          "reranker_score": 0.977732
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 8,
+          "final_rank": 2,
+          "reranker_score": 0.001314
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 3,
+          "final_rank": 3,
+          "reranker_score": 0.000128
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 6,
+          "final_rank": 4,
+          "reranker_score": 4.3e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 2,
+          "final_rank": 5,
+          "reranker_score": 1.7e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 4,
+          "final_rank": 6,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 7,
+          "final_rank": 7,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 8,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 9,
+          "final_rank": 9,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 5,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_architecture_overview:1",
+        "reranker_top1": "eval_architecture_overview:1",
+        "class": "unchanged",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q016",
+      "type": "exact-term",
+      "question": "What exact environment variable sets the minimum upload size limit?",
+      "expected_answer": "MAX_UPLOAD_MB",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_api_reference:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_api_reference:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_api_reference:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 1,
+          "final_rank": 1,
+          "reranker_score": 0.22345
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 4,
+          "final_rank": 2,
+          "reranker_score": 0.026056
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 3,
+          "final_rank": 3,
+          "reranker_score": 0.0031
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 7,
+          "final_rank": 4,
+          "reranker_score": 2.5e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 8,
+          "final_rank": 5,
+          "reranker_score": 1.9e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 2,
+          "final_rank": 6,
+          "reranker_score": 1.6e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 6,
+          "final_rank": 7,
+          "reranker_score": 1.4e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 5,
+          "final_rank": 8,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 10,
+          "final_rank": 9,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 9,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_api_reference:0",
+        "reranker_top1": "eval_api_reference:0",
+        "class": "unchanged",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q017",
+      "type": "exact-term",
+      "question": "What exact error message detail is returned when worker queue saturation occurs?",
+      "expected_answer": "Ingestion queue is full.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_troubleshooting_guide:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_troubleshooting_guide:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_troubleshooting_guide:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 3,
+          "final_rank": 1,
+          "reranker_score": 0.009959
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 1,
+          "final_rank": 2,
+          "reranker_score": 0.00711
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 2,
+          "final_rank": 3,
+          "reranker_score": 0.000237
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 4,
+          "final_rank": 4,
+          "reranker_score": 0.000143
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 5,
+          "final_rank": 5,
+          "reranker_score": 1.7e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 6,
+          "final_rank": 6,
+          "reranker_score": 1.4e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 7,
+          "final_rank": 7,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 8,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 9,
+          "final_rank": 9,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 8,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_troubleshooting_guide:0",
+        "reranker_top1": "eval_troubleshooting_guide:1",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q018",
+      "type": "exact-term",
+      "question": "What exact collection name is used for ChromaDB when fastembed is active?",
+      "expected_answer": "rag_documents_fastembed_bge_small_en_v1_5",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.5
+        }
+      },
+      "hybrid": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.5
+        }
+      },
+      "reranked": {
+        "top1": "eval_database_and_storage_spec:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 2,
+          "final_rank": 1,
+          "reranker_score": 0.966265
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 1,
+          "final_rank": 2,
+          "reranker_score": 0.374215
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 3,
+          "final_rank": 3,
+          "reranker_score": 0.082664
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 5,
+          "final_rank": 4,
+          "reranker_score": 0.030869
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 9,
+          "final_rank": 5,
+          "reranker_score": 0.005868
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 10,
+          "final_rank": 6,
+          "reranker_score": 0.000316
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 8,
+          "final_rank": 7,
+          "reranker_score": 6.6e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 4,
+          "final_rank": 8,
+          "reranker_score": 1.9e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 6,
+          "final_rank": 9,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 7,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_architecture_overview:0",
+        "reranker_top1": "eval_database_and_storage_spec:0",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q019",
+      "type": "exact-term",
+      "question": "What exact collection name is used for ChromaDB when hashing fallback is active?",
+      "expected_answer": "rag_documents_hashing",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.5
+        }
+      },
+      "hybrid": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.5
+        }
+      },
+      "reranked": {
+        "top1": "eval_database_and_storage_spec:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 2,
+          "final_rank": 1,
+          "reranker_score": 0.949023
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 3,
+          "final_rank": 2,
+          "reranker_score": 0.041224
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 1,
+          "final_rank": 3,
+          "reranker_score": 0.004918
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 6,
+          "final_rank": 4,
+          "reranker_score": 0.002677
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 4,
+          "final_rank": 5,
+          "reranker_score": 0.002109
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 7,
+          "final_rank": 6,
+          "reranker_score": 0.000225
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 9,
+          "final_rank": 7,
+          "reranker_score": 5.6e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 8,
+          "reranker_score": 1.8e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 5,
+          "final_rank": 9,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 8,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_architecture_overview:0",
+        "reranker_top1": "eval_database_and_storage_spec:0",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q020",
+      "type": "exact-term",
+      "question": "What exact parameter value of lambda_mult is configured for MMR retrieval?",
+      "expected_answer": "lambda_mult=0.5",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_architecture_overview:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_architecture_overview:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_architecture_overview:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 1,
+          "final_rank": 1,
+          "reranker_score": 0.994574
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 2,
+          "final_rank": 2,
+          "reranker_score": 0.00029
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 3,
+          "final_rank": 3,
+          "reranker_score": 0.000166
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 8,
+          "final_rank": 4,
+          "reranker_score": 9.5e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 7,
+          "final_rank": 5,
+          "reranker_score": 6.8e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 4,
+          "final_rank": 6,
+          "reranker_score": 5.6e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 5,
+          "final_rank": 7,
+          "reranker_score": 3.9e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 8,
+          "reranker_score": 1.7e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 9,
+          "final_rank": 9,
+          "reranker_score": 1.6e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 6,
+          "final_rank": 10,
+          "reranker_score": 1.3e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_architecture_overview:1",
+        "reranker_top1": "eval_architecture_overview:1",
+        "class": "unchanged",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q021",
+      "type": "exact-term",
+      "question": "What exact Python class processes text and markdown document uploads?",
+      "expected_answer": "TextLoader",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_api_reference:0",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.5
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 3,
+          "final_rank": 1,
+          "reranker_score": 0.021678
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 1,
+          "final_rank": 2,
+          "reranker_score": 0.016593
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 2,
+          "final_rank": 3,
+          "reranker_score": 0.000297
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 4,
+          "final_rank": 4,
+          "reranker_score": 0.000248
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 8,
+          "final_rank": 5,
+          "reranker_score": 8.4e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 6,
+          "final_rank": 6,
+          "reranker_score": 3.2e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 9,
+          "final_rank": 7,
+          "reranker_score": 1.8e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 5,
+          "final_rank": 8,
+          "reranker_score": 1.7e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 10,
+          "final_rank": 9,
+          "reranker_score": 1.4e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 7,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_architecture_overview:0",
+        "reranker_top1": "eval_api_reference:0",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q022",
+      "type": "exact-term",
+      "question": "What exact Python class processes PDF document uploads?",
+      "expected_answer": "PyPDFLoader",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_database_and_storage_spec:0",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.5
+        }
+      },
+      "hybrid": {
+        "top1": "eval_database_and_storage_spec:0",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.5
+        }
+      },
+      "reranked": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 2,
+          "final_rank": 1,
+          "reranker_score": 0.245817
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 3,
+          "final_rank": 2,
+          "reranker_score": 0.045774
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 5,
+          "final_rank": 3,
+          "reranker_score": 0.002078
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 4,
+          "final_rank": 4,
+          "reranker_score": 0.002063
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 1,
+          "final_rank": 5,
+          "reranker_score": 0.001723
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 7,
+          "final_rank": 6,
+          "reranker_score": 0.000228
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 9,
+          "final_rank": 7,
+          "reranker_score": 3.3e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 6,
+          "final_rank": 8,
+          "reranker_score": 2.3e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 8,
+          "final_rank": 9,
+          "reranker_score": 1.4e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_database_and_storage_spec:0",
+        "reranker_top1": "eval_architecture_overview:0",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q023",
+      "type": "exact-term",
+      "question": "What exact environment variable disables Hugging Face tokenizers parallelism?",
+      "expected_answer": "TOKENIZERS_PARALLELISM=false",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_api_reference:0",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.3333
+        }
+      },
+      "hybrid": {
+        "top1": "eval_api_reference:0",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.3333
+        }
+      },
+      "reranked": {
+        "top1": "eval_troubleshooting_guide:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 3,
+          "final_rank": 1,
+          "reranker_score": 0.02423
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 5,
+          "final_rank": 2,
+          "reranker_score": 0.000808
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 7,
+          "final_rank": 3,
+          "reranker_score": 1.4e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 9,
+          "final_rank": 4,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 1,
+          "final_rank": 5,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 6,
+          "final_rank": 6,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 4,
+          "final_rank": 7,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 10,
+          "final_rank": 8,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 8,
+          "final_rank": 9,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 2,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_api_reference:0",
+        "reranker_top1": "eval_troubleshooting_guide:0",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q024",
+      "type": "exact-term",
+      "question": "What exact default LLM model identifier is used for OpenRouter answer generation?",
+      "expected_answer": "openai/gpt-4o-mini",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_api_reference:1",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.5
+        }
+      },
+      "hybrid": {
+        "top1": "eval_api_reference:1",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.5
+        }
+      },
+      "reranked": {
+        "top1": "eval_architecture_overview:2",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 2,
+          "final_rank": 1,
+          "reranker_score": 0.957576
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 2,
+          "reranker_score": 0.000126
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 1,
+          "final_rank": 3,
+          "reranker_score": 0.000126
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 3,
+          "final_rank": 4,
+          "reranker_score": 3.4e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 6,
+          "final_rank": 5,
+          "reranker_score": 1.5e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 7,
+          "final_rank": 6,
+          "reranker_score": 1.4e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 5,
+          "final_rank": 7,
+          "reranker_score": 1.4e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 8,
+          "final_rank": 8,
+          "reranker_score": 1.4e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 4,
+          "final_rank": 9,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 9,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_api_reference:1",
+        "reranker_top1": "eval_architecture_overview:2",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q025",
+      "type": "exact-term",
+      "question": "What exact REST endpoint retrieves full ingestion status for all documents?",
+      "expected_answer": "GET /documents",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.5
+        }
+      },
+      "hybrid": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.5
+        }
+      },
+      "reranked": {
+        "top1": "eval_api_reference:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 2,
+          "final_rank": 1,
+          "reranker_score": 0.952816
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 4,
+          "final_rank": 2,
+          "reranker_score": 0.009821
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 1,
+          "final_rank": 3,
+          "reranker_score": 0.003087
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 3,
+          "final_rank": 4,
+          "reranker_score": 0.000209
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 6,
+          "final_rank": 5,
+          "reranker_score": 0.000198
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 5,
+          "final_rank": 6,
+          "reranker_score": 1.8e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 8,
+          "final_rank": 7,
+          "reranker_score": 1.7e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 7,
+          "final_rank": 8,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 10,
+          "final_rank": 9,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 9,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_architecture_overview:0",
+        "reranker_top1": "eval_api_reference:1",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q026",
+      "type": "multi-hop",
+      "question": "How does document hashing prevent duplicate processing and what HTTP status is returned if a duplicate is found?",
+      "expected_answer": "Uploaded documents are hashed using SHA-256 (content_hash). If an active document with the same content hash is currently in queued or processing state, the POST /upload endpoint rejects the new upload with an HTTP 409 CONFLICT status code.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_api_reference:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_api_reference:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_troubleshooting_guide:0",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.5
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 2,
+          "final_rank": 1,
+          "reranker_score": 0.010971
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 1,
+          "final_rank": 2,
+          "reranker_score": 0.005844
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 5,
+          "final_rank": 3,
+          "reranker_score": 0.004968
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 4,
+          "final_rank": 4,
+          "reranker_score": 0.002785
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 6,
+          "final_rank": 5,
+          "reranker_score": 0.000905
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 7,
+          "final_rank": 6,
+          "reranker_score": 0.000903
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 3,
+          "final_rank": 7,
+          "reranker_score": 0.000402
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 10,
+          "final_rank": 8,
+          "reranker_score": 0.000113
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 8,
+          "final_rank": 9,
+          "reranker_score": 3.5e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 9,
+          "final_rank": 10,
+          "reranker_score": 3.1e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_api_reference:1",
+        "reranker_top1": "eval_troubleshooting_guide:0",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q027",
+      "type": "multi-hop",
+      "question": "What happens when FastEmbed model download fails, and how does ChromaDB adjust its vector collection namespace?",
+      "expected_answer": "When FastEmbed download fails or is offline, the system falls back to HashingEmbeddings (1024 dimensions). To avoid mixing vector spaces, ChromaDB changes its collection namespace from rag_documents_fastembed_bge_small_en_v1_5 to rag_documents_hashing.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_database_and_storage_spec:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_database_and_storage_spec:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_troubleshooting_guide:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 2,
+          "final_rank": 1,
+          "reranker_score": 0.708112
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 1,
+          "final_rank": 2,
+          "reranker_score": 0.527604
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 5,
+          "final_rank": 3,
+          "reranker_score": 0.047126
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 6,
+          "final_rank": 4,
+          "reranker_score": 0.006187
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 4,
+          "final_rank": 5,
+          "reranker_score": 0.005187
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 7,
+          "final_rank": 6,
+          "reranker_score": 0.003255
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 3,
+          "final_rank": 7,
+          "reranker_score": 0.00108
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 8,
+          "final_rank": 8,
+          "reranker_score": 0.000113
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 10,
+          "final_rank": 9,
+          "reranker_score": 1.7e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 9,
+          "final_rank": 10,
+          "reranker_score": 1.6e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_database_and_storage_spec:0",
+        "reranker_top1": "eval_troubleshooting_guide:0",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q028",
+      "type": "multi-hop",
+      "question": "What memory constraints exist on Render free tier, and what environment variables are configured to prevent memory exhaustion during embedding generation?",
+      "expected_answer": "Render free tier provides 512 MB RAM. To prevent memory exhaustion during ONNX embedding generation, OMP_NUM_THREADS=1 and TOKENIZERS_PARALLELISM=false are set in settings.py.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_database_and_storage_spec:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_database_and_storage_spec:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_troubleshooting_guide:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 2,
+          "final_rank": 1,
+          "reranker_score": 0.989622
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 1,
+          "final_rank": 2,
+          "reranker_score": 0.127185
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 6,
+          "final_rank": 3,
+          "reranker_score": 0.00172
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 8,
+          "final_rank": 4,
+          "reranker_score": 0.000471
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 9,
+          "final_rank": 5,
+          "reranker_score": 4e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 5,
+          "final_rank": 6,
+          "reranker_score": 2.9e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 10,
+          "final_rank": 7,
+          "reranker_score": 2e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 4,
+          "final_rank": 8,
+          "reranker_score": 1.9e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 7,
+          "final_rank": 9,
+          "reranker_score": 1.7e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 3,
+          "final_rank": 10,
+          "reranker_score": 1.5e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_database_and_storage_spec:1",
+        "reranker_top1": "eval_troubleshooting_guide:0",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q029",
+      "type": "multi-hop",
+      "question": "What parameters control candidate fetching during MMR retrieval, and how does the engine ensure multi-page lists are not split at chunk boundaries?",
+      "expected_answer": "MMR fetches fetch_k=20 initial candidates to return target k=8 chunks with lambda_mult=0.5. To prevent multi-page lists from being cut off at boundaries, adjacent chunk expansion automatically fetches chunk N+1 for every retrieved chunk N.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_architecture_overview:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_architecture_overview:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_architecture_overview:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 1,
+          "final_rank": 1,
+          "reranker_score": 0.961364
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 4,
+          "final_rank": 2,
+          "reranker_score": 0.000837
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 3,
+          "final_rank": 3,
+          "reranker_score": 6.3e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 6,
+          "final_rank": 4,
+          "reranker_score": 3.7e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 8,
+          "final_rank": 5,
+          "reranker_score": 3e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 2,
+          "final_rank": 6,
+          "reranker_score": 2.9e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 5,
+          "final_rank": 7,
+          "reranker_score": 2.2e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 7,
+          "final_rank": 8,
+          "reranker_score": 1.9e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 10,
+          "final_rank": 9,
+          "reranker_score": 1.7e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 9,
+          "final_rank": 10,
+          "reranker_score": 1.4e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_architecture_overview:1",
+        "reranker_top1": "eval_architecture_overview:1",
+        "class": "unchanged",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q030",
+      "type": "multi-hop",
+      "question": "What actions occur during document deletion across disk storage and ChromaDB?",
+      "expected_answer": "When DELETE /documents/{document_id} is called, the backend purges all vector chunks matching document_id from ChromaDB, unlinks the uploaded raw file from data/uploads/, and removes the document record from the registry.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_troubleshooting_guide:0",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.5
+        }
+      },
+      "hybrid": {
+        "top1": "eval_troubleshooting_guide:0",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.5
+        }
+      },
+      "reranked": {
+        "top1": "eval_api_reference:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 5,
+          "final_rank": 1,
+          "reranker_score": 0.053155
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 1,
+          "final_rank": 2,
+          "reranker_score": 0.030512
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 4,
+          "final_rank": 3,
+          "reranker_score": 0.004329
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 6,
+          "final_rank": 4,
+          "reranker_score": 0.000881
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 2,
+          "final_rank": 5,
+          "reranker_score": 0.000395
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 3,
+          "final_rank": 6,
+          "reranker_score": 6.4e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 9,
+          "final_rank": 7,
+          "reranker_score": 3.2e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 7,
+          "final_rank": 8,
+          "reranker_score": 1.9e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 8,
+          "final_rank": 9,
+          "reranker_score": 1.4e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 10,
+          "final_rank": 10,
+          "reranker_score": 1.3e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_troubleshooting_guide:0",
+        "reranker_top1": "eval_api_reference:1",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q031",
+      "type": "multi-hop",
+      "question": "How are PDF files processed differently from text files during ingestion in terms of loaders and page metadata?",
+      "expected_answer": "PDF files are loaded using PyPDFLoader and convert 0-based page indices to 1-based page metadata stored in ChromaDB, whereas text and markdown files are loaded using TextLoader (UTF-8) with default page count 1.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_database_and_storage_spec:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_database_and_storage_spec:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 2,
+          "final_rank": 1,
+          "reranker_score": 0.165167
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 6,
+          "final_rank": 2,
+          "reranker_score": 0.007687
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 7,
+          "final_rank": 3,
+          "reranker_score": 0.000749
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 5,
+          "final_rank": 4,
+          "reranker_score": 0.000621
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 1,
+          "final_rank": 5,
+          "reranker_score": 0.000143
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 4,
+          "final_rank": 6,
+          "reranker_score": 2.6e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 8,
+          "final_rank": 7,
+          "reranker_score": 2.5e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 3,
+          "final_rank": 8,
+          "reranker_score": 1.9e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 10,
+          "final_rank": 9,
+          "reranker_score": 1.4e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 9,
+          "final_rank": 10,
+          "reranker_score": 1.3e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_database_and_storage_spec:0",
+        "reranker_top1": "eval_architecture_overview:0",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q032",
+      "type": "multi-hop",
+      "question": "What are the exact request schema fields for POST /search and what error response occurs if the query string is empty?",
+      "expected_answer": "The POST /search request payload takes query (string), top_k (integer), and optional source (filename string). An empty query causes HTTP status 400 BAD REQUEST.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_api_reference:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_api_reference:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_api_reference:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 1,
+          "final_rank": 1,
+          "reranker_score": 0.41909
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 4,
+          "final_rank": 2,
+          "reranker_score": 0.003098
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 8,
+          "final_rank": 3,
+          "reranker_score": 0.000141
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 7,
+          "final_rank": 4,
+          "reranker_score": 0.000106
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 2,
+          "final_rank": 5,
+          "reranker_score": 8.3e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 6,
+          "final_rank": 6,
+          "reranker_score": 8.3e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 3,
+          "final_rank": 7,
+          "reranker_score": 4.2e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 9,
+          "final_rank": 8,
+          "reranker_score": 3.8e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 5,
+          "final_rank": 9,
+          "reranker_score": 3.3e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 10,
+          "final_rank": 10,
+          "reranker_score": 1.3e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_api_reference:1",
+        "reranker_top1": "eval_api_reference:1",
+        "class": "unchanged",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q033",
+      "type": "multi-hop",
+      "question": "Where is the FastEmbed model cached on disk and how does Render persistent disk prevent redownloading on redeployment?",
+      "expected_answer": "FastEmbed models are cached in data/fastembed_cache/. Mounting a 1 GB persistent disk at data/ ensures the ONNX model files survive application redeployments without redownloading.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_troubleshooting_guide:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_troubleshooting_guide:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_troubleshooting_guide:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 1,
+          "final_rank": 1,
+          "reranker_score": 0.981736
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 2,
+          "final_rank": 2,
+          "reranker_score": 0.023979
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 8,
+          "final_rank": 3,
+          "reranker_score": 0.004663
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 5,
+          "final_rank": 4,
+          "reranker_score": 0.004453
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 9,
+          "final_rank": 5,
+          "reranker_score": 0.000748
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 6,
+          "final_rank": 6,
+          "reranker_score": 0.000166
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 3,
+          "final_rank": 7,
+          "reranker_score": 2.2e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 10,
+          "final_rank": 8,
+          "reranker_score": 2.1e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 7,
+          "final_rank": 9,
+          "reranker_score": 1.9e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 4,
+          "final_rank": 10,
+          "reranker_score": 1.4e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_troubleshooting_guide:0",
+        "reranker_top1": "eval_troubleshooting_guide:0",
+        "class": "unchanged",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q034",
+      "type": "multi-hop",
+      "question": "What generation parameters are sent to OpenRouter API and what fallback answer is returned if the API key is missing?",
+      "expected_answer": "OpenRouter API request uses temperature=0.0 and max_tokens=768 with model openai/gpt-4o-mini. If OPENROUTER_API_KEY is empty or calls fail, the engine falls back to displaying top context snippets formatted directly.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_architecture_overview:2",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_architecture_overview:2",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_architecture_overview:2",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 1,
+          "final_rank": 1,
+          "reranker_score": 0.993562
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 3,
+          "final_rank": 2,
+          "reranker_score": 0.001413
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 4,
+          "final_rank": 3,
+          "reranker_score": 0.00096
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 8,
+          "final_rank": 4,
+          "reranker_score": 0.000358
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 9,
+          "final_rank": 5,
+          "reranker_score": 0.000127
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 7,
+          "final_rank": 6,
+          "reranker_score": 0.000113
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 7,
+          "reranker_score": 7.9e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 6,
+          "final_rank": 8,
+          "reranker_score": 7.4e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 2,
+          "final_rank": 9,
+          "reranker_score": 4.6e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 5,
+          "final_rank": 10,
+          "reranker_score": 3.6e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_architecture_overview:2",
+        "reranker_top1": "eval_architecture_overview:2",
+        "class": "unchanged",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q035",
+      "type": "multi-hop",
+      "question": "What HTTP status codes occur when file size is exceeded vs when the background ingestion queue is full?",
+      "expected_answer": "Exceeding max upload file size returns HTTP 413 REQUEST ENTITY TOO LARGE, while worker queue saturation returns HTTP 503 SERVICE UNAVAILABLE.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_troubleshooting_guide:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_troubleshooting_guide:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_troubleshooting_guide:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 1,
+          "final_rank": 1,
+          "reranker_score": 0.994816
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 3,
+          "final_rank": 2,
+          "reranker_score": 0.547538
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 7,
+          "final_rank": 3,
+          "reranker_score": 0.003305
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 4,
+          "final_rank": 4,
+          "reranker_score": 0.001523
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 2,
+          "final_rank": 5,
+          "reranker_score": 0.000336
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 9,
+          "final_rank": 6,
+          "reranker_score": 2.3e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 6,
+          "final_rank": 7,
+          "reranker_score": 1.7e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 8,
+          "reranker_score": 1.4e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 5,
+          "final_rank": 9,
+          "reranker_score": 1.4e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 8,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_troubleshooting_guide:1",
+        "reranker_top1": "eval_troubleshooting_guide:1",
+        "class": "unchanged",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q036",
+      "type": "unanswerable",
+      "question": "What BM25 k1 and b parameters are configured in the retrieval engine?",
+      "expected_answer": "I cannot answer this based on the provided documents. BM25 is not implemented in the current system (dense MMR retrieval is used).",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_architecture_overview:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_architecture_overview:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_architecture_overview:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 1,
+          "final_rank": 1,
+          "reranker_score": 0.769895
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 2,
+          "final_rank": 2,
+          "reranker_score": 0.00232
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 3,
+          "final_rank": 3,
+          "reranker_score": 0.000327
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 7,
+          "final_rank": 4,
+          "reranker_score": 8.4e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 10,
+          "final_rank": 5,
+          "reranker_score": 5.1e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 6,
+          "final_rank": 6,
+          "reranker_score": 3.7e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 4,
+          "final_rank": 7,
+          "reranker_score": 2.5e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 8,
+          "final_rank": 8,
+          "reranker_score": 1.6e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 9,
+          "final_rank": 9,
+          "reranker_score": 1.6e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 5,
+          "final_rank": 10,
+          "reranker_score": 1.5e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_architecture_overview:1",
+        "reranker_top1": "eval_architecture_overview:1",
+        "class": "unchanged",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q037",
+      "type": "unanswerable",
+      "question": "What cross-encoder model is used for reranking retrieved search results?",
+      "expected_answer": "I cannot answer this based on the provided documents. Reranking is not present in the current baseline architecture.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_architecture_overview:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_architecture_overview:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_architecture_overview:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 1,
+          "final_rank": 1,
+          "reranker_score": 0.014696
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 2,
+          "final_rank": 2,
+          "reranker_score": 0.007889
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 3,
+          "final_rank": 3,
+          "reranker_score": 0.000277
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 4,
+          "final_rank": 4,
+          "reranker_score": 0.000113
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 9,
+          "final_rank": 5,
+          "reranker_score": 5.2e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 5,
+          "final_rank": 6,
+          "reranker_score": 3.1e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 8,
+          "final_rank": 7,
+          "reranker_score": 2.5e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 8,
+          "reranker_score": 2.3e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 7,
+          "final_rank": 9,
+          "reranker_score": 2e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 6,
+          "final_rank": 10,
+          "reranker_score": 1.4e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_architecture_overview:1",
+        "reranker_top1": "eval_architecture_overview:1",
+        "class": "unchanged",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q038",
+      "type": "unanswerable",
+      "question": "What PostgreSQL database credentials are required for vector storage?",
+      "expected_answer": "I cannot answer this based on the provided documents. The system uses local ChromaDB disk storage, not PostgreSQL.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_database_and_storage_spec:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_database_and_storage_spec:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_database_and_storage_spec:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 1,
+          "final_rank": 1,
+          "reranker_score": 0.017135
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 9,
+          "final_rank": 2,
+          "reranker_score": 0.0001
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 10,
+          "final_rank": 3,
+          "reranker_score": 4.5e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 6,
+          "final_rank": 4,
+          "reranker_score": 4.1e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 3,
+          "final_rank": 5,
+          "reranker_score": 4e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 5,
+          "final_rank": 6,
+          "reranker_score": 4e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 7,
+          "final_rank": 7,
+          "reranker_score": 1.6e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 2,
+          "final_rank": 8,
+          "reranker_score": 1.4e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 4,
+          "final_rank": 9,
+          "reranker_score": 1.4e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 8,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_database_and_storage_spec:0",
+        "reranker_top1": "eval_database_and_storage_spec:0",
+        "class": "unchanged",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q039",
+      "type": "unanswerable",
+      "question": "What Docker container image base tag is used in production deployment?",
+      "expected_answer": "I cannot answer this based on the provided documents. Docker configuration is not detailed in the baseline documentation corpus.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_troubleshooting_guide:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 3,
+          "final_rank": 1,
+          "reranker_score": 2.6e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 2,
+          "final_rank": 2,
+          "reranker_score": 2.1e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 6,
+          "final_rank": 3,
+          "reranker_score": 1.5e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 9,
+          "final_rank": 4,
+          "reranker_score": 1.5e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 1,
+          "final_rank": 5,
+          "reranker_score": 1.5e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 5,
+          "final_rank": 6,
+          "reranker_score": 1.4e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 7,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 4,
+          "final_rank": 8,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 7,
+          "final_rank": 9,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 8,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_architecture_overview:0",
+        "reranker_top1": "eval_troubleshooting_guide:0",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q040",
+      "type": "unanswerable",
+      "question": "What semantic chunking threshold is used to split paragraphs by embedding distance?",
+      "expected_answer": "I cannot answer this based on the provided documents. The baseline uses RecursiveCharacterTextSplitter, not semantic chunking.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_architecture_overview:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 5,
+          "final_rank": 1,
+          "reranker_score": 0.007836
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 1,
+          "final_rank": 2,
+          "reranker_score": 0.000513
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 2,
+          "final_rank": 3,
+          "reranker_score": 0.000247
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 6,
+          "final_rank": 4,
+          "reranker_score": 7.7e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 5,
+          "reranker_score": 5.4e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 9,
+          "final_rank": 6,
+          "reranker_score": 3.2e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 4,
+          "final_rank": 7,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 3,
+          "final_rank": 8,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 8,
+          "final_rank": 9,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 7,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_architecture_overview:0",
+        "reranker_top1": "eval_architecture_overview:1",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q041",
+      "type": "unanswerable",
+      "question": "What is the maximum token context length for the Anthropic Claude 3.5 Sonnet model in this app?",
+      "expected_answer": "I cannot answer this based on the provided documents. The default model specified is openai/gpt-4o-mini via OpenRouter.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_troubleshooting_guide:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_troubleshooting_guide:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_architecture_overview:2",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 2,
+          "final_rank": 1,
+          "reranker_score": 0.004347
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 6,
+          "final_rank": 2,
+          "reranker_score": 7e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 1,
+          "final_rank": 3,
+          "reranker_score": 2.9e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 7,
+          "final_rank": 4,
+          "reranker_score": 2.3e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 4,
+          "final_rank": 5,
+          "reranker_score": 2.2e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 3,
+          "final_rank": 6,
+          "reranker_score": 1.8e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 5,
+          "final_rank": 7,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 8,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 8,
+          "final_rank": 9,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 9,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_troubleshooting_guide:0",
+        "reranker_top1": "eval_architecture_overview:2",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q042",
+      "type": "unanswerable",
+      "question": "How do you configure Redis cluster caching for search response endpoints?",
+      "expected_answer": "I cannot answer this based on the provided documents. Redis caching is not part of the system architecture.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_api_reference:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_api_reference:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_api_reference:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 1,
+          "final_rank": 1,
+          "reranker_score": 0.000422
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 3,
+          "final_rank": 2,
+          "reranker_score": 0.000355
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 5,
+          "final_rank": 3,
+          "reranker_score": 7.1e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 4,
+          "final_rank": 4,
+          "reranker_score": 3.3e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 2,
+          "final_rank": 5,
+          "reranker_score": 2.1e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 7,
+          "final_rank": 6,
+          "reranker_score": 1.8e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 9,
+          "final_rank": 7,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 6,
+          "final_rank": 8,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 8,
+          "final_rank": 9,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 10,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_api_reference:0",
+        "reranker_top1": "eval_api_reference:0",
+        "class": "unchanged",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q043",
+      "type": "unanswerable",
+      "question": "What Qdrant collection distance metric (Cosine, Euclidean, Dot Product) is configured?",
+      "expected_answer": "I cannot answer this based on the provided documents. The system uses ChromaDB rather than Qdrant.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_database_and_storage_spec:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_database_and_storage_spec:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_api_reference:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 3,
+          "final_rank": 1,
+          "reranker_score": 1.9e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 5,
+          "final_rank": 2,
+          "reranker_score": 1.8e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 3,
+          "reranker_score": 1.5e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 2,
+          "final_rank": 4,
+          "reranker_score": 1.5e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 7,
+          "final_rank": 5,
+          "reranker_score": 1.5e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 9,
+          "final_rank": 6,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 6,
+          "final_rank": 7,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 1,
+          "final_rank": 8,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 4,
+          "final_rank": 9,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 8,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_database_and_storage_spec:0",
+        "reranker_top1": "eval_api_reference:0",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q044",
+      "type": "unanswerable",
+      "question": "What Prometheus metric port is exposed for scraping ingestion queue depth?",
+      "expected_answer": "I cannot answer this based on the provided documents. Prometheus metrics endpoints are not documented.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_api_reference:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_api_reference:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_troubleshooting_guide:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 2,
+          "final_rank": 1,
+          "reranker_score": 0.001524
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 1,
+          "final_rank": 2,
+          "reranker_score": 0.000274
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 4,
+          "final_rank": 3,
+          "reranker_score": 7.5e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 3,
+          "final_rank": 4,
+          "reranker_score": 2.7e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 7,
+          "final_rank": 5,
+          "reranker_score": 2e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 5,
+          "final_rank": 6,
+          "reranker_score": 1.4e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 7,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 8,
+          "final_rank": 8,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 9,
+          "final_rank": 9,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 6,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_api_reference:0",
+        "reranker_top1": "eval_troubleshooting_guide:1",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q045",
+      "type": "unanswerable",
+      "question": "What JWT secret key setting is required for authenticating REST API requests?",
+      "expected_answer": "I cannot answer this based on the provided documents. The REST API endpoints currently operate without JWT authentication headers.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_architecture_overview:2",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_architecture_overview:2",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_api_reference:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 3,
+          "final_rank": 1,
+          "reranker_score": 0.000121
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 2,
+          "final_rank": 2,
+          "reranker_score": 9.7e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 1,
+          "final_rank": 3,
+          "reranker_score": 4.3e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 4,
+          "final_rank": 4,
+          "reranker_score": 2.1e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 5,
+          "final_rank": 5,
+          "reranker_score": 1.9e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 6,
+          "final_rank": 6,
+          "reranker_score": 1.7e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 7,
+          "final_rank": 7,
+          "reranker_score": 1.4e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 9,
+          "final_rank": 8,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 9,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 8,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_architecture_overview:2",
+        "reranker_top1": "eval_api_reference:0",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q046",
+      "type": "ambiguous",
+      "question": "What is the default port for running the application?",
+      "expected_answer": "The application supports two default ports depending on context: port 9826 for the unified FastAPI backend/local server, and port 5500 for serving the static frontend separately via http.server.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_troubleshooting_guide:1",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.25
+        }
+      },
+      "hybrid": {
+        "top1": "eval_troubleshooting_guide:1",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.25
+        }
+      },
+      "reranked": {
+        "top1": "eval_api_reference:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 4,
+          "final_rank": 1,
+          "reranker_score": 0.000609
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 1,
+          "final_rank": 2,
+          "reranker_score": 0.000166
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 3,
+          "final_rank": 3,
+          "reranker_score": 0.000157
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 5,
+          "final_rank": 4,
+          "reranker_score": 0.000132
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 6,
+          "final_rank": 5,
+          "reranker_score": 3.2e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 2,
+          "final_rank": 6,
+          "reranker_score": 2.1e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 7,
+          "final_rank": 7,
+          "reranker_score": 1.9e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 8,
+          "reranker_score": 1.7e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 9,
+          "final_rank": 9,
+          "reranker_score": 1.6e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 8,
+          "final_rank": 10,
+          "reranker_score": 1.3e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_troubleshooting_guide:1",
+        "reranker_top1": "eval_api_reference:0",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q047",
+      "type": "ambiguous",
+      "question": "What embedding dimensions are used in the system?",
+      "expected_answer": "The vector dimensions depend on the active embedding backend: FastEmbed (BAAI/bge-small-en-v1.5) uses 384 dimensions, whereas the offline HashingEmbeddings fallback uses 1024 dimensions.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.5
+        }
+      },
+      "hybrid": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.5
+        }
+      },
+      "reranked": {
+        "top1": "eval_database_and_storage_spec:1",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 2,
+          "final_rank": 1,
+          "reranker_score": 0.979622
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 5,
+          "final_rank": 2,
+          "reranker_score": 0.034109
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 4,
+          "final_rank": 3,
+          "reranker_score": 0.019227
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 3,
+          "final_rank": 4,
+          "reranker_score": 0.019094
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 1,
+          "final_rank": 5,
+          "reranker_score": 0.000148
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 7,
+          "final_rank": 6,
+          "reranker_score": 2.2e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 10,
+          "final_rank": 7,
+          "reranker_score": 1.5e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 8,
+          "final_rank": 8,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 6,
+          "final_rank": 9,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 9,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_architecture_overview:0",
+        "reranker_top1": "eval_database_and_storage_spec:1",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q048",
+      "type": "ambiguous",
+      "question": "What vector collection name is stored in ChromaDB?",
+      "expected_answer": "The ChromaDB collection name is dynamically namespaced based on backend: rag_documents_fastembed_bge_small_en_v1_5 when FastEmbed is active, or rag_documents_hashing when hashing fallback is active.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_database_and_storage_spec:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_database_and_storage_spec:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_database_and_storage_spec:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 1,
+          "final_rank": 1,
+          "reranker_score": 0.995776
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 3,
+          "final_rank": 2,
+          "reranker_score": 0.056637
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 2,
+          "final_rank": 3,
+          "reranker_score": 0.00823
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 7,
+          "final_rank": 4,
+          "reranker_score": 0.001795
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 5,
+          "reranker_score": 0.00103
+        },
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 6,
+          "final_rank": 6,
+          "reranker_score": 0.000954
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 9,
+          "final_rank": 7,
+          "reranker_score": 3.6e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 8,
+          "final_rank": 8,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 5,
+          "final_rank": 9,
+          "reranker_score": 1.2e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 4,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_database_and_storage_spec:0",
+        "reranker_top1": "eval_database_and_storage_spec:0",
+        "class": "unchanged",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q049",
+      "type": "ambiguous",
+      "question": "What answer is generated when a search query is executed?",
+      "expected_answer": "If OPENROUTER_API_KEY is configured, an LLM-generated answer using gpt-4o-mini is produced. If no key is present or the API fails, a plain context summary showing top matching snippets is returned.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_api_reference:1",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.3333
+        }
+      },
+      "hybrid": {
+        "top1": "eval_api_reference:1",
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 0.3333
+        }
+      },
+      "reranked": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 5,
+          "final_rank": 1,
+          "reranker_score": 0.000395
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 1,
+          "final_rank": 2,
+          "reranker_score": 0.000161
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 3,
+          "final_rank": 3,
+          "reranker_score": 3e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 2,
+          "final_rank": 4,
+          "reranker_score": 2.1e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 7,
+          "final_rank": 5,
+          "reranker_score": 1.7e-05
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 6,
+          "final_rank": 6,
+          "reranker_score": 1.5e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 8,
+          "final_rank": 7,
+          "reranker_score": 1.4e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 4,
+          "final_rank": 8,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 9,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 9,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_api_reference:1",
+        "reranker_top1": "eval_architecture_overview:0",
+        "class": "neutral_change",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    },
+    {
+      "id": "q050",
+      "type": "ambiguous",
+      "question": "What document loader is used during file ingestion?",
+      "expected_answer": "The loader depends on the file extension: PyPDFLoader is used for .pdf files, while TextLoader (UTF-8 encoding) is used for .txt and .md files.",
+      "dense": {
+        "top1": null,
+        "metrics": {
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "mrr": 0.0
+        }
+      },
+      "bm25": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "hybrid": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        }
+      },
+      "reranked": {
+        "top1": "eval_architecture_overview:0",
+        "metrics": {
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "mrr": 1.0
+        },
+        "status": "ok"
+      },
+      "reranked_list": [
+        {
+          "chunk_id": "eval_architecture_overview:0",
+          "original_rrf_rank": 1,
+          "final_rank": 1,
+          "reranker_score": 0.931157
+        },
+        {
+          "chunk_id": "eval_api_reference:1",
+          "original_rrf_rank": 4,
+          "final_rank": 2,
+          "reranker_score": 0.332782
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:1",
+          "original_rrf_rank": 6,
+          "final_rank": 3,
+          "reranker_score": 0.319026
+        },
+        {
+          "chunk_id": "eval_api_reference:0",
+          "original_rrf_rank": 5,
+          "final_rank": 4,
+          "reranker_score": 0.045342
+        },
+        {
+          "chunk_id": "eval_troubleshooting_guide:0",
+          "original_rrf_rank": 3,
+          "final_rank": 5,
+          "reranker_score": 0.000587
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:1",
+          "original_rrf_rank": 2,
+          "final_rank": 6,
+          "reranker_score": 3.4e-05
+        },
+        {
+          "chunk_id": "eval_database_and_storage_spec:0",
+          "original_rrf_rank": 8,
+          "final_rank": 7,
+          "reranker_score": 3.2e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:1",
+          "original_rrf_rank": 7,
+          "final_rank": 8,
+          "reranker_score": 2.4e-05
+        },
+        {
+          "chunk_id": "eval_architecture_overview:2",
+          "original_rrf_rank": 9,
+          "final_rank": 9,
+          "reranker_score": 1.3e-05
+        },
+        {
+          "chunk_id": "eval_api_reference:2",
+          "original_rrf_rank": 10,
+          "final_rank": 10,
+          "reranker_score": 1.2e-05
+        }
+      ],
+      "provenance": {
+        "rrf_top1": "eval_architecture_overview:0",
+        "reranker_top1": "eval_architecture_overview:0",
+        "class": "unchanged",
+        "rrf_correct": false,
+        "reranker_correct": false
+      }
+    }
+  ]
+}

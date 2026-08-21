@@ -1,0 +1,17 @@
+services:
+  rag-backend:
+    build: .
+    ports:
+      - "9826:9826"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    deploy:
+      resources:
+        limits:
+          # Minimum practical: 1 GB.  Recommended: 2 GB for hybrid_rerank.
+          # 512 MB is NOT supported — peak memory (TinyBERT ~786 MB, MiniLM ~1143 MB)
+          # exceeds it.  See docs/PRODUCTION_OPERATIONS.md for details.
+          memory: 2g
+    restart: unless-stopped

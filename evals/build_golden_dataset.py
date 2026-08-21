@@ -1,0 +1,476 @@
+import json
+from pathlib import Path
+
+GOLDEN_DATASET_PATH = Path(__file__).resolve().parent / "golden_dataset.json"
+
+questions = [
+    # -------------------------------------------------------------------------
+    # SINGLE-HOP LOOKUP QUESTIONS (15)
+    # -------------------------------------------------------------------------
+    {
+        "id": "q001",
+        "question": "What chunk size is configured for the text splitter?",
+        "type": "single-hop",
+        "expected_answer": "The text splitter is configured with a chunk size of 1200 characters.",
+        "expected_sources": [{"document": "architecture_overview.md", "section": "Ingestion Engine & Queue Lifecycle"}],
+        "notes": "Single-hop lookup from architecture_overview.md."
+    },
+    {
+        "id": "q002",
+        "question": "What chunk overlap is used during document ingestion?",
+        "type": "single-hop",
+        "expected_answer": "The chunk overlap is 200 characters.",
+        "expected_sources": [{"document": "architecture_overview.md", "section": "Ingestion Engine & Queue Lifecycle"}],
+        "notes": "Single-hop lookup from architecture_overview.md."
+    },
+    {
+        "id": "q003",
+        "question": "What primary embedding model is used by FastEmbedEmbeddings?",
+        "type": "single-hop",
+        "expected_answer": "FastEmbedEmbeddings uses BAAI/bge-small-en-v1.5 in ONNX format.",
+        "expected_sources": [{"document": "architecture_overview.md", "section": "Retrieval Pipeline & MMR Parameters"}],
+        "notes": "Single-hop lookup from architecture_overview.md."
+    },
+    {
+        "id": "q004",
+        "question": "What is the default local development port for the backend web server?",
+        "type": "single-hop",
+        "expected_answer": "The default local development port is 9826 (http://127.0.0.1:9826).",
+        "expected_sources": [{"document": "api_reference.txt", "section": "API BASE CONFIGURATION"}],
+        "notes": "Single-hop lookup from api_reference.txt."
+    },
+    {
+        "id": "q005",
+        "question": "What is the maximum allowed document upload size?",
+        "type": "single-hop",
+        "expected_answer": "The maximum allowed file upload size is 50 MB.",
+        "expected_sources": [{"document": "api_reference.txt", "section": "POST /upload"}],
+        "notes": "Single-hop lookup from api_reference.txt."
+    },
+    {
+        "id": "q006",
+        "question": "What HTTP status code is returned when an upload is successfully accepted for processing?",
+        "type": "single-hop",
+        "expected_answer": "HTTP status code 202 ACCEPTED is returned.",
+        "expected_sources": [{"document": "api_reference.txt", "section": "POST /upload"}],
+        "notes": "Single-hop lookup from api_reference.txt."
+    },
+    {
+        "id": "q007",
+        "question": "Where are runtime vector database files stored on disk?",
+        "type": "single-hop",
+        "expected_answer": "Vector database files are stored in data/chroma_db/.",
+        "expected_sources": [{"document": "database_and_storage_spec.txt", "section": "1. STORAGE DIRECTORY LAYOUT"}],
+        "notes": "Single-hop lookup from database_and_storage_spec.txt."
+    },
+    {
+        "id": "q008",
+        "question": "How many vector dimensions are produced by the BAAI/bge-small-en-v1.5 model?",
+        "type": "single-hop",
+        "expected_answer": "The BAAI/bge-small-en-v1.5 model produces 384-dimensional dense vectors.",
+        "expected_sources": [{"document": "database_and_storage_spec.txt", "section": "3. EMBEDDING DIMENSIONS & THREAD SAFETY"}],
+        "notes": "Single-hop lookup from database_and_storage_spec.txt."
+    },
+    {
+        "id": "q009",
+        "question": "How many vector dimensions are produced by HashingEmbeddings?",
+        "type": "single-hop",
+        "expected_answer": "HashingEmbeddings produces 1024-dimensional vectors.",
+        "expected_sources": [{"document": "database_and_storage_spec.txt", "section": "3. EMBEDDING DIMENSIONS & THREAD SAFETY"}],
+        "notes": "Single-hop lookup from database_and_storage_spec.txt."
+    },
+    {
+        "id": "q010",
+        "question": "What is the RAM memory capacity provided on Render free tier?",
+        "type": "single-hop",
+        "expected_answer": "Render free tier provides 512 MB of RAM and 1 vCPU.",
+        "expected_sources": [{"document": "troubleshooting_guide.pdf", "section": "1. Render Deployment and Memory Optimization"}],
+        "notes": "Single-hop lookup from troubleshooting_guide.pdf."
+    },
+    {
+        "id": "q011",
+        "question": "Where should persistent disk volume be mounted on Render?",
+        "type": "single-hop",
+        "expected_answer": "A 1 GB persistent disk volume must be mounted at data/ on Render.",
+        "expected_sources": [{"document": "troubleshooting_guide.pdf", "section": "2. Persistent Disk Volume Setup"}],
+        "notes": "Single-hop lookup from troubleshooting_guide.pdf."
+    },
+    {
+        "id": "q012",
+        "question": "What environment variable forces native ONNX runtime to run single-threaded?",
+        "type": "single-hop",
+        "expected_answer": "OMP_NUM_THREADS=1 forces native ONNX runtime to run single-threaded.",
+        "expected_sources": [{"document": "troubleshooting_guide.pdf", "section": "1. Render Deployment and Memory Optimization"}],
+        "notes": "Single-hop lookup from troubleshooting_guide.pdf."
+    },
+    {
+        "id": "q013",
+        "question": "What separators are used by RecursiveCharacterTextSplitter?",
+        "type": "single-hop",
+        "expected_answer": "Separators used are [\"\\n\\n\", \"\\n\", \". \", \" \", \"\"].",
+        "expected_sources": [{"document": "architecture_overview.md", "section": "Ingestion Engine & Queue Lifecycle"}],
+        "notes": "Single-hop lookup from architecture_overview.md."
+    },
+    {
+        "id": "q014",
+        "question": "What document page numbering convention is used for stored PDF chunk metadata?",
+        "type": "single-hop",
+        "expected_answer": "Stored page numbers in chunk metadata are 1-based (derived by adding 1 to PyPDFLoader 0-based page index).",
+        "expected_sources": [{"document": "database_and_storage_spec.txt", "section": "2. CHROMADB VECTOR COLLECTION SPECIFICATION"}],
+        "notes": "Single-hop lookup from database_and_storage_spec.txt."
+    },
+    {
+        "id": "q015",
+        "question": "What is the minimum relevance score threshold for retrieved chunks?",
+        "type": "single-hop",
+        "expected_answer": "The minimum relevance score cutoff is MIN_RELEVANCE_SCORE=0.35.",
+        "expected_sources": [{"document": "architecture_overview.md", "section": "Retrieval Pipeline & MMR Parameters"}],
+        "notes": "Single-hop lookup from architecture_overview.md."
+    },
+
+    # -------------------------------------------------------------------------
+    # EXACT-TERM QUESTIONS (10)
+    # -------------------------------------------------------------------------
+    {
+        "id": "q016",
+        "question": "What exact environment variable sets the minimum upload size limit?",
+        "type": "exact-term",
+        "expected_answer": "MAX_UPLOAD_MB",
+        "expected_sources": [{"document": "api_reference.txt", "section": "POST /upload"}],
+        "notes": "Exact term match for environment variable MAX_UPLOAD_MB."
+    },
+    {
+        "id": "q017",
+        "question": "What exact error message detail is returned when worker queue saturation occurs?",
+        "type": "exact-term",
+        "expected_answer": "Ingestion queue is full.",
+        "expected_sources": [{"document": "troubleshooting_guide.pdf", "section": "4. Queue Saturation Error ERR-503"}],
+        "notes": "Exact error string returned on 503."
+    },
+    {
+        "id": "q018",
+        "question": "What exact collection name is used for ChromaDB when fastembed is active?",
+        "type": "exact-term",
+        "expected_answer": "rag_documents_fastembed_bge_small_en_v1_5",
+        "expected_sources": [{"document": "database_and_storage_spec.txt", "section": "2. CHROMADB VECTOR COLLECTION SPECIFICATION"}],
+        "notes": "Exact collection identifier string."
+    },
+    {
+        "id": "q019",
+        "question": "What exact collection name is used for ChromaDB when hashing fallback is active?",
+        "type": "exact-term",
+        "expected_answer": "rag_documents_hashing",
+        "expected_sources": [{"document": "database_and_storage_spec.txt", "section": "2. CHROMADB VECTOR COLLECTION SPECIFICATION"}],
+        "notes": "Exact collection identifier string."
+    },
+    {
+        "id": "q020",
+        "question": "What exact parameter value of lambda_mult is configured for MMR retrieval?",
+        "type": "exact-term",
+        "expected_answer": "lambda_mult=0.5",
+        "expected_sources": [{"document": "architecture_overview.md", "section": "3. Retrieval Pipeline & MMR Parameters"}],
+        "notes": "Exact parameter configuration value."
+    },
+    {
+        "id": "q021",
+        "question": "What exact Python class processes text and markdown document uploads?",
+        "type": "exact-term",
+        "expected_answer": "TextLoader",
+        "expected_sources": [{"document": "architecture_overview.md", "section": "2. Ingestion Engine & Queue Lifecycle"}],
+        "notes": "Exact class identifier."
+    },
+    {
+        "id": "q022",
+        "question": "What exact Python class processes PDF document uploads?",
+        "type": "exact-term",
+        "expected_answer": "PyPDFLoader",
+        "expected_sources": [{"document": "architecture_overview.md", "section": "2. Ingestion Engine & Queue Lifecycle"}],
+        "notes": "Exact class identifier."
+    },
+    {
+        "id": "q023",
+        "question": "What exact environment variable disables Hugging Face tokenizers parallelism?",
+        "type": "exact-term",
+        "expected_answer": "TOKENIZERS_PARALLELISM=false",
+        "expected_sources": [{"document": "troubleshooting_guide.pdf", "section": "1. Render Deployment and Memory Optimization"}],
+        "notes": "Exact environment variable setting."
+    },
+    {
+        "id": "q024",
+        "question": "What exact default LLM model identifier is used for OpenRouter answer generation?",
+        "type": "exact-term",
+        "expected_answer": "openai/gpt-4o-mini",
+        "expected_sources": [{"document": "architecture_overview.md", "section": "4. LLM Integration & OpenRouter Protocol"}],
+        "notes": "Exact OpenRouter model identifier string."
+    },
+    {
+        "id": "q025",
+        "question": "What exact REST endpoint retrieves full ingestion status for all documents?",
+        "type": "exact-term",
+        "expected_answer": "GET /documents",
+        "expected_sources": [{"document": "api_reference.txt", "section": "2. GET /documents"}],
+        "notes": "Exact REST endpoint route."
+    },
+
+    # -------------------------------------------------------------------------
+    # MULTI-HOP QUESTIONS (10)
+    # -------------------------------------------------------------------------
+    {
+        "id": "q026",
+        "question": "How does document hashing prevent duplicate processing and what HTTP status is returned if a duplicate is found?",
+        "type": "multi-hop",
+        "expected_answer": "Uploaded documents are hashed using SHA-256 (content_hash). If an active document with the same content hash is currently in queued or processing state, the POST /upload endpoint rejects the new upload with an HTTP 409 CONFLICT status code.",
+        "expected_sources": [
+            {"document": "architecture_overview.md", "section": "Ingestion Engine & Queue Lifecycle"},
+            {"document": "api_reference.txt", "section": "POST /upload"}
+        ],
+        "notes": "Multi-hop combining hashing mechanism and API HTTP status response."
+    },
+    {
+        "id": "q027",
+        "question": "What happens when FastEmbed model download fails, and how does ChromaDB adjust its vector collection namespace?",
+        "type": "multi-hop",
+        "expected_answer": "When FastEmbed download fails or is offline, the system falls back to HashingEmbeddings (1024 dimensions). To avoid mixing vector spaces, ChromaDB changes its collection namespace from rag_documents_fastembed_bge_small_en_v1_5 to rag_documents_hashing.",
+        "expected_sources": [
+            {"document": "troubleshooting_guide.pdf", "section": "3. Offline Fallback and Hashing Embeddings"},
+            {"document": "database_and_storage_spec.txt", "section": "2. CHROMADB VECTOR COLLECTION SPECIFICATION"}
+        ],
+        "notes": "Multi-hop linking embedding fallback behavior with vector store collection namespacing."
+    },
+    {
+        "id": "q028",
+        "question": "What memory constraints exist on Render free tier, and what environment variables are configured to prevent memory exhaustion during embedding generation?",
+        "type": "multi-hop",
+        "expected_answer": "Render free tier provides 512 MB RAM. To prevent memory exhaustion during ONNX embedding generation, OMP_NUM_THREADS=1 and TOKENIZERS_PARALLELISM=false are set in settings.py.",
+        "expected_sources": [
+            {"document": "troubleshooting_guide.pdf", "section": "1. Render Deployment and Memory Optimization"},
+            {"document": "database_and_storage_spec.txt", "section": "3. EMBEDDING DIMENSIONS & THREAD SAFETY"}
+        ],
+        "notes": "Multi-hop combining hardware resource limits with OS environment variable flags."
+    },
+    {
+        "id": "q029",
+        "question": "What parameters control candidate fetching during MMR retrieval, and how does the engine ensure multi-page lists are not split at chunk boundaries?",
+        "type": "multi-hop",
+        "expected_answer": "MMR fetches fetch_k=20 initial candidates to return target k=8 chunks with lambda_mult=0.5. To prevent multi-page lists from being cut off at boundaries, adjacent chunk expansion automatically fetches chunk N+1 for every retrieved chunk N.",
+        "expected_sources": [
+            {"document": "architecture_overview.md", "section": "3. Retrieval Pipeline & MMR Parameters"}
+        ],
+        "notes": "Multi-hop combining candidate retrieval parameters with adjacent chunk expansion logic."
+    },
+    {
+        "id": "q030",
+        "question": "What actions occur during document deletion across disk storage and ChromaDB?",
+        "type": "multi-hop",
+        "expected_answer": "When DELETE /documents/{document_id} is called, the backend purges all vector chunks matching document_id from ChromaDB, unlinks the uploaded raw file from data/uploads/, and removes the document record from the registry.",
+        "expected_sources": [
+            {"document": "api_reference.txt", "section": "4. DELETE /documents/{document_id}"},
+            {"document": "database_and_storage_spec.txt", "section": "2. CHROMADB VECTOR COLLECTION SPECIFICATION"}
+        ],
+        "notes": "Multi-hop combining REST deletion endpoint with filesystem and database operations."
+    },
+    {
+        "id": "q031",
+        "question": "How are PDF files processed differently from text files during ingestion in terms of loaders and page metadata?",
+        "type": "multi-hop",
+        "expected_answer": "PDF files are loaded using PyPDFLoader and convert 0-based page indices to 1-based page metadata stored in ChromaDB, whereas text and markdown files are loaded using TextLoader (UTF-8) with default page count 1.",
+        "expected_sources": [
+            {"document": "architecture_overview.md", "section": "2. Ingestion Engine & Queue Lifecycle"},
+            {"document": "database_and_storage_spec.txt", "section": "2. CHROMADB VECTOR COLLECTION SPECIFICATION"}
+        ],
+        "notes": "Multi-hop comparing file format loaders and metadata mapping."
+    },
+    {
+        "id": "q032",
+        "question": "What are the exact request schema fields for POST /search and what error response occurs if the query string is empty?",
+        "type": "multi-hop",
+        "expected_answer": "The POST /search request payload takes query (string), top_k (integer), and optional source (filename string). An empty query causes HTTP status 400 BAD REQUEST.",
+        "expected_sources": [
+            {"document": "api_reference.txt", "section": "5. POST /search"}
+        ],
+        "notes": "Multi-hop combining search request schema with input validation error behavior."
+    },
+    {
+        "id": "q033",
+        "question": "Where is the FastEmbed model cached on disk and how does Render persistent disk prevent redownloading on redeployment?",
+        "type": "multi-hop",
+        "expected_answer": "FastEmbed models are cached in data/fastembed_cache/. Mounting a 1 GB persistent disk at data/ ensures the ONNX model files survive application redeployments without redownloading.",
+        "expected_sources": [
+            {"document": "database_and_storage_spec.txt", "section": "1. STORAGE DIRECTORY LAYOUT"},
+            {"document": "troubleshooting_guide.pdf", "section": "2. Persistent Disk Volume Setup"}
+        ],
+        "notes": "Multi-hop combining disk directory layout with hosting persistence setup."
+    },
+    {
+        "id": "q034",
+        "question": "What generation parameters are sent to OpenRouter API and what fallback answer is returned if the API key is missing?",
+        "type": "multi-hop",
+        "expected_answer": "OpenRouter API request uses temperature=0.0 and max_tokens=768 with model openai/gpt-4o-mini. If OPENROUTER_API_KEY is empty or calls fail, the engine falls back to displaying top context snippets formatted directly.",
+        "expected_sources": [
+            {"document": "architecture_overview.md", "section": "4. LLM Integration & OpenRouter Protocol"}
+        ],
+        "notes": "Multi-hop combining LLM generation payload settings with graceful offline context fallback."
+    },
+    {
+        "id": "q035",
+        "question": "What HTTP status codes occur when file size is exceeded vs when the background ingestion queue is full?",
+        "type": "multi-hop",
+        "expected_answer": "Exceeding max upload file size returns HTTP 413 REQUEST ENTITY TOO LARGE, while worker queue saturation returns HTTP 503 SERVICE UNAVAILABLE.",
+        "expected_sources": [
+            {"document": "api_reference.txt", "section": "POST /upload"},
+            {"document": "troubleshooting_guide.pdf", "section": "4. Queue Saturation Error ERR-503"}
+        ],
+        "notes": "Multi-hop comparing error conditions and status codes."
+    },
+
+    # -------------------------------------------------------------------------
+    # UNANSWERABLE QUESTIONS (10)
+    # -------------------------------------------------------------------------
+    {
+        "id": "q036",
+        "question": "What BM25 k1 and b parameters are configured in the retrieval engine?",
+        "type": "unanswerable",
+        "expected_answer": "I cannot answer this based on the provided documents. BM25 is not implemented in the current system (dense MMR retrieval is used).",
+        "expected_sources": [],
+        "notes": "Unanswerable: BM25 is not in current baseline."
+    },
+    {
+        "id": "q037",
+        "question": "What cross-encoder model is used for reranking retrieved search results?",
+        "type": "unanswerable",
+        "expected_answer": "I cannot answer this based on the provided documents. Reranking is not present in the current baseline architecture.",
+        "expected_sources": [],
+        "notes": "Unanswerable: Reranker is absent in Phase 0."
+    },
+    {
+        "id": "q038",
+        "question": "What PostgreSQL database credentials are required for vector storage?",
+        "type": "unanswerable",
+        "expected_answer": "I cannot answer this based on the provided documents. The system uses local ChromaDB disk storage, not PostgreSQL.",
+        "expected_sources": [],
+        "notes": "Unanswerable: PostgreSQL is not used in Phase 0."
+    },
+    {
+        "id": "q039",
+        "question": "What Docker container image base tag is used in production deployment?",
+        "type": "unanswerable",
+        "expected_answer": "I cannot answer this based on the provided documents. Docker configuration is not detailed in the baseline documentation corpus.",
+        "expected_sources": [],
+        "notes": "Unanswerable: Docker setup is scheduled for Phase 10."
+    },
+    {
+        "id": "q040",
+        "question": "What semantic chunking threshold is used to split paragraphs by embedding distance?",
+        "type": "unanswerable",
+        "expected_answer": "I cannot answer this based on the provided documents. The baseline uses RecursiveCharacterTextSplitter, not semantic chunking.",
+        "expected_sources": [],
+        "notes": "Unanswerable: Semantic chunking is absent in Phase 0."
+    },
+    {
+        "id": "q041",
+        "question": "What is the maximum token context length for the Anthropic Claude 3.5 Sonnet model in this app?",
+        "type": "unanswerable",
+        "expected_answer": "I cannot answer this based on the provided documents. The default model specified is openai/gpt-4o-mini via OpenRouter.",
+        "expected_sources": [],
+        "notes": "Unanswerable: Claude 3.5 Sonnet is not configured."
+    },
+    {
+        "id": "q042",
+        "question": "How do you configure Redis cluster caching for search response endpoints?",
+        "type": "unanswerable",
+        "expected_answer": "I cannot answer this based on the provided documents. Redis caching is not part of the system architecture.",
+        "expected_sources": [],
+        "notes": "Unanswerable: Redis is not implemented."
+    },
+    {
+        "id": "q043",
+        "question": "What Qdrant collection distance metric (Cosine, Euclidean, Dot Product) is configured?",
+        "type": "unanswerable",
+        "expected_answer": "I cannot answer this based on the provided documents. The system uses ChromaDB rather than Qdrant.",
+        "expected_sources": [],
+        "notes": "Unanswerable: Qdrant is not used."
+    },
+    {
+        "id": "q044",
+        "question": "What Prometheus metric port is exposed for scraping ingestion queue depth?",
+        "type": "unanswerable",
+        "expected_answer": "I cannot answer this based on the provided documents. Prometheus metrics endpoints are not documented.",
+        "expected_sources": [],
+        "notes": "Unanswerable: Prometheus monitoring is not in Phase 0."
+    },
+    {
+        "id": "q045",
+        "question": "What JWT secret key setting is required for authenticating REST API requests?",
+        "type": "unanswerable",
+        "expected_answer": "I cannot answer this based on the provided documents. The REST API endpoints currently operate without JWT authentication headers.",
+        "expected_sources": [],
+        "notes": "Unanswerable: JWT authentication is not present."
+    },
+
+    # -------------------------------------------------------------------------
+    # AMBIGUOUS QUESTIONS (5)
+    # -------------------------------------------------------------------------
+    {
+        "id": "q046",
+        "question": "What is the default port for running the application?",
+        "type": "ambiguous",
+        "expected_answer": "The application supports two default ports depending on context: port 9826 for the unified FastAPI backend/local server, and port 5500 for serving the static frontend separately via http.server.",
+        "expected_sources": [{"document": "api_reference.txt", "section": "API BASE CONFIGURATION"}],
+        "notes": "Ambiguous: Backend runs on 9826, standalone frontend runs on 5500."
+    },
+    {
+        "id": "q047",
+        "question": "What embedding dimensions are used in the system?",
+        "type": "ambiguous",
+        "expected_answer": "The vector dimensions depend on the active embedding backend: FastEmbed (BAAI/bge-small-en-v1.5) uses 384 dimensions, whereas the offline HashingEmbeddings fallback uses 1024 dimensions.",
+        "expected_sources": [{"document": "database_and_storage_spec.txt", "section": "3. EMBEDDING DIMENSIONS & THREAD SAFETY"}],
+        "notes": "Ambiguous: FastEmbed is 384, HashingEmbeddings is 1024."
+    },
+    {
+        "id": "q048",
+        "question": "What vector collection name is stored in ChromaDB?",
+        "type": "ambiguous",
+        "expected_answer": "The ChromaDB collection name is dynamically namespaced based on backend: rag_documents_fastembed_bge_small_en_v1_5 when FastEmbed is active, or rag_documents_hashing when hashing fallback is active.",
+        "expected_sources": [{"document": "database_and_storage_spec.txt", "section": "2. CHROMADB VECTOR COLLECTION SPECIFICATION"}],
+        "notes": "Ambiguous: Dynamic based on active embedding provider."
+    },
+    {
+        "id": "q049",
+        "question": "What answer is generated when a search query is executed?",
+        "type": "ambiguous",
+        "expected_answer": "If OPENROUTER_API_KEY is configured, an LLM-generated answer using gpt-4o-mini is produced. If no key is present or the API fails, a plain context summary showing top matching snippets is returned.",
+        "expected_sources": [{"document": "architecture_overview.md", "section": "4. LLM Integration & OpenRouter Protocol"}],
+        "notes": "Ambiguous: LLM answer vs plain context fallback depending on environment variable."
+    },
+    {
+        "id": "q050",
+        "question": "What document loader is used during file ingestion?",
+        "type": "ambiguous",
+        "expected_answer": "The loader depends on the file extension: PyPDFLoader is used for .pdf files, while TextLoader (UTF-8 encoding) is used for .txt and .md files.",
+        "expected_sources": [{"document": "architecture_overview.md", "section": "2. Ingestion Engine & Queue Lifecycle"}],
+        "notes": "Ambiguous: PyPDFLoader vs TextLoader based on file type extension."
+    }
+]
+
+def build_golden_dataset():
+    dataset = {
+        "version": "1.0",
+        "description": "HybridRAG Phase 0 Golden Evaluation Dataset (50 questions)",
+        "total_questions": len(questions),
+        "taxonomy": {
+            "single-hop": 15,
+            "exact-term": 10,
+            "multi-hop": 10,
+            "unanswerable": 10,
+            "ambiguous": 5
+        },
+        "records": questions
+    }
+
+    with GOLDEN_DATASET_PATH.open("w", encoding="utf-8") as f:
+        json.dump(dataset, f, indent=2)
+
+    print(f"Golden dataset written to {GOLDEN_DATASET_PATH} with {len(questions)} questions.")
+
+if __name__ == "__main__":
+    build_golden_dataset()

@@ -10,7 +10,7 @@ import os
 import queue
 import threading
 
-from backend.ingestion import ingest_document
+from backend.ingestion_v2 import ingest_document_v2
 
 log = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ def _run() -> None:
             break
         try:
             document_id, stored_path, filename = job
-            ingest_document(document_id, stored_path, filename)
+            ingest_document_v2(document_id, stored_path, filename)
         except Exception as exc:  # keep the worker alive across any failure
             log.exception("Ingestion worker error: %s", exc)
         finally:

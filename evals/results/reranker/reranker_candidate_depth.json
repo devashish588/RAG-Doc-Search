@@ -1,0 +1,47 @@
+{
+  "cand5_top5": {
+    "candidate_k": 5,
+    "top_k_final": 5,
+    "metrics": {
+      "recall@1": 0.92,
+      "recall@5": 1.0,
+      "recall@10": 1.0,
+      "mrr": 0.96
+    },
+    "latency": {
+      "mean": 10.626,
+      "p50": 9.188,
+      "p95": 11.102
+    }
+  },
+  "cand10_top5": {
+    "candidate_k": 10,
+    "top_k_final": 5,
+    "metrics": {
+      "recall@1": 0.92,
+      "recall@5": 1.0,
+      "recall@10": 1.0,
+      "mrr": 0.96
+    },
+    "latency": {
+      "mean": 19.517,
+      "p50": 18.18,
+      "p95": 21.153
+    }
+  },
+  "cand20_top5": {
+    "candidate_k": 20,
+    "top_k_final": 5,
+    "metrics": {
+      "recall@1": 0.9,
+      "recall@5": 1.0,
+      "recall@10": 1.0,
+      "mrr": 0.95
+    },
+    "latency": {
+      "mean": 24.578,
+      "p50": 23.001,
+      "p95": 30.844
+    }
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "dense_only": {
+    "recall@1": 0.78,
+    "recall@5": 1.0,
+    "recall@10": 1.0,
+    "mrr": 0.8833,
+    "answer_correctness": 0.0,
+    "faithfulness": 0.0,
+    "citation_coverage": 0.0,
+    "citation_accuracy": 0.0,
+    "abstention_accuracy": 0.0,
+    "latency_ms": {
+      "mean": 14.55,
+      "p50": 14.11,
+      "p95": 19.99
+    }
+  },
+  "w0.9_0.1": {
+    "recall@1": 0.78,
+    "recall@5": 1.0,
+    "recall@10": 1.0,
+    "mrr": 0.8833,
+    "answer_correctness": 0.0,
+    "faithfulness": 0.0,
+    "citation_coverage": 0.0,
+    "citation_accuracy": 0.0,
+    "abstention_accuracy": 0.0,
+    "latency_ms": {
+      "mean": 14.34,
+      "p50": 13.36,
+      "p95": 21.9
+    }
+  },
+  "w0.7_0.3": {
+    "recall@1": 0.78,
+    "recall@5": 1.0,
+    "recall@10": 1.0,
+    "mrr": 0.8833,
+    "answer_correctness": 0.0,
+    "faithfulness": 0.0,
+    "citation_coverage": 0.0,
+    "citation_accuracy": 0.0,
+    "abstention_accuracy": 0.0,
+    "latency_ms": {
+      "mean": 14.93,
+      "p50": 14.82,
+      "p95": 21.0
+    }
+  },
+  "w0.5_0.5": {
+    "recall@1": 0.78,
+    "recall@5": 1.0,
+    "recall@10": 1.0,
+    "mrr": 0.8833,
+    "answer_correctness": 0.0,
+    "faithfulness": 0.0,
+    "citation_coverage": 0.0,
+    "citation_accuracy": 0.0,
+    "abstention_accuracy": 0.0,
+    "latency_ms": {
+      "mean": 14.72,
+      "p50": 15.26,
+      "p95": 19.0
+    }
+  },
+  "w0.3_0.7": {
+    "recall@1": 0.78,
+    "recall@5": 1.0,
+    "recall@10": 1.0,
+    "mrr": 0.8833,
+    "answer_correctness": 0.0,
+    "faithfulness": 0.0,
+    "citation_coverage": 0.0,
+    "citation_accuracy": 0.0,
+    "abstention_accuracy": 0.0,
+    "latency_ms": {
+      "mean": 14.93,
+      "p50": 14.88,
+      "p95": 20.27
+    }
+  },
+  "w0.1_0.9": {
+    "recall@1": 0.78,
+    "recall@5": 1.0,
+    "recall@10": 1.0,
+    "mrr": 0.8833,
+    "answer_correctness": 0.0,
+    "faithfulness": 0.0,
+    "citation_coverage": 0.0,
+    "citation_accuracy": 0.0,
+    "abstention_accuracy": 0.0,
+    "latency_ms": {
+      "mean": 15.64,
+      "p50": 15.5,
+      "p95": 22.73
+    }
+  },
+  "sparse_only": {
+    "recall@1": 0.78,
+    "recall@5": 1.0,
+    "recall@10": 1.0,
+    "mrr": 0.8833,
+    "answer_correctness": 0.0,
+    "faithfulness": 0.0,
+    "citation_coverage": 0.0,
+    "citation_accuracy": 0.0,
+    "abstention_accuracy": 0.0,
+    "latency_ms": {
+      "mean": 15.22,
+      "p50": 15.16,
+      "p95": 21.16
+    }
+  }
+}

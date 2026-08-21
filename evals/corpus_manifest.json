@@ -1,0 +1,44 @@
+{
+  "version": "1.0",
+  "corpus_name": "fixed_baseline_corpus",
+  "total_documents": 4,
+  "total_characters": 7589,
+  "documents": [
+    {
+      "filename": "api_reference.txt",
+      "path": "corpus\\api_reference.txt",
+      "extension": ".txt",
+      "size_bytes": 2389,
+      "sha256": "4209ed440cd44caa4a14e33e4a52cf49bae76e8f97c102d63a3e79208fec5923",
+      "page_count": 1,
+      "char_count": 2389
+    },
+    {
+      "filename": "architecture_overview.md",
+      "path": "corpus\\architecture_overview.md",
+      "extension": ".md",
+      "size_bytes": 2359,
+      "sha256": "2ea3b2ff7954d5fc26bf17314d6a35a684cf9b23b1026c75c646c424d5b4d6f9",
+      "page_count": 1,
+      "char_count": 2359
+    },
+    {
+      "filename": "database_and_storage_spec.txt",
+      "path": "corpus\\database_and_storage_spec.txt",
+      "extension": ".txt",
+      "size_bytes": 1519,
+      "sha256": "5c7543570ca8f01f24d52267360304a8e7a597490ff9be8f9502575b095c0160",
+      "page_count": 1,
+      "char_count": 1519
+    },
+    {
+      "filename": "troubleshooting_guide.pdf",
+      "path": "corpus\\troubleshooting_guide.pdf",
+      "extension": ".pdf",
+      "size_bytes": 2782,
+      "sha256": "543245628b2403626f689f740d7ea339fa581af98ceeff21a4d32041a20ed3f9",
+      "page_count": 1,
+      "char_count": 1322
+    }
+  ]
+}

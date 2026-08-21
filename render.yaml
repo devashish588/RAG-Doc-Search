@@ -4,16 +4,24 @@
 #   New -> Blueprint -> select this repo.
 # It provisions the web service and a persistent disk mounted at data/ so the
 # ChromaDB index and uploads survive redeploys.
+#
+# MEMORY WARNING:
+# 512 MB (free/starter) is NOT supported.  Peak memory with TinyBERT reranker
+# is ~786 MB.  Minimum practical: 1 GB.  Recommended: 2 GB for hybrid_rerank.
 services:
   - type: web
     name: rag-doc-search
     runtime: python
-    plan: starter # free plan (512 MB) is enough: fastembed/ONNX is light, no torch
+    plan: standard  # 1 GB minimum; 2 GB recommended for hybrid_rerank
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
-    healthCheckPath: /health
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /healthz
     autoDeploy: true
     envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
       - key: OPENROUTER_API_KEY
         sync: false # secret — fill in manually in the Render dashboard
       - key: OPENROUTER_MODEL
@@ -24,6 +32,28 @@ services:
         value: "true"
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: RATE_LIMIT_REQUESTS
+        value: "60"
+      - key: RATE_LIMIT_WINDOW_SECONDS
+        value: "60"
+      - key: CIRCUIT_BREAKER_FAILURE_THRESHOLD
+        value: "3"
+      - key: CIRCUIT_BREAKER_RECOVERY_SECONDS
+        value: "30"
+      - key: RERANKER_ENABLED
+        value: "false"
+      - key: RERANKER_MODEL
+        value: ms-marco-TinyBERT-L-2-v2
+      - key: CONFIDENCE_THRESHOLD
+        value: "0.50"
+      - key: MAX_UPLOAD_MB
+        value: "25"
+      - key: MAX_TOP_K
+        value: "50"
+      - key: MAX_TOP_K_FINAL
+        value: "20"
     disk:
       name: rag-data
       mountPath: /opt/render/project/src/data

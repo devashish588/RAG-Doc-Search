@@ -1,0 +1,23 @@
+Database and Storage Specifications for RAG Document Search
+
+1. STORAGE DIRECTORY LAYOUT:
+- Root Data Directory: data/
+- Uploads Directory: data/uploads/
+- Vector Database Directory: data/chroma_db/
+- FastEmbed Cache Directory: data/fastembed_cache/
+
+2. CHROMADB VECTOR COLLECTION SPECIFICATION:
+- Primary Collection Namespace: `rag_documents_fastembed_bge_small_en_v1_5` when running FastEmbed ONNX backend.
+- Fallback Collection Namespace: `rag_documents_hashing` when running scikit-learn HashingEmbeddings fallback.
+- ChromaDB Version: 0.5.23
+- Metadata Fields Stored Per Vector Chunk:
+  * document_id: Unique 32-character hexadecimal UUID string identifying the parent file.
+  * source: Original filename of the document (e.g. troubleshooting_guide.pdf).
+  * chunk: Integer sequence index starting from 0 representing the chunk position.
+  * page: 1-based page number for PDF documents (derived from 0-based PyPDFLoader index + 1).
+
+3. EMBEDDING DIMENSIONS & THREAD SAFETY:
+- FastEmbed ONNX Model: BAAI/bge-small-en-v1.5 producing 384-dimensional dense vectors.
+- Hashing Embeddings Fallback: scikit-learn HashingVectorizer producing 1024-dimensional sparse-dense vectors.
+- Process Concurrency: Thread locks `_VECTOR_LOCK` and `_LOCK` manage safe concurrent modifications during background document indexing and deletions.
+- Memory Limits & Thread Settings: `OMP_NUM_THREADS=1` and `TOKENIZERS_PARALLELISM=false` are explicitly enforced in `settings.py` to keep memory consumption under 512 MB on Render hosting.
