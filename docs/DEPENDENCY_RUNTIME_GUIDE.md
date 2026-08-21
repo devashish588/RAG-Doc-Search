@@ -25,31 +25,34 @@ pip install -r requirements.txt
 
 ## Validation
 
-Verify all critical dependencies are installed:
+Run the diagnostic script to verify your environment:
 
 ```bash
-python -c "import chromadb, fastembed, numpy, rank_bm25; print('Runtime dependencies OK')"
+# Windows
+.venv\Scripts\python.exe evals/runtime_environment_diagnostic.py
+
+# macOS/Linux
+source .venv/bin/activate
+python evals/runtime_environment_diagnostic.py
 ```
 
-Expected output:
-```
-Runtime dependencies OK
-```
+Or manually verify:
 
-If you see `ModuleNotFoundError`, reinstall:
 ```bash
-pip install -r requirements.txt
+.venv\Scripts\python.exe -c "import chromadb, fastembed, numpy, rank_bm25; print('OK')"
 ```
+
+> **WARNING:** Running `python` without activating the venv may use a global Python that does NOT have the required packages.
 
 ## Startup
 
 ```bash
-python -m uvicorn backend.main:app --host 127.0.0.1 --port 9826
-```
+# Windows (always use .venv python directly):
+.venv\Scripts\python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 9826
 
-Or using the convenience runner:
-```bash
-python main.py
+# macOS/Linux (activate venv first):
+source .venv/bin/activate
+uvicorn backend.main:app --host 127.0.0.1 --port 9826
 ```
 
 On startup, the application validates:

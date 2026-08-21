@@ -622,8 +622,16 @@ Without an API key, the system returns retrieved context without LLM-generated a
 ### Run
 
 ```bash
-python main.py
+# Always use the .venv Python directly (prevents wrong-interpreter errors)
+# Windows:
+.venv\Scripts\python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 9826
+
+# macOS/Linux:
+source .venv/bin/activate
+uvicorn backend.main:app --host 127.0.0.1 --port 9826
 ```
+
+> **IMPORTANT:** The `python` command may resolve to a global Python installation that does NOT have the required packages. Always use `.venv\Scripts\python.exe` (Windows) or activate the venv first.
 
 Open: http://127.0.0.1:9826
 

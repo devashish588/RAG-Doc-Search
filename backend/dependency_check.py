@@ -1,11 +1,12 @@
 """Runtime dependency validation.
 
-Validates that critical production dependencies are installed and functional.
-Called at startup and by /readyz to ensure the application cannot silently
-degrade when packages are missing.
+Validates that critical production dependencies are installed in the ACTUAL
+Python interpreter running the application. Detects wrong-interpreter launches
+(e.g., global Python 3.14 instead of project .venv Python 3.12).
 """
 import importlib
 import logging
+import site
 import sys
 from dataclasses import dataclass, field
 from typing import Any
@@ -39,7 +40,11 @@ class DepStatus:
 @dataclass
 class DependencyReport:
     status: str  # "ok" | "degraded" | "failed"
-    python_version: str = field(default_factory=lambda: sys.version)
+    executable: str = field(default_factory=lambda: sys.executable)
+    python_version: str = field(default_factory=lambda: sys.version.split()[0])
+    prefix: str = field(default_factory=lambda: sys.prefix)
+    base_prefix: str = field(default_factory=lambda: sys.base_prefix)
+    is_virtualenv: bool = field(default_factory=lambda: sys.prefix != sys.base_prefix)
     dependencies: dict[str, DepStatus] = field(default_factory=dict)
     missing_critical: list[str] = field(default_factory=list)
     missing_optional: list[str] = field(default_factory=list)
@@ -74,18 +79,34 @@ def check_runtime_dependencies() -> DependencyReport:
 
     if report.missing_critical:
         report.status = "failed"
-        log.error(
-            "CRITICAL: Missing runtime dependencies: %s. "
-            "Install using: pip install -r requirements.txt",
-            ", ".join(report.missing_critical),
-        )
     elif report.missing_optional:
         report.status = "degraded"
-        log.warning("Optional dependencies missing: %s", ", ".join(report.missing_optional))
     else:
         report.status = "ok"
 
     return report
+
+
+def log_environment_info() -> None:
+    """Log runtime environment details. Called once at startup."""
+    is_venv = sys.prefix != sys.base_prefix
+    site_packages = site.getsitepackages()[0] if site.getsitepackages() else "N/A"
+
+    log.info("Runtime environment:")
+    log.info("  executable:     %s", sys.executable)
+    log.info("  python:         %s", sys.version.split()[0])
+    log.info("  prefix:         %s", sys.prefix)
+    log.info("  base_prefix:    %s", sys.base_prefix)
+    log.info("  virtualenv:     %s", is_venv)
+    log.info("  site-packages:  %s", site_packages)
+
+    if not is_venv:
+        log.warning(
+            "NOT running inside a virtual environment. "
+            "The global 'python' resolves to: %s. "
+            "This WILL cause ModuleNotFoundError for chromadb, fastembed, etc.",
+            sys.executable,
+        )
 
 
 def check_embedding_backend() -> dict[str, Any]:
@@ -104,7 +125,7 @@ def check_embedding_backend() -> dict[str, Any]:
             "status": "failed",
             "backend": EMBEDDING_BACKEND,
             "reason": f"fastembed not installed: {ds.error}",
-            "fix": "pip install fastembed",
+            "fix": ".venv\\Scripts\\python.exe -m pip install -r requirements.txt",
         }
 
     return {"status": "ok", "backend": EMBEDDING_BACKEND, "reason": "unknown-backend"}
@@ -119,41 +140,62 @@ def check_vector_store() -> dict[str, Any]:
         return {
             "status": "failed",
             "reason": f"chromadb not installed: {chroma_ds.error}",
-            "fix": "pip install chromadb",
+            "fix": ".venv\\Scripts\\python.exe -m pip install -r requirements.txt",
         }
 
     if not langchain_chroma_ds.installed:
-        # Fallback to langchain_community.vectorstores.Chroma
         lc_ds = _check_package("langchain_community")
         if lc_ds.installed:
             return {"status": "ok", "client": "langchain_community.vectorstores.Chroma", "chromadb": chroma_ds.version}
         return {
             "status": "failed",
             "reason": "Neither langchain-chroma nor langchain-community available",
-            "fix": "pip install langchain-chroma",
+            "fix": ".venv\\Scripts\\python.exe -m pip install -r requirements.txt",
         }
 
     return {"status": "ok", "client": "langchain_chroma.Chroma", "chromadb": chroma_ds.version}
 
 
 def startup_validation() -> bool:
-    """Run at application startup. Returns True if safe to proceed."""
+    """Run at application startup. Returns True if safe to proceed.
+
+    Logs the interpreter, checks every critical dependency, and fails with
+    actionable instructions if anything is missing.
+    """
+    log_environment_info()
     report = check_runtime_dependencies()
 
     if report.status == "failed":
-        log.critical(
-            "Startup validation FAILED. Missing: %s. "
-            "The application cannot serve requests correctly without these packages.",
-            ", ".join(report.missing_critical),
-        )
+        missing = ", ".join(report.missing_critical)
+        is_venv = report.is_virtualenv
+
+        if not is_venv:
+            log.critical(
+                "STARTUP FAILED — Wrong Python interpreter detected.\n"
+                "  Executable: %s\n"
+                "  Missing: %s\n"
+                "  The global Python does NOT contain the required packages.\n"
+                "  FIX: Use the project virtual environment:\n"
+                "    .venv\\Scripts\\python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 9826",
+                report.executable, missing,
+            )
+        else:
+            log.critical(
+                "STARTUP FAILED — Missing runtime dependencies in virtual environment.\n"
+                "  Executable: %s\n"
+                "  Missing: %s\n"
+                "  FIX: .venv\\Scripts\\python.exe -m pip install -r requirements.txt",
+                report.executable, missing,
+            )
         return False
 
     embed_check = check_embedding_backend()
     if embed_check["status"] == "failed":
         log.critical(
-            "Embedding backend FAILED: %s. "
-            "Set EMBEDDING_BACKEND=fastembed and install fastembed, "
-            "or set EMBEDDING_BACKEND=hashing for development only.",
+            "STARTUP FAILED — Embedding backend unavailable.\n"
+            "  Reason: %s\n"
+            "  FIX: .venv\\Scripts\\python.exe -m pip install -r requirements.txt\n"
+            "  Or set EMBEDDING_BACKEND=hashing for development only.",
             embed_check.get("reason", "unknown"),
         )
         return False
@@ -161,14 +203,15 @@ def startup_validation() -> bool:
     vs_check = check_vector_store()
     if vs_check["status"] == "failed":
         log.critical(
-            "Vector store FAILED: %s. "
-            "Install using: pip install -r requirements.txt",
+            "STARTUP FAILED — Vector store unavailable.\n"
+            "  Reason: %s\n"
+            "  FIX: .venv\\Scripts\\python.exe -m pip install -r requirements.txt",
             vs_check.get("reason", "unknown"),
         )
         return False
 
     log.info(
-        "Startup validation OK — chromadb=%s, embedding_backend=%s, vector_store=%s",
+        "Startup validation OK — chromadb=%s, embedding=%s, vector_store=%s",
         report.dependencies.get("chromadb", DepStatus(False)).version,
         embed_check.get("backend"),
         vs_check.get("client"),
