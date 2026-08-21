@@ -105,16 +105,13 @@ def _normalize_dense(dense_results: list[RetrievalResult]) -> Optional[float]:
 
 
 def _normalize_bm25(bm25_results: list[RetrievalResult]) -> Optional[float]:
-    """Normalize BM25 scores to [0, 1] using query-local min-max."""
+    """Normalize BM25 scores to [0, 1]. Returns 0.0 if top score <= 0."""
     if not bm25_results:
         return None
-    scores = [r.score for r in bm25_results]
-    min_s = min(scores)
-    max_s = max(scores)
-    if max_s <= min_s:
-        return 1.0
     top_score = bm25_results[0].score
-    return max(0.0, min(1.0, (top_score - min_s) / (max_s - min_s)))
+    if top_score <= 0.0:
+        return 0.0
+    return max(0.0, min(1.0, top_score / 10.0))
 
 
 def _normalize_rrf(rrf_results: list[RetrievalResult]) -> Optional[float]:
@@ -129,16 +126,13 @@ def _normalize_rrf(rrf_results: list[RetrievalResult]) -> Optional[float]:
 
 
 def _normalize_reranker(reranker_results: list[RetrievalResult]) -> Optional[float]:
-    """Normalize reranker score to [0, 1] using query-local min-max."""
+    """Normalize reranker score to [0, 1] using absolute score (clamped)."""
     if not reranker_results:
         return None
-    scores = [r.score for r in reranker_results]
-    min_s = min(scores)
-    max_s = max(scores)
-    if max_s <= min_s:
-        return 1.0
     top_score = reranker_results[0].score
-    return max(0.0, min(1.0, (top_score - min_s) / (max_s - min_s)))
+    if top_score <= 0.0:
+        return 0.0
+    return max(0.0, min(1.0, top_score))
 
 
 def _normalize_grounding(grounding_ratio: float) -> float:
@@ -156,10 +150,10 @@ class ConfidenceEstimator:
     def __init__(
         self,
         # Weights for retrieval component
-        dense_weight: float = 0.4,
-        bm25_weight: float = 0.3,
-        rrf_weight: float = 0.2,
-        reranker_weight: float = 0.1,
+        dense_weight: float = 0.2,
+        bm25_weight: float = 0.15,
+        rrf_weight: float = 0.15,
+        reranker_weight: float = 0.5,
         # Weight for grounding in overall composite
         grounding_weight: float = 0.5,
         retrieval_weight: float = 0.5,
@@ -224,8 +218,10 @@ class ConfidenceEstimator:
         retrieval_confidence = round(max(0.0, min(1.0, retrieval_confidence)), 4)
         grounding_confidence = round(grounding_signal, 4)
 
-        # Overall composite: retrieval + grounding
-        if retrieval_signals:
+        # Overall composite: retrieval + grounding (use retrieval_confidence if total_claims == 0)
+        if total_claims == 0:
+            overall_score = retrieval_confidence
+        elif retrieval_signals:
             overall_score = (
                 self.retrieval_weight * retrieval_confidence +
                 self.grounding_weight * grounding_confidence

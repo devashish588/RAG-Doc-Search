@@ -110,6 +110,11 @@ def _split_claims(answer: str) -> list[Claim]:
     if not answer or not answer.strip():
         return []
 
+    # Context fallback check: raw context fallback is not an LLM generated answer
+    answer_clean = answer.strip().lower()
+    if answer_clean.startswith("most relevant context:"):
+        return []
+
     claims = []
 
     # Remove code blocks and very short fragments
@@ -117,7 +122,6 @@ def _split_claims(answer: str) -> list[Claim]:
     text = re.sub(r'`[^`]+`', '', text)
 
     # Split into candidate sentences/lines
-    # Handle bullet points and numbered lists
     lines = []
     for line in text.split('\n'):
         line = line.strip()
@@ -134,13 +138,16 @@ def _split_claims(answer: str) -> list[Claim]:
         parts = re.split(r'(?<=[.!?])\s+', line)
         candidates.extend(p for p in parts if p.strip())
 
-    # Filter out conversational hedging
+    # Filter out conversational hedging, refusals, and fallback text
     conversational_starts = (
         'i think', 'i believe', 'it seems', 'it appears', 'perhaps',
         'maybe', 'probably', 'possibly', 'likely', 'generally',
         'typically', 'usually', 'often', 'sometimes', 'note that',
         'please note', 'important:', 'note:', 'disclaimer',
         'here are', 'here is', 'the following', 'below are', 'key points',
+        'i cannot answer', 'i am unable to answer', 'i don\'t have',
+        'i do not have', 'there is no information', 'the provided text does not',
+        'no information is provided', 'based on the provided documents',
     )
 
     for i, cand in enumerate(candidates):
@@ -148,7 +155,7 @@ def _split_claims(answer: str) -> list[Claim]:
         # Skip very short fragments
         if len(cand_lower) < 10:
             continue
-        # Skip conversational hedging
+        # Skip conversational hedging and refusals
         if any(cand_lower.startswith(cs) for cs in conversational_starts):
             continue
         # Skip pure questions
