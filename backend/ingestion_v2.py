@@ -213,7 +213,22 @@ def ingest_document_v2(
 
         # Embed and index (dense)
         log_event(INGESTION_EVENTS["embedding_started"], document_id, chunk_count=len(langchain_chunks))
-        count = add_documents(langchain_chunks, chunk_ids)
+
+        from backend.ingestion import _update
+
+        def on_vector_progress(added: int, total: int) -> None:
+            pct = round((added / total) * 100, 1) if total > 0 else 100.0
+            _update(
+                document_id,
+                status="indexing",
+                chunks_indexed=added,
+                total_chunks=total,
+                progress_pct=pct,
+                message=f"Indexing {added}/{total} chunks ({round(pct)}%)...",
+                error=None,
+            )
+
+        count = add_documents(langchain_chunks, chunk_ids, progress_callback=on_vector_progress)
         log_event(INGESTION_EVENTS["indexing_completed"], document_id, indexed=count)
 
         # Index to BM25 (sparse)

@@ -7,12 +7,16 @@ from threading import RLock
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 
+from typing import Callable
+
 from backend.settings import (
     CHROMA_DIR,
     COLLECTION_NAME,
     DATA_DIR,
     EMBEDDING_BACKEND,
+    EMBEDDING_BATCH_SIZE,
     EMBEDDING_MODEL,
+    FASTEMBED_BATCH_SIZE,
     HASHING_EMBEDDING_DIMS,
     ensure_runtime_dirs,
 )
@@ -56,7 +60,7 @@ def _fastembed_embeddings() -> Embeddings:
         cache_dir=str(_FASTEMBED_CACHE_DIR),
         providers=["CPUExecutionProvider"],
         threads=1,
-        batch_size=int(os.getenv("FASTEMBED_BATCH_SIZE", "2")),
+        batch_size=FASTEMBED_BATCH_SIZE,
     )
 
 
@@ -125,18 +129,28 @@ def get_vector_store():
 # Public helpers
 # ---------------------------------------------------------------------------
 
-def add_documents(documents: list[Document], ids: list[str]) -> int:
+def add_documents(
+    documents: list[Document],
+    ids: list[str],
+    progress_callback: Callable[[int, int], None] | None = None,
+) -> int:
     if not documents:
         return 0
-    batch = int(os.getenv("EMBEDDING_BATCH_SIZE", "4"))
+    batch = EMBEDDING_BATCH_SIZE
     added = 0
+    total = len(documents)
     with _VECTOR_LOCK:
         store = get_vector_store()
-        for i in range(0, len(documents), batch):
+        for i in range(0, total, batch):
             chunk_docs = documents[i:i + batch]
             chunk_ids  = ids[i:i + batch]
             store.add_documents(documents=chunk_docs, ids=chunk_ids)
             added += len(chunk_docs)
+            if progress_callback is not None:
+                try:
+                    progress_callback(added, total)
+                except Exception as exc:
+                    log.warning("Progress callback error: %s", exc)
         if callable(getattr(store, "persist", None)):
             store.persist()
     return added

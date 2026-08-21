@@ -66,12 +66,19 @@ function renderDocs(docs) {
     if (doc.status === 'complete' || doc.status === 'indexed') sources.add(doc.filename);
     const el = document.createElement('div');
     el.className = 'doc';
+    const chunksText = doc.total_chunks
+      ? doc.chunks_indexed + '/' + doc.total_chunks + ' chunks' + (doc.progress_pct !== null && doc.progress_pct !== undefined ? ' (' + Math.round(doc.progress_pct) + '%)' : '')
+      : (doc.chunks_indexed ?? 0) + ' chunks';
+    const progressBar = (doc.progress_pct !== null && doc.progress_pct !== undefined && doc.status !== 'complete' && doc.status !== 'indexed' && doc.status !== 'failed')
+      ? '<div style="margin-top:6px; background:#e2e8f0; height:4px; border-radius:2px; overflow:hidden;"><div style="background:#3b82f6; height:100%; width:' + Math.min(100, Math.max(0, doc.progress_pct)) + '%; transition: width 0.3s ease;"></div></div>'
+      : '';
     el.innerHTML =
       '<div class="doc-top">' +
         '<strong>' + doc.filename + '</strong>' +
-        '<span class="pill ' + statusClass(doc.status) + '">' + doc.status + ' · ' + (doc.chunks_indexed ?? 0) + ' chunks</span>' +
+        '<span class="pill ' + statusClass(doc.status) + '">' + doc.status + ' · ' + chunksText + '</span>' +
       '</div>' +
-      '<div class="muted">' + (doc.message ?? '') + '</div>' +
+      progressBar +
+      '<div class="muted" style="margin-top:4px;">' + (doc.message ?? '') + '</div>' +
       '<div style="margin-top:8px">' +
         '<button class="danger" data-delete-id="' + doc.document_id + '" data-filename="' + doc.filename + '">Delete</button>' +
       '</div>' +

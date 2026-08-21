@@ -54,6 +54,8 @@ EMBEDDING_MODEL           = os.getenv("EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5
 EMBEDDING_BACKEND         = os.getenv("EMBEDDING_BACKEND", "auto").strip().lower()
 EMBEDDING_WARMUP          = os.getenv("EMBEDDING_WARMUP", "false").strip().lower() in {"1", "true", "yes", "on"}
 HASHING_EMBEDDING_DIMS    = int(os.getenv("HASHING_EMBEDDING_DIMENSIONS", "1024"))
+FASTEMBED_BATCH_SIZE      = int(os.getenv("FASTEMBED_BATCH_SIZE", "64"))
+EMBEDDING_BATCH_SIZE      = int(os.getenv("EMBEDDING_BATCH_SIZE", "64"))
 
 CHUNK_SIZE    = int(os.getenv("CHUNK_SIZE", "1200"))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "200"))
