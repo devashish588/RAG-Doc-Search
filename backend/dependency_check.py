@@ -156,58 +156,72 @@ def check_vector_store() -> dict[str, Any]:
     return {"status": "ok", "client": "langchain_chroma.Chroma", "chromadb": chroma_ds.version}
 
 
-def startup_validation() -> bool:
-    """Run at application startup. Returns True if safe to proceed.
+class StartupValidationError(RuntimeError):
+    """Exception raised when application startup validation fails."""
 
-    Logs the interpreter, checks every critical dependency, and fails with
-    actionable instructions if anything is missing.
+    def __init__(self, message: str, executable: str, missing_critical: list[str]):
+        self.executable = executable
+        self.missing_critical = missing_critical
+        super().__init__(message)
+
+
+def startup_validation(raise_on_failure: bool = True) -> bool:
+    """Run at application startup.
+
+    Logs environment info, checks critical dependencies and interpreter status.
+    If raise_on_failure=True and validation fails, raises StartupValidationError
+    with actionable command instructions to immediately halt application startup.
     """
     log_environment_info()
     report = check_runtime_dependencies()
+    failure_msg = None
 
-    if report.status == "failed":
+    if not report.is_virtualenv:
+        missing = ", ".join(report.missing_critical) if report.missing_critical else "global interpreter without virtualenv"
+        failure_msg = (
+            f"STARTUP FAILED — Wrong Python interpreter detected.\n"
+            f"  Executable: {report.executable}\n"
+            f"  Missing / Environment issue: {missing}\n"
+            f"  The global Python does NOT contain the required project virtualenv packages.\n"
+            f"  FIX: Use the project virtual environment:\n"
+            f"    .venv\\Scripts\\python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 9826"
+        )
+    elif report.status == "failed":
         missing = ", ".join(report.missing_critical)
-        is_venv = report.is_virtualenv
-
-        if not is_venv:
-            log.critical(
-                "STARTUP FAILED — Wrong Python interpreter detected.\n"
-                "  Executable: %s\n"
-                "  Missing: %s\n"
-                "  The global Python does NOT contain the required packages.\n"
-                "  FIX: Use the project virtual environment:\n"
-                "    .venv\\Scripts\\python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 9826",
-                report.executable, missing,
-            )
-        else:
-            log.critical(
-                "STARTUP FAILED — Missing runtime dependencies in virtual environment.\n"
-                "  Executable: %s\n"
-                "  Missing: %s\n"
-                "  FIX: .venv\\Scripts\\python.exe -m pip install -r requirements.txt",
-                report.executable, missing,
-            )
-        return False
-
-    embed_check = check_embedding_backend()
-    if embed_check["status"] == "failed":
-        log.critical(
-            "STARTUP FAILED — Embedding backend unavailable.\n"
-            "  Reason: %s\n"
-            "  FIX: .venv\\Scripts\\python.exe -m pip install -r requirements.txt\n"
-            "  Or set EMBEDDING_BACKEND=hashing for development only.",
-            embed_check.get("reason", "unknown"),
+        failure_msg = (
+            f"STARTUP FAILED — Missing runtime dependencies in virtual environment.\n"
+            f"  Executable: {report.executable}\n"
+            f"  Missing: {missing}\n"
+            f"  FIX: .venv\\Scripts\\python.exe -m pip install -r requirements.txt\n"
+            f"  Command: .venv\\Scripts\\python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 9826"
         )
-        return False
 
-    vs_check = check_vector_store()
-    if vs_check["status"] == "failed":
-        log.critical(
-            "STARTUP FAILED — Vector store unavailable.\n"
-            "  Reason: %s\n"
-            "  FIX: .venv\\Scripts\\python.exe -m pip install -r requirements.txt",
-            vs_check.get("reason", "unknown"),
-        )
+    if not failure_msg:
+        embed_check = check_embedding_backend()
+        if embed_check["status"] == "failed":
+            failure_msg = (
+                f"STARTUP FAILED — Embedding backend unavailable.\n"
+                f"  Executable: {report.executable}\n"
+                f"  Reason: {embed_check.get('reason', 'unknown')}\n"
+                f"  FIX: .venv\\Scripts\\python.exe -m pip install -r requirements.txt\n"
+                f"  Command: .venv\\Scripts\\python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 9826"
+            )
+
+    if not failure_msg:
+        vs_check = check_vector_store()
+        if vs_check["status"] == "failed":
+            failure_msg = (
+                f"STARTUP FAILED — Vector store unavailable.\n"
+                f"  Executable: {report.executable}\n"
+                f"  Reason: {vs_check.get('reason', 'unknown')}\n"
+                f"  FIX: .venv\\Scripts\\python.exe -m pip install -r requirements.txt\n"
+                f"  Command: .venv\\Scripts\\python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 9826"
+            )
+
+    if failure_msg:
+        log.critical("%s", failure_msg)
+        if raise_on_failure:
+            raise StartupValidationError(failure_msg, report.executable, report.missing_critical)
         return False
 
     log.info(
