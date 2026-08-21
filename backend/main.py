@@ -1,15 +1,19 @@
+import json
 import logging
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
+from urllib import error as _urlerror
 from uuid import uuid4
 
-from fastapi import FastAPI, File, HTTPException, UploadFile, status
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, Response
+from fastapi.responses import HTMLResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from backend.api_errors import HTTPException as _HTTPException, register_error_handlers
 from backend.api_v1 import router as v1_router
+from backend.circuit_breaker import get_circuit_breaker
 from backend.ingestion import (
     delete_document,
     find_active_duplicate,
@@ -19,11 +23,27 @@ from backend.ingestion import (
 )
 from backend.ingestion_queue import start as start_ingestion_worker, stop as stop_ingestion_worker, submit as submit_job
 from backend.llm import llm_available
+from backend.middleware import RateLimitMiddleware
+from backend.monitoring import (
+    RequestMonitoringMiddleware,
+    metrics_snapshot,
+)
 from backend.retrieval import run_search
 from backend.reconciliation import health_check as reconciliation_health_check
 from backend.schemas import DeleteResponse, DocumentStatus, HealthResponse, SearchRequest, SearchResponse, UploadResponse
+from backend.storage_health import readiness_report
 from backend.vector_store import get_embeddings
-from backend.settings import CHROMA_DIR, EMBEDDING_BACKEND, EMBEDDING_WARMUP, MAX_UPLOAD_MB, OPENROUTER_MODEL, SUPPORTED_EXTENSIONS, UPLOAD_DIR, ensure_runtime_dirs
+from backend.settings import (
+    CHROMA_DIR,
+    CORS_ORIGINS,
+    EMBEDDING_BACKEND,
+    EMBEDDING_WARMUP,
+    MAX_UPLOAD_MB,
+    OPENROUTER_MODEL,
+    SUPPORTED_EXTENSIONS,
+    UPLOAD_DIR,
+    ensure_runtime_dirs,
+)
 from backend.webapp import FRONTEND_DIR, build_index_html
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -56,19 +76,100 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# ---------------------------------------------------------------------------
+# CORS — configurable, production-safe
+# ---------------------------------------------------------------------------
+_cors_origins = [o.strip() for o in CORS_ORIGINS.split(",") if o.strip()]
+_allow_all = "*" in _cors_origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=["*"] if _allow_all else _cors_origins,
+    allow_credentials=not _allow_all,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# --- Production middleware (order matters: outermost runs first) ---
+app.add_middleware(RateLimitMiddleware)
+app.add_middleware(RequestMonitoringMiddleware)
 
 # Register structured error handlers
 register_error_handlers(app)
 
 # Include v1 API router
 app.include_router(v1_router)
+
+
+# ---------------------------------------------------------------------------
+# Health probes
+# ---------------------------------------------------------------------------
+
+@app.get("/health", response_model=HealthResponse)
+def health() -> HealthResponse:
+    return HealthResponse(
+        status="ok",
+        vector_store=str(CHROMA_DIR),
+        embedding_backend=EMBEDDING_BACKEND,
+        answer_model=OPENROUTER_MODEL if llm_available() else None,
+    )
+
+
+@app.get("/healthz")
+def healthz():
+    """Liveness probe — extremely lightweight."""
+    return {"status": "ok"}
+
+
+@app.get("/readyz")
+def readyz():
+    """Readiness probe — checks Chroma, BM25, disk."""
+    report = readiness_report()
+    code = 200 if report["status"] == "ready" else 503
+    return Response(
+        content=json.dumps(report),
+        status_code=code,
+        media_type="application/json",
+    )
+
+
+@app.get("/health/index", response_model=dict)
+def index_health() -> dict:
+    """Index reconciliation health check."""
+    return reconciliation_health_check()
+
+
+# ---------------------------------------------------------------------------
+# Prometheus metrics
+# ---------------------------------------------------------------------------
+
+@app.get("/metrics")
+def metrics():
+    return PlainTextResponse(content=metrics_snapshot(), media_type="text/plain; version=0.0.4; charset=utf-8")
+
+
+# ---------------------------------------------------------------------------
+# Upload helper
+# ---------------------------------------------------------------------------
+
+async def _save_upload(upload: UploadFile, dest: Path) -> str:
+    import hashlib
+
+    max_bytes = MAX_UPLOAD_MB * 1024 * 1024
+    written = 0
+    hasher = hashlib.sha256()
+    with dest.open("wb") as fh:
+        while chunk := await upload.read(1024 * 1024):
+            written += len(chunk)
+            if written > max_bytes:
+                dest.unlink(missing_ok=True)
+                raise HTTPException(
+                    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                    detail=f"File exceeds the {MAX_UPLOAD_MB} MB limit.",
+                )
+            hasher.update(chunk)
+            fh.write(chunk)
+    return hasher.hexdigest()
 
 
 # ---------------------------------------------------------------------------
@@ -83,22 +184,6 @@ def root() -> HTMLResponse:
 @app.get("/favicon.ico", include_in_schema=False)
 def favicon() -> Response:
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-@app.get("/health", response_model=HealthResponse)
-def health() -> HealthResponse:
-    return HealthResponse(
-        status="ok",
-        vector_store=str(CHROMA_DIR),
-        embedding_backend=EMBEDDING_BACKEND,
-        answer_model=OPENROUTER_MODEL if llm_available() else None,
-    )
-
-
-@app.get("/health/index", response_model=dict)
-def index_health() -> dict:
-    """Index reconciliation health check."""
-    return reconciliation_health_check()
 
 
 @app.post("/upload", response_model=UploadResponse, status_code=status.HTTP_202_ACCEPTED)
@@ -172,31 +257,21 @@ def search(request: SearchRequest) -> SearchResponse:
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except Exception as exc:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Search failed: {exc}") from exc
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Search failed.") from exc
 
 
 # ---------------------------------------------------------------------------
-# Upload helper
+# Global exception handler — never expose tracebacks or secrets
 # ---------------------------------------------------------------------------
 
-async def _save_upload(upload: UploadFile, dest: Path) -> str:
-    import hashlib
-
-    max_bytes = MAX_UPLOAD_MB * 1024 * 1024
-    written = 0
-    hasher = hashlib.sha256()
-    with dest.open("wb") as fh:
-        while chunk := await upload.read(1024 * 1024):
-            written += len(chunk)
-            if written > max_bytes:
-                dest.unlink(missing_ok=True)
-                raise HTTPException(
-                    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                    detail=f"File exceeds the {MAX_UPLOAD_MB} MB limit.",
-                )
-            hasher.update(chunk)
-            fh.write(chunk)
-    return hasher.hexdigest()
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    log.exception("Unhandled exception on %s %s", request.method, request.url.path)
+    return Response(
+        content=json.dumps({"error": {"code": "INTERNAL_ERROR", "message": "An internal error occurred."}}),
+        status_code=500,
+        media_type="application/json",
+    )
 
 
 # ---------------------------------------------------------------------------

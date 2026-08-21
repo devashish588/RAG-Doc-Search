@@ -1,8 +1,12 @@
 import json
+import logging
 from urllib import error, request
 
+from backend.circuit_breaker import get_circuit_breaker
 from backend.schemas import SearchResult
 from backend.settings import OPENROUTER_API_KEY, OPENROUTER_BASE_URL, OPENROUTER_MODEL
+
+log = logging.getLogger(__name__)
 
 
 def llm_available() -> bool:
@@ -30,6 +34,10 @@ def _messages(query: str, results: list[SearchResult]) -> list[dict[str, str]]:
     ]
 
 def generate_answer(query: str, results: list[SearchResult]) -> str | None:
+    breaker = get_circuit_breaker()
+    if not breaker.allow_request():
+        log.warning("Circuit breaker OPEN — skipping LLM call, using fallback")
+        return None
     payload = {
         "model": OPENROUTER_MODEL,
         "messages": _messages(query, results),
@@ -48,6 +56,8 @@ def generate_answer(query: str, results: list[SearchResult]) -> str | None:
     try:
         with request.urlopen(req, timeout=60) as resp:
             data = json.loads(resp.read().decode("utf-8"))
+        breaker.record_success()
         return data["choices"][0]["message"]["content"].strip()
     except (error.HTTPError, error.URLError, KeyError, IndexError, json.JSONDecodeError):
+        breaker.record_failure()
         return None

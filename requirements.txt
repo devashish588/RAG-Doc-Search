@@ -16,3 +16,6 @@ fastembed==0.5.1
 
 # Cross-encoder reranker (Phase 6). ONNX-based, CPU-only, no torch dependency.
 flashrank==0.2.10
+
+# Production observability (Phase 9)
+prometheus_client==0.26.0

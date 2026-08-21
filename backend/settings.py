@@ -17,6 +17,38 @@ DATA_DIR  = BASE_DIR / "data"
 UPLOAD_DIR = DATA_DIR / "uploads"
 CHROMA_DIR = DATA_DIR / "chroma_db"
 
+# ---------------------------------------------------------------------------
+# Environment & logging
+# ---------------------------------------------------------------------------
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development").strip().lower()
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").strip().upper()
+
+# ---------------------------------------------------------------------------
+# CORS
+# ---------------------------------------------------------------------------
+# Comma-separated origins.  "*" means allow all (development default).
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*").strip()
+
+# ---------------------------------------------------------------------------
+# Rate limiting (per-IP sliding window, in-memory)
+# ---------------------------------------------------------------------------
+RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "60"))
+RATE_LIMIT_WINDOW_SECONDS = int(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "60"))
+
+# ---------------------------------------------------------------------------
+# Circuit breaker (OpenRouter)
+# ---------------------------------------------------------------------------
+CIRCUIT_BREAKER_FAILURE_THRESHOLD = int(os.getenv("CIRCUIT_BREAKER_FAILURE_THRESHOLD", "3"))
+CIRCUIT_BREAKER_RECOVERY_SECONDS = int(os.getenv("CIRCUIT_BREAKER_RECOVERY_SECONDS", "30"))
+
+# ---------------------------------------------------------------------------
+# Request validation
+# ---------------------------------------------------------------------------
+MAX_UPLOAD_MB = int(os.getenv("MAX_UPLOAD_MB", "25"))
+MAX_TOP_K = int(os.getenv("MAX_TOP_K", "50"))
+MAX_TOP_K_FINAL = int(os.getenv("MAX_TOP_K_FINAL", "20"))
+REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "60"))
+
 COLLECTION_NAME           = os.getenv("CHROMA_COLLECTION", "rag_documents")
 EMBEDDING_MODEL           = os.getenv("EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5")
 EMBEDDING_BACKEND         = os.getenv("EMBEDDING_BACKEND", "auto").strip().lower()
@@ -27,7 +59,6 @@ CHUNK_SIZE    = int(os.getenv("CHUNK_SIZE", "1200"))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "200"))
 CHUNKING_STRATEGY = os.getenv("CHUNKING_STRATEGY", "recursive").strip().lower()
 NEAR_DUPLICATE_THRESHOLD = float(os.getenv("NEAR_DUPLICATE_THRESHOLD", "0.95"))
-MAX_UPLOAD_MB  = int(os.getenv("MAX_UPLOAD_MB", "50"))
 
 # Dense retrieval configuration
 DENSE_TOP_K = int(os.getenv("DENSE_TOP_K", "10"))
