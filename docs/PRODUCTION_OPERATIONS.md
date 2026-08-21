@@ -1,198 +1,152 @@
-# Production Operations Guide
+# Production Operations
 
-## Architecture
+## Production Deployment
 
-```
-Client → CORS → Rate Limiter → Request ID → FastAPI Router
-                                              ├── /v1/ask    → Retrieval → LLM (circuit breaker) → Verification → Confidence → Response
-                                              ├── /upload    → Ingestion Queue → Chroma + BM25
-                                              ├── /healthz   → Liveness (no-op)
-                                              ├── /readyz    → Chroma + BM25 + Disk checks
-                                              └── /metrics   → Prometheus text exposition
-```
+The backend is deployed on **Render** as a web service with persistent disk.
 
-## Resource Requirements
+The frontend is deployed on **GitHub Pages** and calls the Render backend via HTTPS.
 
-| Component         | Memory   | Notes                          |
-|-------------------|----------|--------------------------------|
-| Application base  | ~728 MB  | FastAPI + Chroma + embeddings  |
-| Dense model       | ~50 MB   | BAAI/bge-small-en-v1.5         |
-| BM25              | ~10 MB   | rank_bm25 in-memory            |
-| TinyBERT reranker | ~786 MB  | ONNX cross-encoder             |
-| MiniLM reranker   | ~1143 MB | Too heavy for 1 GB instances   |
+### Render Configuration
 
-**512 MB is NOT a supported configuration.** Peak memory with TinyBERT (~786 MB) exceeds it. MiniLM (~1143 MB) is completely out of reach.
+| Setting | Value |
+|---------|-------|
+| Plan | `standard` (1 GB min) |
+| Runtime | Python 3.12 |
+| Build | `pip install -r requirements.txt` |
+| Start | `uvicorn backend.main:app --host 0.0.0.0 --port $PORT` |
+| Health | `/healthz` |
+| Disk | 1 GB at `/opt/render/project/src/data` |
 
-| Tier     | Memory | Recommendation                        |
-|----------|--------|---------------------------------------|
-| Minimum  | 1 GB   | Dense/BM25/hybrid only                |
-| Recommended | 2 GB | hybrid_rerank with TinyBERT           |
-| Premium  | 4 GB   | MiniLM reranker or multi-user         |
+### GitHub Pages Configuration
 
-## Recommended Render Plan
+- Frontend served from GitHub Pages repository settings
+- `frontend/config.js` auto-detects environment and sets API URL
+- No build step required — static HTML/JS/CSS
+- CORS must allow the GitHub Pages origin
 
-- **Starter** (1 GB) — Dense/BM25/hybrid modes
-- **Standard** (2 GB) — hybrid_rerank with TinyBERT
-- Free tier (512 MB) is **not recommended** — the application will OOM on ingestion or reranking.
+## Render Cold Starts
 
-## Environment Variables
+Render suspends idle web services after a period of inactivity. When suspended:
 
-See `.env.example` for the full list. Key variables:
+1. The next request triggers a cold start (service restart)
+2. Cold starts typically take 30–120 seconds depending on dependencies
+3. The service must re-import FastEmbed, ChromaDB, and BM25 indexes
+4. The first request after cold start may take significantly longer than subsequent requests
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `ENVIRONMENT` | `development` | `production` or `development` |
-| `LOG_LEVEL` | `INFO` | Python log level |
-| `CORS_ORIGINS` | `*` | Comma-separated allowed origins |
-| `RATE_LIMIT_REQUESTS` | `60` | Max requests per window per IP |
-| `RATE_LIMIT_WINDOW_SECONDS` | `60` | Sliding window size |
-| `CIRCUIT_BREAKER_FAILURE_THRESHOLD` | `3` | Failures before OPEN |
-| `CIRCUIT_BREAKER_RECOVERY_SECONDS` | `30` | Recovery timeout |
-| `MAX_UPLOAD_MB` | `25` | Upload size limit |
-| `MAX_TOP_K` | `50` | Max dense/sparse top_k |
-| `MAX_TOP_K_FINAL` | `20` | Max reranker top_k |
-| `OPENROUTER_API_KEY` | (empty) | LLM API key |
+**Key facts:**
+- 512 MB instances are **unsupported** — memory peak with reranker is ~786 MB
+- 1 GB instances can run basic modes (dense, sparse, hybrid)
+- 2 GB instances are recommended for hybrid_rerank with TinyBERT
 
-## Health Probes
+## External Keep-Warm Health Check
 
-| Endpoint | Purpose | Weight | Response |
-|----------|---------|--------|----------|
-| `/health` | Legacy health | None | `{"status": "ok"}` |
-| `/healthz` | Liveness | Extremely lightweight | `{"status": "ok"}` |
-| `/readyz` | Readiness | Checks Chroma + BM25 + disk | `{"status": "ready", "checks": {...}}` |
+An external GitHub Actions workflow pings `/healthz` every 5 minutes to reduce inactivity-related cold starts.
 
-`/healthz` must **never** load embeddings, reranker, or call OpenRouter.
+### Configuration
 
-## Metrics
+| Setting | Value |
+|---------|-------|
+| Provider | GitHub Actions |
+| Workflow | `.github/workflows/render-keepalive.yml` |
+| Schedule | `*/5 * * * *` (every 5 minutes) |
+| Endpoint | `$RENDER_HEALTH_URL` (repository variable) |
+| Timeout | 10 seconds |
+| HTTP method | GET |
 
-Prometheus-compatible metrics at `/metrics`:
+### Required Setup
 
-- `http_requests_total` — Total HTTP requests (labels: endpoint, method, status)
-- `http_request_latency_seconds` — Request latency histogram
-- `rag_retrieval_latency_seconds` — Retrieval latency (labels: retrieval_mode)
-- `rag_generation_latency_seconds` — LLM generation latency
-- `rag_reranker_latency_seconds` — Reranker latency
-- `rag_verification_latency_seconds` — Citation verification latency
-- `rag_confidence_score` — Confidence distribution (labels: level)
-- `rag_abstentions_total` — Abstention counter
-- `rag_ingestion_total` — Ingestion operations (labels: status)
-- `rag_errors_total` — Error counter (labels: endpoint, code)
+1. Create a repository variable `RENDER_HEALTH_URL` in GitHub Settings → Secrets and variables → Actions → Variables
+2. Set the value to `https://rag-doc-search-1.onrender.com/healthz`
+3. The workflow is enabled by default after the repository variable exists
 
-Labels are **bounded** — never use question text, document content, or user IDs.
+### Limitations
 
-## Logging
+- **Not a guarantee**: The keep-warm cron reduces cold starts but does not eliminate them
+- **Render plan dependent**: Effectiveness varies by Render service plan
+- **Platform behavior**: GitHub Actions scheduling may have delays
+- **Monitoring only**: The cron is for monitoring/keep-warm, not strict real-time
 
-Structured JSON logging for every request (except `/healthz` and `/metrics`):
+## Health Endpoints
 
-```json
-{
-  "timestamp": "2025-01-15T10:30:00+0000",
-  "request_id": "abc123",
-  "endpoint": "/v1/ask",
-  "method": "POST",
-  "status_code": 200,
-  "duration_ms": 123.4,
-  "retrieval_mode": "dense",
-  "confidence_level": "high",
-  "abstention": false
-}
-```
+| Endpoint | Method | Purpose | Rate Limited |
+|----------|--------|---------|-------------|
+| `/health` | GET | Full health (Chroma + BM25 + disk) | Yes |
+| `/healthz` | GET | Lightweight liveness probe | No (exempt) |
+| `/readyz` | GET | Readiness with storage details | No (exempt) |
+| `/metrics` | GET | Prometheus metrics | Yes |
 
-**Never logged:** API keys, Authorization headers, passwords, tokens, document content, raw user questions as labels.
+## Monitoring
+
+### Prometheus Metrics
+
+Available at `/metrics`:
+- `http_requests_total` — total requests by method, endpoint, status
+- `http_request_duration_seconds` — request latency histogram
+- `retrieval_total` — retrievals by mode
+- `retrieval_latency_seconds` — retrieval latency by mode
+- `reranker_total` — reranker invocations
+- `reranker_latency_seconds` — reranker latency
+- `llm_total` — LLM calls
+- `llm_latency_seconds` — LLM latency
+- `llm_errors_total` — LLM errors by type
+- `circuit_breaker_state` — current circuit breaker state (0=closed, 1=open, 2=half-open)
+
+### Structured Logs
+
+JSON format with:
+- `request_id` — unique per request
+- `timestamp` — ISO 8601
+- `endpoint` — request path
+- `method` — HTTP method
+- `status` — HTTP status code
+- `duration_ms` — request duration
+- `level` — log level
+
+No secrets, API keys, or query content are logged.
 
 ## Rate Limiting
 
-In-memory sliding-window per-IP. Returns HTTP 429 with `Retry-After` header.
+| Setting | Value |
+|---------|-------|
+| Requests | 60 per window |
+| Window | 60 seconds |
+| Algorithm | Sliding window, per-IP |
+| Storage | In-memory (single instance) |
+| Health probes | Exempt from rate limiting |
 
-```
-X-RateLimit-Limit: 60
-X-RateLimit-Remaining: 45
-Retry-After: 12
-```
-
-This is **single-instance protection only**. For multi-instance deployments, use a shared rate limiter (Redis, API gateway). Do not add Redis in Phase 9.
+Response headers:
+- `X-RateLimit-Limit` — window limit
+- `X-RateLimit-Remaining` — remaining requests
+- `Retry-After` — seconds until next allowed request (429 only)
 
 ## Circuit Breaker
 
-Wraps the OpenRouter LLM call only (not the entire `/v1/ask` endpoint).
+The OpenRouter LLM calls use a circuit breaker:
 
 | State | Behavior |
 |-------|----------|
-| CLOSED | Normal LLM calls |
-| OPEN | Skip LLM, return fallback answer |
-| HALF_OPEN | Allow one probe request |
+| `CLOSED` | Normal operation, requests pass through |
+| `OPEN` | All requests rejected immediately, fallback message returned |
+| `HALF_OPEN` | One test request allowed through to verify recovery |
 
-Default: 3 failures → OPEN, 30 seconds → HALF_OPEN.
-
-## Chroma Persistence
-
-Chroma data is stored at `data/chroma_db/`. The Render Blueprint mounts a persistent disk at this path.
-
-## BM25 Persistence
-
-BM25 index is stored at `data/bm25_index/`. Rebuilt from Chroma on first access if missing.
-
-## Ingestion
-
-1. Upload file → validate extension + size
-2. Save to `data/uploads/` with content hash
-3. Duplicate detection by content hash
-4. Background queue processes ingestion
-5. Text extraction → chunking → embedding → Chroma + BM25 index
-
-**Metadata safety:** All values passed to Chroma are converted via `_safe_value()` to ensure str/int/float/bool — no `WindowsPath` or `Path` objects.
-
-## Security
-
-- CORS: Configurable via `CORS_ORIGINS`. Production should **not** use `*`.
-- Rate limiting: Per-IP sliding window
-- Upload limits: Configurable max file size
-- Error handling: Never exposes tracebacks, internal paths, API keys, or environment variables
-- Secrets: `.env` is git-ignored; `.env.example` contains placeholders only
-
-## CORS
-
-```bash
-# Development (allow all)
-CORS_ORIGINS=*
-
-# Production (specific origins)
-CORS_ORIGINS=https://yourfrontend.pages.dev,https://yourdomain.com
-```
-
-## Docker
-
-```bash
-docker compose up --build
-```
-
-- Python 3.12 slim base
-- Non-root user
-- HEALTHCHECK against `/healthz`
-- Data volume persisted at `./data`
-
-## Deployment
-
-1. Copy `.env.example` to `.env` and fill in `OPENROUTER_API_KEY`
-2. `docker compose up -d` or deploy to Render via Blueprint
-3. Verify: `curl http://localhost:9826/healthz`
-4. Verify: `curl http://localhost:9826/readyz`
-5. Verify: `curl http://localhost:9826/metrics`
-6. Upload a document via `/upload`
-7. Query via `/v1/ask`
+| Setting | Value |
+|---------|-------|
+| Failure threshold | 3 consecutive failures |
+| Recovery timeout | 30 seconds |
 
 ## Rollback
 
-1. Revert to previous git tag: `git checkout v1.8-evaluation`
-2. Rebuild and redeploy
-3. Chroma data is backward-compatible within the same ChromaDB version
+1. **Render dashboard**: Deploys → select previous deploy → Rollback
+2. **Git revert**: `git revert <commit>` + push triggers auto-deploy
+3. **Manual redeploy**: Render dashboard → Manual Deploy → redeploy
 
-## Troubleshooting
+## Incident Response
 
-| Symptom | Cause | Fix |
-|---------|-------|-----|
-| OOM on startup | Insufficient memory | Upgrade to 1 GB+ plan |
-| 429 errors | Rate limit exceeded | Increase `RATE_LIMIT_REQUESTS` or reduce traffic |
-| Circuit OPEN | OpenRouter failures | Check API key, model availability |
-| 503 on /readyz | Chroma/BM25 unhealthy | Check `data/` directory, disk space |
-| Slow ingestion | Large documents | Reduce chunk size or document size |
+1. Check `/healthz` — is the service alive?
+2. Check `/metrics` — is request volume normal?
+3. Check Render dashboard — logs, memory usage, disk usage
+4. Check circuit breaker state — is OpenRouter failing?
+5. Check GitHub Actions logs — is keep-warm cron running?
+6. If memory pressure: disable reranker (`RERANKER_ENABLED=false`)
+7. If disk full: clear old uploads from `/data/uploads`
+8. If OpenRouter down: circuit breaker returns safe fallback message
