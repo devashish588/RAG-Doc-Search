@@ -14,10 +14,13 @@ wheels/
 .env
 vector_store/
 logs/
+*.log
 data/uploads/*
 data/chroma_db/*
+data/chroma_store/*
 data/bm25_index/*
 data/fastembed_cache/*
 !data/uploads/.gitkeep
 !data/chroma_db/.gitkeep
+!data/chroma_store/.gitkeep
 !data/bm25_index/.gitkeep
