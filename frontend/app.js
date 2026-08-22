@@ -114,25 +114,28 @@ function renderConfidence(conf) {
   confidenceBox.innerHTML = html;
 }
 
-function renderCitations(data) {
+function renderAnswer(data) {
   answerBox.textContent = data.answer || 'No answer returned.';
+}
+
+function renderChunks(data) {
   resultsBox.innerHTML = '';
-  var cites = data.citations || [];
-  if (!cites.length) {
+  var chunks = data.retrieved_chunks || [];
+  if (!chunks.length) {
     resultsBox.innerHTML = '<div class="muted">No matching chunks found.</div>';
     return;
   }
-  cites.forEach(function(c, i) {
-    var verdictClass = c.verdict === 'supported' ? 'ok' : c.verdict === 'unsupported' ? 'fail' : 'muted';
-    var verdictLabel = c.verdict ? c.verdict.charAt(0).toUpperCase() + c.verdict.slice(1) : '';
+  chunks.forEach(function(c, i) {
     var card = document.createElement('div');
     card.className = 'result';
+    var pageStr = c.page ? ' · page ' + c.page : '';
+    var scoreStr = typeof c.score === 'number' ? c.score.toFixed(4) : c.score;
     card.innerHTML =
       '<div class="result-head">' +
-        '<div>#' + (i + 1) + ' · ' + safeText(c.source) + (c.page ? ' · page ' + c.page : '') + '</div>' +
-        (verdictLabel ? '<span class="pill ' + verdictClass + '">' + verdictLabel + '</span>' : '') +
+        '<div>#' + (i + 1) + ' · ' + safeText(c.source) + pageStr + '</div>' +
+        '<span class="pill">Score: ' + scoreStr + '</span>' +
       '</div>' +
-      '<div class="result-text">' + safeText(c.text_snippet || c.claim) + '</div>';
+      '<div class="result-text">' + safeText(c.text) + '</div>';
     resultsBox.appendChild(card);
   });
 }
@@ -254,7 +257,8 @@ $('searchBtn').addEventListener('click', async function() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    renderCitations(d);
+    renderAnswer(d);
+    renderChunks(d);
     renderConfidence(d.confidence);
     renderTrace(d.retrieval_trace);
     searchStatus.textContent = 'Status: ' + d.status;
