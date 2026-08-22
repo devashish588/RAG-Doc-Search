@@ -26,10 +26,13 @@ def _now() -> datetime:
 
 
 def _public(record: dict[str, Any]) -> dict[str, Any]:
-    return {k: record[k] for k in (
+    res = {k: record[k] for k in (
         "document_id", "filename", "status",
         "chunks_indexed", "message", "error", "uploaded_at",
     )}
+    res["total_chunks"] = record.get("total_chunks")
+    res["progress_pct"] = record.get("progress_pct")
+    return res
 
 
 def _update(document_id: str, **fields: Any) -> None:
@@ -50,6 +53,8 @@ def register_document(document_id: str, filename: str, stored_path: Path, conten
         "content_hash":  content_hash,
         "status":        "queued",
         "chunks_indexed": 0,
+        "total_chunks":   None,
+        "progress_pct":   None,
         "message":       "Document queued for ingestion.",
         "error":         None,
         "uploaded_at":   _now(),

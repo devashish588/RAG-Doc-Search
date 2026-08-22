@@ -16,6 +16,8 @@ class DocumentStatus(BaseModel):
     filename: str
     status: str
     chunks_indexed: int = 0
+    total_chunks: int | None = None
+    progress_pct: float | None = None
     message: str | None = None
     error: str | None = None
     uploaded_at: datetime

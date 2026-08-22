@@ -2,7 +2,8 @@
 
 ## Prerequisites
 
-- Python 3.12+
+- **Python 3.12.x (Mandatory Production Runtime)**
+  - *Unsupported*: Python 3.14+ (PyPI pre-built wheels for `tokenizers` are unavailable for 3.14, causing maturin/Rust source-build failures on read-only deployment filesystems).
 - 1 GB RAM minimum (2 GB recommended for hybrid_rerank)
 - 100 MB disk for dependencies + embeddings model cache
 

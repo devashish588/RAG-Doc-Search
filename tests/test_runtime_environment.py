@@ -99,6 +99,63 @@ class TestDependencyChecker:
             assert "fastembed" in report.missing_critical
 
 
+class TestStartupValidationStrictAborts:
+    def test_valid_venv_startup_succeeds(self):
+        from backend.dependency_check import startup_validation
+        assert startup_validation(raise_on_failure=True) is True
+
+    def test_missing_chromadb_aborts_startup(self):
+        from backend.dependency_check import startup_validation, StartupValidationError
+        original_import = importlib.import_module
+
+        def mock_import(name, *args, **kwargs):
+            if name == "chromadb":
+                raise ImportError("No module named 'chromadb'")
+            return original_import(name, *args, **kwargs)
+
+        with patch("backend.dependency_check.importlib.import_module", side_effect=mock_import):
+            with pytest.raises(StartupValidationError) as exc_info:
+                startup_validation(raise_on_failure=True)
+            err = exc_info.value
+            assert "chromadb" in err.missing_critical
+            assert sys.executable in str(err)
+            assert ".venv\\Scripts\\python.exe" in str(err)
+
+    def test_missing_fastembed_aborts_startup(self):
+        from backend.dependency_check import startup_validation, StartupValidationError
+        original_import = importlib.import_module
+
+        def mock_import(name, *args, **kwargs):
+            if name == "fastembed":
+                raise ImportError("No module named 'fastembed'")
+            return original_import(name, *args, **kwargs)
+
+        with patch("backend.dependency_check.importlib.import_module", side_effect=mock_import):
+            with pytest.raises(StartupValidationError) as exc_info:
+                startup_validation(raise_on_failure=True)
+            err = exc_info.value
+            assert "fastembed" in err.missing_critical
+            assert sys.executable in str(err)
+            assert ".venv\\Scripts\\python.exe" in str(err)
+
+    def test_invalid_global_interpreter_aborts_startup(self):
+        from backend.dependency_check import startup_validation, StartupValidationError, DependencyReport
+
+        fake_report = DependencyReport(
+            status="ok",
+            executable=sys.executable,
+            is_virtualenv=False,  # Global interpreter
+        )
+
+        with patch("backend.dependency_check.check_runtime_dependencies", return_value=fake_report):
+            with pytest.raises(StartupValidationError) as exc_info:
+                startup_validation(raise_on_failure=True)
+            err = exc_info.value
+            assert "STARTUP FAILED — Wrong Python interpreter detected" in str(err)
+            assert sys.executable in str(err)
+            assert ".venv\\Scripts\\python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 9826" in str(err)
+
+
 class TestReadyzDependencyHealth:
     def test_readyz_returns_200_when_deps_ok(self):
         reset_limiter()

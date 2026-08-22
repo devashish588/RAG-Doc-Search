@@ -64,6 +64,12 @@ INGESTION_EVENTS = {
     "indexing_completed": "indexing_completed",
     "ingestion_completed": "ingestion_completed",
     "ingestion_failed": "ingestion_failed",
+    "ingestion_finalization_started": "ingestion_finalization_started",
+    "document_indexed": "document_indexed",
+    "bm25_index_updated": "bm25_index_updated",
+    "vector_store_committed": "vector_store_committed",
+    "ingestion_finalization_completed": "ingestion_finalization_completed",
+    "ingestion_finalization_failed": "ingestion_finalization_failed",
 }
 
 
@@ -159,6 +165,17 @@ def ingest_document_v2(
         chunks = chunker.chunk(normalized_docs, document_id, filename)
         log_event(INGESTION_EVENTS["chunking_completed"], document_id, chunk_count=len(chunks))
 
+        from backend.ingestion import _update
+        _update(
+            document_id,
+            status="indexing",
+            chunks_indexed=len(chunks),
+            total_chunks=len(chunks),
+            progress_pct=0.0,
+            message=f"Chunked into {len(chunks)} chunks. Indexing...",
+            error=None,
+        )
+
         if not chunks:
             raise ValueError("No chunks generated from document")
 
@@ -204,8 +221,26 @@ def ingest_document_v2(
 
         # Embed and index (dense)
         log_event(INGESTION_EVENTS["embedding_started"], document_id, chunk_count=len(langchain_chunks))
-        count = add_documents(langchain_chunks, chunk_ids)
+
+        def on_vector_progress(added: int, total: int) -> None:
+            raw_pct = (added / total) * 99.0 if total > 0 else 99.0
+            pct = round(raw_pct, 1)
+            _update(
+                document_id,
+                status="indexing",
+                chunks_indexed=added,
+                total_chunks=total,
+                progress_pct=pct,
+                message=f"Indexing {added}/{total} chunks ({round(pct)}%)...",
+                error=None,
+            )
+
+        count = add_documents(langchain_chunks, chunk_ids, progress_callback=on_vector_progress)
         log_event(INGESTION_EVENTS["indexing_completed"], document_id, indexed=count)
+        log_event(INGESTION_EVENTS["vector_store_committed"], document_id, indexed=count)
+
+        # Finalization phase
+        log_event(INGESTION_EVENTS["ingestion_finalization_started"], document_id)
 
         # Index to BM25 (sparse)
         log_event(INGESTION_EVENTS["indexing_completed"], document_id, indexed=count, index="bm25")
@@ -213,14 +248,29 @@ def ingest_document_v2(
             bm25_index = get_bm25_index()
             bm25_index.build(kept_chunks)
             bm25_index.save()
+            log_event(INGESTION_EVENTS["bm25_index_updated"], document_id, indexed=count)
             log.info("BM25 index built and saved for document %s", document_id)
         except Exception as exc:
             log.warning("Failed to build BM25 index for document %s: %s", document_id, exc)
+            raise RuntimeError(f"BM25 index build failed: {exc}") from exc
 
         # Mark job complete
         if ingestion_job:
             ingestion_job.mark_complete()
 
+        total_kept = len(langchain_chunks)
+        _update(
+            document_id,
+            status="complete",
+            chunks_indexed=count,
+            total_chunks=total_kept,
+            progress_pct=100.0,
+            message=f"Indexed {count} chunks.",
+            error=None,
+        )
+
+        log_event(INGESTION_EVENTS["document_indexed"], document_id, chunks_indexed=count)
+        log_event(INGESTION_EVENTS["ingestion_finalization_completed"], document_id)
         log_event(INGESTION_EVENTS["ingestion_completed"], document_id, chunks_indexed=count)
 
         return {
@@ -234,7 +284,17 @@ def ingest_document_v2(
 
     except Exception as exc:
         log.exception("Ingestion failed for %s", document_id)
+        log_event(INGESTION_EVENTS["ingestion_finalization_failed"], document_id, error=str(exc))
         log_event(INGESTION_EVENTS["ingestion_failed"], document_id, error=str(exc))
+
+        from backend.ingestion import _update
+        _update(
+            document_id,
+            status="failed",
+            chunks_indexed=0,
+            message="Ingestion failed.",
+            error=str(exc),
+        )
 
         if ingestion_job:
             ingestion_job.mark_failed("INGESTION_ERROR", str(exc))

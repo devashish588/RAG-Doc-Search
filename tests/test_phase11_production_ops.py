@@ -309,7 +309,7 @@ class TestSecurityConfiguration:
         frontend_dir = pathlib.Path(__file__).parents[1] / "frontend"
         for f in frontend_dir.glob("*"):
             if f.is_file() and f.suffix in (".js", ".html", ".css"):
-                content = f.read_text()
+                content = f.read_text(encoding="utf-8")
                 assert "sk-" not in content, f"Possible secret in {f.name}"
                 assert "OPENROUTER_API_KEY" not in content
 

@@ -46,11 +46,14 @@ async function api(path, options, attempt = 1) {
 }
 
 function statusClass(s) {
-  return s === 'complete' ? 'ok' : s === 'failed' ? 'fail' : 'muted';
+  if (s === 'complete' || s === 'indexed') return 'ok';
+  if (s === 'indexing' || s === 'processing') return 'indexing';
+  if (s === 'failed' || s === 'error') return 'fail';
+  return 'muted';
 }
 
 function safeText(v) {
-  if (v === null || v === undefined || v === '' || v === 'undefined' || v === 'null' || v === 'NaN') return 'ó';
+  if (v === null || v === undefined || v === '' || v === 'undefined' || v === 'null' || v === 'NaN') return '‚Äî';
   return String(v);
 }
 
@@ -63,15 +66,22 @@ function renderDocs(docs) {
   }
   const sources = new Set();
   docs.forEach(doc => {
-    if (doc.status === 'complete') sources.add(doc.filename);
+    if (doc.status === 'complete' || doc.status === 'indexed') sources.add(doc.filename);
     const el = document.createElement('div');
     el.className = 'doc';
+    const chunksText = doc.total_chunks
+      ? doc.chunks_indexed + '/' + doc.total_chunks + ' chunks' + (doc.progress_pct !== null && doc.progress_pct !== undefined ? ' (' + Math.round(doc.progress_pct) + '%)' : '')
+      : (doc.chunks_indexed ?? 0) + ' chunks';
+    const progressBar = (doc.progress_pct !== null && doc.progress_pct !== undefined && doc.status !== 'complete' && doc.status !== 'indexed' && doc.status !== 'failed')
+      ? '<div class="progress-bar-container"><div class="progress-bar-fill" style="width:' + Math.min(100, Math.max(0, doc.progress_pct)) + '%;"></div></div>'
+      : '';
     el.innerHTML =
       '<div class="doc-top">' +
         '<strong>' + doc.filename + '</strong>' +
-        '<span class="pill ' + statusClass(doc.status) + '">' + doc.status + ' ∑ ' + (doc.chunks_indexed ?? 0) + ' chunks</span>' +
+        '<span class="pill ' + statusClass(doc.status) + '">' + doc.status + ' ¬∑ ' + chunksText + '</span>' +
       '</div>' +
-      '<div class="muted">' + (doc.message ?? '') + '</div>' +
+      progressBar +
+      '<div class="muted" style="margin-top:4px;">' + (doc.message ?? '') + '</div>' +
       '<div style="margin-top:8px">' +
         '<button class="danger" data-delete-id="' + doc.document_id + '" data-filename="' + doc.filename + '">Delete</button>' +
       '</div>' +
@@ -86,11 +96,11 @@ function renderDocs(docs) {
 }
 
 function renderConfidence(conf) {
-  if (!conf) { confidenceBox.innerHTML = '<div class="muted">ó</div>'; return; }
+  if (!conf) { confidenceBox.innerHTML = '<div class="muted">√¢‚Ç¨‚Äù</div>'; return; }
   var level = conf.level || 'unknown';
   var color = level === 'high' ? 'ok' : level === 'medium' ? '' : 'fail';
-  var score = typeof conf.overall_score === 'number' ? (conf.overall_score * 100).toFixed(0) + '%' : 'ó';
-  var abstain = conf.abstention_flag ? ' ∑ <span class="fail">Abstained</span>' : '';
+  var score = typeof conf.overall_score === 'number' ? (conf.overall_score * 100).toFixed(0) + '%' : '√¢‚Ç¨‚Äù';
+  var abstain = conf.abstention_flag ? ' ¬∑ <span class="fail">Abstained</span>' : '';
   var html =
     '<div class="doc-top">' +
       '<span class="pill ' + color + '">' + level.charAt(0).toUpperCase() + level.slice(1) + '</span>' +
@@ -98,31 +108,34 @@ function renderConfidence(conf) {
       abstain +
     '</div>' +
     '<div class="muted">' +
-      'Retrieval: ' + (typeof conf.retrieval_confidence === 'number' ? (conf.retrieval_confidence * 100).toFixed(0) + '%' : 'ó') +
-      ' ∑ Grounding: ' + (typeof conf.grounding_confidence === 'number' ? (conf.grounding_confidence * 100).toFixed(0) + '%' : 'ó') +
+      'Retrieval: ' + (typeof conf.retrieval_confidence === 'number' ? (conf.retrieval_confidence * 100).toFixed(0) + '%' : '√¢‚Ç¨‚Äù') +
+      ' ¬∑ Grounding: ' + (typeof conf.grounding_confidence === 'number' ? (conf.grounding_confidence * 100).toFixed(0) + '%' : '√¢‚Ç¨‚Äù') +
     '</div>';
   confidenceBox.innerHTML = html;
 }
 
-function renderCitations(data) {
+function renderAnswer(data) {
   answerBox.textContent = data.answer || 'No answer returned.';
+}
+
+function renderChunks(data) {
   resultsBox.innerHTML = '';
-  var cites = data.citations || [];
-  if (!cites.length) {
+  var chunks = data.retrieved_chunks || [];
+  if (!chunks.length) {
     resultsBox.innerHTML = '<div class="muted">No matching chunks found.</div>';
     return;
   }
-  cites.forEach(function(c, i) {
-    var verdictClass = c.verdict === 'supported' ? 'ok' : c.verdict === 'unsupported' ? 'fail' : 'muted';
-    var verdictLabel = c.verdict ? c.verdict.charAt(0).toUpperCase() + c.verdict.slice(1) : '';
+  chunks.forEach(function(c, i) {
     var card = document.createElement('div');
     card.className = 'result';
+    var pageStr = c.page ? ' ¬∑ page ' + c.page : '';
+    var scoreStr = typeof c.score === 'number' ? c.score.toFixed(4) : c.score;
     card.innerHTML =
       '<div class="result-head">' +
-        '<div>#' + (i + 1) + ' ∑ ' + safeText(c.source) + (c.page ? ' ∑ page ' + c.page : '') + '</div>' +
-        (verdictLabel ? '<span class="pill ' + verdictClass + '">' + verdictLabel + '</span>' : '') +
+        '<div>#' + (i + 1) + ' ¬∑ ' + safeText(c.source) + pageStr + '</div>' +
+        '<span class="pill">Score: ' + scoreStr + '</span>' +
       '</div>' +
-      '<div class="result-text">' + safeText(c.text_snippet || c.claim) + '</div>';
+      '<div class="result-text">' + safeText(c.text) + '</div>';
     resultsBox.appendChild(card);
   });
 }
@@ -132,34 +145,56 @@ function traceStage(label, items, meta) {
   var n = items.length;
   var extra = meta && items[0] && items[0].metadata && items[0].metadata[meta];
   return '<div class="trace-row"><span class="trace-label">' + label + '</span>' +
-       '<span class="trace-val">' + n + (extra ? ' ∑ ' + extra : '') + '</span></div>';
+       '<span class="trace-val">' + n + (extra ? ' ¬∑ ' + extra : '') + '</span></div>';
 }
 
 function renderTrace(trace) {
-  if (!trace) { traceBox.innerHTML = '<div class="muted">ó</div>'; return; }
+  if (!trace) { traceBox.innerHTML = '<div class="muted">√¢‚Ç¨‚Äù</div>'; return; }
   var html = '';
   html += traceStage('Dense', trace.dense);
   html += traceStage('BM25', trace.bm25);
   html += traceStage('Hybrid RRF', trace.rrf);
   html += traceStage('Reranker', trace.reranker, 'reranker_status');
-  if (!html) html = '<div class="muted">ó</div>';
+  if (!html) html = '<div class="muted">√¢‚Ç¨‚Äù</div>';
   traceBox.innerHTML = html;
 }
 
 async function loadHealth() {
   try {
     var d = await api('/health');
-    healthPill.textContent = 'API ok ∑ ' + d.embedding_backend;
+    healthPill.textContent = 'API ok ¬∑ ' + d.embedding_backend;
   } catch (e) {
-    healthPill.textContent = 'API error ∑ ' + e.message;
+    healthPill.textContent = 'API error ¬∑ ' + e.message;
   }
 }
 
 async function loadDocuments() {
   try {
-    renderDocs(await api('/documents'));
+    const docs = await api('/documents');
+    renderDocs(docs);
   } catch (e) {
     docsBox.innerHTML = '<div class="fail">' + e.message + '</div>';
+  }
+}
+
+async function pollSingleDocProgress(docId, attempt = 0) {
+  if (attempt >= 20) return;
+  await sleep(3000);
+  try {
+    const doc = await api('/documents/' + docId);
+    const card = document.querySelector('[data-doc-card-id="' + docId + '"]');
+    if (card) {
+      updateCardInDOM(card, doc);
+    } else {
+      await loadDocuments();
+    }
+    if (doc.status === 'queued' || doc.status === 'processing' || doc.status === 'indexing') {
+      pollSingleDocProgress(docId, attempt + 1);
+    } else {
+      await loadDocuments();
+      uploadStatus.textContent = doc.filename + ' ' + doc.status + '.';
+    }
+  } catch (e) {
   }
 }
 
@@ -183,13 +218,14 @@ $('uploadBtn').addEventListener('click', async function() {
   var file = $('fileInput').files[0];
   if (!file) { uploadStatus.textContent = 'Choose a file first.'; return; }
   $('uploadBtn').disabled = true;
-  uploadStatus.textContent = 'UploadingÖ';
+  uploadStatus.textContent = 'Uploading‚Ä¶';
   try {
     var fd = new FormData();
     fd.append('file', file);
     var d = await api('/upload', { method: 'POST', body: fd });
-    uploadStatus.textContent = d.filename + ' queued.';
+    uploadStatus.textContent = d.filename + ' queued. Ingesting...';
     await loadDocuments();
+    pollSingleDocProgress(d.document_id);
   } catch (e) {
     uploadStatus.textContent = 'Upload failed: ' + e.message;
   } finally {
@@ -205,7 +241,7 @@ $('searchBtn').addEventListener('click', async function() {
   var source   = sourceSelect.value;
   if (!question) { searchStatus.textContent = 'Type a question first.'; return; }
   $('searchBtn').disabled = true;
-  searchStatus.textContent = 'SearchingÖ';
+  searchStatus.textContent = 'Searching‚Ä¶';
   try {
     var payload = {
       question: question,
@@ -221,7 +257,8 @@ $('searchBtn').addEventListener('click', async function() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    renderCitations(d);
+    renderAnswer(d);
+    renderChunks(d);
     renderConfidence(d.confidence);
     renderTrace(d.retrieval_trace);
     searchStatus.textContent = 'Status: ' + d.status;
@@ -240,5 +277,5 @@ $('refreshBtn').addEventListener('click', loadDocuments);
 
 loadHealth();
 loadDocuments();
-setInterval(loadHealth, 15000);
-setInterval(loadDocuments, 15000);
+setInterval(loadHealth, 30000);
+setInterval(loadDocuments, 30000);

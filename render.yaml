@@ -18,6 +18,8 @@ services:
     healthCheckPath: /healthz
     autoDeploy: true
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.9
       - key: ENVIRONMENT
         value: production
       - key: LOG_LEVEL

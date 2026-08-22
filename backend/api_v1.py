@@ -66,10 +66,22 @@ class AskRequest(BaseModel):
     retrieval_mode: str = Field(default="dense", pattern="^(dense|sparse|hybrid|hybrid_rerank)$")
 
 
+class RetrievedChunk(BaseModel):
+    """A single retrieved chunk exposed to the frontend."""
+    chunk_id: str
+    source: str
+    text: str
+    score: float
+    rank: int
+    page: int | None = None
+    metadata: dict[str, Any] = {}
+
+
 class AskResponse(BaseModel):
     answer: str
     status: str  # "answered" | "insufficient_context" | "failed"
     citations: list[SchemaCitation] = []
+    retrieved_chunks: list[RetrievedChunk] = []
     confidence: Confidence | None = None
     grounding_metrics: GroundingMetrics | None = None
     retrieval_trace: RetrievalTrace
@@ -113,6 +125,52 @@ async def _save_upload(upload: UploadFile, dest: Path) -> str:
             hasher.update(chunk)
             fh.write(chunk)
     return hasher.hexdigest()
+
+
+def _extract_retrieved_chunks(
+    dense_results: list,
+    bm25_results: list,
+    rrf_results: list,
+    reranker_results: list,
+    retrieval_mode: str,
+) -> list[RetrievedChunk]:
+    """Extract the final-stage retrieval chunks for the frontend.
+
+    Uses the most refined stage available for the given mode:
+    - hybrid_rerank: reranker results (most refined)
+    - hybrid: rrf results
+    - sparse: bm25 results
+    - dense: dense results
+    """
+    if retrieval_mode == "hybrid_rerank" and reranker_results:
+        raw = reranker_results
+    elif retrieval_mode in ("hybrid", "hybrid_rerank") and rrf_results:
+        raw = rrf_results
+    elif retrieval_mode == "sparse" and bm25_results:
+        raw = bm25_results
+    elif dense_results:
+        raw = dense_results
+    else:
+        raw = []
+
+    chunks = []
+    for r in raw:
+        meta = r.metadata if hasattr(r, "metadata") else {}
+        page = meta.get("page")
+        if isinstance(page, str) and page.isdigit():
+            page = int(page)
+        elif not isinstance(page, int):
+            page = None
+        chunks.append(RetrievedChunk(
+            chunk_id=r.chunk_id,
+            source=r.source,
+            text=r.content,
+            score=r.score,
+            rank=r.rank,
+            page=page,
+            metadata=meta,
+        ))
+    return chunks
 
 
 def _build_citations_from_verification(verification_result: dict[str, Any]) -> list[SchemaCitation]:
@@ -174,12 +232,14 @@ async def ingest_document_v1(file: UploadFile = File(...)) -> IngestResponse:
 async def ask_v1(request: AskRequest) -> AskResponse:
     # Dense, BM25, and Hybrid retrieval are active in Phase 5
     try:
+        source_filter = getattr(request, "source", None)
+
         if request.retrieval_mode == "dense":
             # Dense only mode
             dense_results = run_search_dense(
                 query=request.question,
                 k=request.top_k_dense,
-                source=None,
+                source=source_filter,
             )
             bm25_results = []
             rrf_results = []
@@ -187,7 +247,7 @@ async def ask_v1(request: AskRequest) -> AskResponse:
             legacy_req = LegacySearchRequest(
                 query=request.question,
                 top_k=request.top_k_dense,
-                source=None,
+                source=source_filter,
             )
             search_res = run_search(legacy_req)
         elif request.retrieval_mode == "sparse":
@@ -196,14 +256,14 @@ async def ask_v1(request: AskRequest) -> AskResponse:
             bm25_results = run_search_bm25(
                 query=request.question,
                 k=request.top_k_sparse,
-                source=None,
+                source=source_filter,
             )
             rrf_results = []
             reranker_results = []
             legacy_req = LegacySearchRequest(
                 query=request.question,
                 top_k=request.top_k_sparse,
-                source=None,
+                source=source_filter,
             )
             search_res = run_search(legacy_req)
         elif request.retrieval_mode == "hybrid_rerank":
@@ -211,12 +271,12 @@ async def ask_v1(request: AskRequest) -> AskResponse:
             dense_results = run_search_dense(
                 query=request.question,
                 k=request.top_k_dense,
-                source=None,
+                source=source_filter,
             )
             bm25_results = run_search_bm25(
                 query=request.question,
                 k=request.top_k_sparse,
-                source=None,
+                source=source_filter,
             )
             rrf_results = run_search_hybrid(
                 query=request.question,
@@ -224,7 +284,7 @@ async def ask_v1(request: AskRequest) -> AskResponse:
                 top_k_dense=request.top_k_dense,
                 top_k_sparse=request.top_k_sparse,
                 top_k_fused=request.top_k_fused,
-                source=None,
+                source=source_filter,
             )
             # Rerank the RRF candidate pool (top_k_fused) down to top_k_final.
             reranker = get_reranker()
@@ -237,7 +297,7 @@ async def ask_v1(request: AskRequest) -> AskResponse:
             legacy_req = LegacySearchRequest(
                 query=request.question,
                 top_k=request.top_k_final,
-                source=None,
+                source=source_filter,
             )
             search_res = run_search(legacy_req)
         else:  # hybrid mode
@@ -245,12 +305,12 @@ async def ask_v1(request: AskRequest) -> AskResponse:
             dense_results = run_search_dense(
                 query=request.question,
                 k=request.top_k_dense,
-                source=None,
+                source=source_filter,
             )
             bm25_results = run_search_bm25(
                 query=request.question,
                 k=request.top_k_sparse,
-                source=None,
+                source=source_filter,
             )
             rrf_results = run_search_hybrid(
                 query=request.question,
@@ -258,14 +318,14 @@ async def ask_v1(request: AskRequest) -> AskResponse:
                 top_k_dense=request.top_k_dense,
                 top_k_sparse=request.top_k_sparse,
                 top_k_fused=request.top_k_fused,
-                source=None,
+                source=source_filter,
             )
             reranker_results = []
             # Use dense for answer generation (existing behavior)
             legacy_req = LegacySearchRequest(
                 query=request.question,
                 top_k=request.top_k_dense,
-                source=None,
+                source=source_filter,
             )
             search_res = run_search(legacy_req)
     except ValueError as exc:
@@ -322,6 +382,15 @@ async def ask_v1(request: AskRequest) -> AskResponse:
 
     schema_citations = _build_citations_from_verification(verification_output)
 
+    # Extract the final-stage retrieval chunks for the frontend
+    retrieved_chunks = _extract_retrieved_chunks(
+        dense_results=dense_results,
+        bm25_results=bm25_results,
+        rrf_results=rrf_results,
+        reranker_results=reranker_results,
+        retrieval_mode=request.retrieval_mode,
+    )
+
     conf_obj = Confidence(
         overall_score=conf_output.overall_score,
         level=conf_output.level,
@@ -356,10 +425,25 @@ async def ask_v1(request: AskRequest) -> AskResponse:
         final_answer = search_res.answer
         final_citations = schema_citations
 
+    # Observability: log response contract summary
+    import logging
+    _log = logging.getLogger("rag.structured")
+    _log.info(
+        "retrieval_response_summary: mode=%s retrieval_count=%d response_chunk_count=%d "
+        "citation_count=%d grounding_context_count=%d status=%s",
+        request.retrieval_mode,
+        len(dense_results) + len(bm25_results) + len(rrf_results) + len(reranker_results),
+        len(retrieved_chunks),
+        len(final_citations),
+        len(eval_context),
+        response_status,
+    )
+
     return AskResponse(
         answer=final_answer,
         status=response_status,
         citations=final_citations,
+        retrieved_chunks=retrieved_chunks,
         confidence=conf_obj,
         grounding_metrics=grounding_metrics_obj,
         retrieval_trace=RetrievalTrace(
