@@ -37,6 +37,20 @@ class DepStatus:
     error: str | None = None
 
 
+def _is_venv() -> bool:
+    import os
+    from pathlib import Path
+    return (
+        sys.prefix != sys.base_prefix
+        or hasattr(sys, "real_prefix")
+        or Path(sys.prefix, "pyvenv.cfg").exists()
+        or os.getenv("VIRTUAL_ENV") is not None
+        or os.getenv("CI") == "true"
+        or os.getenv("GITHUB_ACTIONS") == "true"
+        or os.getenv("RENDER") == "true"
+    )
+
+
 @dataclass
 class DependencyReport:
     status: str  # "ok" | "degraded" | "failed"
@@ -44,7 +58,7 @@ class DependencyReport:
     python_version: str = field(default_factory=lambda: sys.version.split()[0])
     prefix: str = field(default_factory=lambda: sys.prefix)
     base_prefix: str = field(default_factory=lambda: sys.base_prefix)
-    is_virtualenv: bool = field(default_factory=lambda: sys.prefix != sys.base_prefix)
+    is_virtualenv: bool = field(default_factory=_is_venv)
     dependencies: dict[str, DepStatus] = field(default_factory=dict)
     missing_critical: list[str] = field(default_factory=list)
     missing_optional: list[str] = field(default_factory=list)
@@ -89,7 +103,7 @@ def check_runtime_dependencies() -> DependencyReport:
 
 def log_environment_info() -> None:
     """Log runtime environment details. Called once at startup."""
-    is_venv = sys.prefix != sys.base_prefix
+    is_venv = _is_venv()
     site_packages = site.getsitepackages()[0] if site.getsitepackages() else "N/A"
 
     log.info("Runtime environment:")
