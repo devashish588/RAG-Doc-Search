@@ -176,7 +176,15 @@ def startup_validation(raise_on_failure: bool = True) -> bool:
     report = check_runtime_dependencies()
     failure_msg = None
 
-    if not report.is_virtualenv:
+    if sys.version_info >= (3, 13):
+        failure_msg = (
+            f"UNSUPPORTED PYTHON RUNTIME\n"
+            f"  Detected: Python {sys.version.split()[0]}\n"
+            f"  Supported production runtime: Python 3.12.x\n"
+            f"  Executable: {report.executable}\n"
+            f"  Use the project's supported Python 3.12 environment."
+        )
+    elif not report.is_virtualenv:
         missing = ", ".join(report.missing_critical) if report.missing_critical else "global interpreter without virtualenv"
         failure_msg = (
             f"STARTUP FAILED — Wrong Python interpreter detected.\n"
