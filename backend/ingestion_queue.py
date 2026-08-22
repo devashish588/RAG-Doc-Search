@@ -29,9 +29,15 @@ def _run() -> None:
             break
         try:
             document_id, stored_path, filename = job
-            ingest_document_v2(document_id, stored_path, filename)
+            res = ingest_document_v2(document_id, stored_path, filename)
+            log.info("Queue worker completed ingestion job for %s: status=%s", document_id, res.get("status"))
         except Exception as exc:  # keep the worker alive across any failure
-            log.exception("Ingestion worker error: %s", exc)
+            log.exception("Ingestion worker error for %s: %s", document_id, exc)
+            try:
+                from backend.ingestion import _update
+                _update(document_id, status="failed", message="Ingestion failed.", error=str(exc))
+            except Exception:
+                pass
         finally:
             _q.task_done()
 

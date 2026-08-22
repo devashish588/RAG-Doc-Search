@@ -69,3 +69,93 @@ class TestDocumentStatusSchema:
         assert data["total_chunks"] is None
         assert data["progress_pct"] is None
         assert data["chunks_indexed"] == 0
+
+
+class TestPhase13CompletionAndSearchability:
+    def test_ingestion_reaches_complete_and_persists(self, tmp_path):
+        from backend.ingestion import register_document, get_document_status
+        from backend.ingestion_v2 import ingest_document_v2
+        from backend.vector_store import get_vector_store
+
+        test_file = tmp_path / "test_doc.txt"
+        test_file.write_text("The HybridRAG system uses ChromaDB for vector storage and semantic document search.", encoding="utf-8")
+        doc_id = "test_completion_123"
+
+        register_document(doc_id, "test_doc.txt", test_file)
+
+        res = ingest_document_v2(doc_id, test_file, "test_doc.txt")
+        assert res["status"] == "complete"
+        assert res["chunks_indexed"] > 0
+
+        # Verify global registry record
+        status = get_document_status(doc_id)
+        assert status is not None
+        assert status["status"] == "complete"
+        assert status["chunks_indexed"] == res["chunks_indexed"]
+        assert status["total_chunks"] == res["chunks_indexed"]
+        assert status["progress_pct"] == 100.0
+        assert status["error"] is None
+
+    def test_no_false_100_percent_progress(self, tmp_path):
+        from backend.ingestion import register_document, get_document_status
+        from backend.ingestion_v2 import ingest_document_v2
+
+        test_file = tmp_path / "progress_doc.txt"
+        test_file.write_text("Chunk one content for progress test.\nChunk two content for progress test.", encoding="utf-8")
+        doc_id = "test_progress_cap"
+
+        register_document(doc_id, "progress_doc.txt", test_file)
+
+        recorded_statuses = []
+
+        with patch("backend.ingestion._update", side_effect=lambda did, **k: recorded_statuses.append(dict(k))):
+            ingest_document_v2(doc_id, test_file, "progress_doc.txt")
+
+        # Check indexing statuses during vector progress
+        indexing_records = [r for r in recorded_statuses if r.get("status") == "indexing"]
+        for r in indexing_records:
+            assert r.get("progress_pct") <= 99.0, f"False 100% progress emitted during indexing: {r}"
+
+        # Final record must be complete with 100%
+        final_record = recorded_statuses[-1]
+        assert final_record.get("status") == "complete"
+        assert final_record.get("progress_pct") == 100.0
+
+    def test_document_is_searchable_after_completion(self, tmp_path):
+        from backend.ingestion import register_document
+        from backend.ingestion_v2 import ingest_document_v2
+        from backend.retrieval import run_search
+        from backend.schemas import SearchRequest
+
+        test_file = tmp_path / "searchable_doc.txt"
+        test_file.write_text("Syllabus for System Discipline course covering architectural patterns and reliability.", encoding="utf-8")
+        doc_id = "test_searchable_789"
+
+        register_document(doc_id, "searchable_doc.txt", test_file)
+        res = ingest_document_v2(doc_id, test_file, "searchable_doc.txt")
+        assert res["status"] == "complete"
+
+        # Dense search query
+        response = run_search(SearchRequest(query="System Discipline syllabus architectural patterns", top_k=5))
+        assert len(response.results) > 0
+        matching = [r for r in response.results if "System Discipline" in r.text]
+        assert len(matching) > 0
+
+    def test_bm25_failure_marks_failed(self, tmp_path):
+        from backend.ingestion import register_document, get_document_status
+        from backend.ingestion_v2 import ingest_document_v2
+
+        test_file = tmp_path / "bm25_fail_doc.txt"
+        test_file.write_text("Test content for BM25 failure simulation.", encoding="utf-8")
+        doc_id = "test_bm25_fail"
+
+        register_document(doc_id, "bm25_fail_doc.txt", test_file)
+
+        with patch("backend.ingestion_v2.get_bm25_index", side_effect=RuntimeError("BM25 index lock failure")):
+            res = ingest_document_v2(doc_id, test_file, "bm25_fail_doc.txt")
+            assert res["status"] == "failed"
+
+        status = get_document_status(doc_id)
+        assert status is not None
+        assert status["status"] == "failed"
+        assert "BM25" in str(status.get("error"))
