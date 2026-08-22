@@ -174,12 +174,14 @@ async def ingest_document_v1(file: UploadFile = File(...)) -> IngestResponse:
 async def ask_v1(request: AskRequest) -> AskResponse:
     # Dense, BM25, and Hybrid retrieval are active in Phase 5
     try:
+        source_filter = getattr(request, "source", None)
+
         if request.retrieval_mode == "dense":
             # Dense only mode
             dense_results = run_search_dense(
                 query=request.question,
                 k=request.top_k_dense,
-                source=None,
+                source=source_filter,
             )
             bm25_results = []
             rrf_results = []
@@ -187,7 +189,7 @@ async def ask_v1(request: AskRequest) -> AskResponse:
             legacy_req = LegacySearchRequest(
                 query=request.question,
                 top_k=request.top_k_dense,
-                source=None,
+                source=source_filter,
             )
             search_res = run_search(legacy_req)
         elif request.retrieval_mode == "sparse":
@@ -196,14 +198,14 @@ async def ask_v1(request: AskRequest) -> AskResponse:
             bm25_results = run_search_bm25(
                 query=request.question,
                 k=request.top_k_sparse,
-                source=None,
+                source=source_filter,
             )
             rrf_results = []
             reranker_results = []
             legacy_req = LegacySearchRequest(
                 query=request.question,
                 top_k=request.top_k_sparse,
-                source=None,
+                source=source_filter,
             )
             search_res = run_search(legacy_req)
         elif request.retrieval_mode == "hybrid_rerank":
@@ -211,12 +213,12 @@ async def ask_v1(request: AskRequest) -> AskResponse:
             dense_results = run_search_dense(
                 query=request.question,
                 k=request.top_k_dense,
-                source=None,
+                source=source_filter,
             )
             bm25_results = run_search_bm25(
                 query=request.question,
                 k=request.top_k_sparse,
-                source=None,
+                source=source_filter,
             )
             rrf_results = run_search_hybrid(
                 query=request.question,
@@ -224,7 +226,7 @@ async def ask_v1(request: AskRequest) -> AskResponse:
                 top_k_dense=request.top_k_dense,
                 top_k_sparse=request.top_k_sparse,
                 top_k_fused=request.top_k_fused,
-                source=None,
+                source=source_filter,
             )
             # Rerank the RRF candidate pool (top_k_fused) down to top_k_final.
             reranker = get_reranker()
@@ -237,7 +239,7 @@ async def ask_v1(request: AskRequest) -> AskResponse:
             legacy_req = LegacySearchRequest(
                 query=request.question,
                 top_k=request.top_k_final,
-                source=None,
+                source=source_filter,
             )
             search_res = run_search(legacy_req)
         else:  # hybrid mode
@@ -245,12 +247,12 @@ async def ask_v1(request: AskRequest) -> AskResponse:
             dense_results = run_search_dense(
                 query=request.question,
                 k=request.top_k_dense,
-                source=None,
+                source=source_filter,
             )
             bm25_results = run_search_bm25(
                 query=request.question,
                 k=request.top_k_sparse,
-                source=None,
+                source=source_filter,
             )
             rrf_results = run_search_hybrid(
                 query=request.question,
@@ -258,14 +260,14 @@ async def ask_v1(request: AskRequest) -> AskResponse:
                 top_k_dense=request.top_k_dense,
                 top_k_sparse=request.top_k_sparse,
                 top_k_fused=request.top_k_fused,
-                source=None,
+                source=source_filter,
             )
             reranker_results = []
             # Use dense for answer generation (existing behavior)
             legacy_req = LegacySearchRequest(
                 query=request.question,
                 top_k=request.top_k_dense,
-                source=None,
+                source=source_filter,
             )
             search_res = run_search(legacy_req)
     except ValueError as exc:
