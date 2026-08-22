@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 
 from backend.api_errors import HTTPException as _HTTPException, register_error_handlers
 from backend.api_v1 import router as v1_router
+from backend.dependency_check import startup_validation
 from backend.circuit_breaker import get_circuit_breaker
 from backend.ingestion import (
     delete_document,
@@ -62,6 +63,7 @@ def _warmup():
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     ensure_runtime_dirs()
+    startup_validation()
     if EMBEDDING_WARMUP:
         _warmup()
     start_ingestion_worker()

@@ -622,8 +622,16 @@ Without an API key, the system returns retrieved context without LLM-generated a
 ### Run
 
 ```bash
-python main.py
+# Always use the .venv Python directly (prevents wrong-interpreter errors)
+# Windows:
+.venv\Scripts\python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 9826
+
+# macOS/Linux:
+source .venv/bin/activate
+uvicorn backend.main:app --host 127.0.0.1 --port 9826
 ```
+
+> **IMPORTANT:** The `python` command may resolve to a global Python installation that does NOT have the required packages. Always use `.venv\Scripts\python.exe` (Windows) or activate the venv first.
 
 Open: http://127.0.0.1:9826
 
@@ -641,6 +649,50 @@ Or with docker-compose:
 ```bash
 docker compose up
 ```
+
+---
+
+## Runtime Dependency Verification
+
+### Requirements
+
+- Python 3.12+
+- `chromadb` — vector database (declared in `requirements.txt`)
+- `fastembed` — ONNX embeddings (declared in `requirements.txt`)
+- `numpy` — array operations for BM25 and deduplication (declared in `requirements.txt`)
+- `rank-bm25` — BM25 sparse retrieval (declared in `requirements.txt`)
+
+### Validate Installation
+
+```bash
+python -c "import chromadb, fastembed, numpy, rank_bm25; print('Runtime dependencies OK')"
+```
+
+### Startup Validation
+
+On startup, the application validates:
+1. All critical runtime dependencies are importable
+2. FastEmbed initializes successfully (production only)
+3. ChromaDB vector store is accessible
+
+If validation fails, startup logs contain a clear error identifying the missing package and installation command.
+
+### Health Probes
+
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /healthz` | Lightweight liveness (no dependency checks) |
+| `GET /readyz` | Full readiness including dependency health |
+
+The `/readyz` endpoint returns `503` if any critical dependency is missing.
+
+### Memory Requirements
+
+| Tier | Status |
+|------|--------|
+| 512 MB | **UNSUPPORTED** |
+| 1 GB | Minimum practical |
+| 2 GB | Recommended |
 
 ---
 

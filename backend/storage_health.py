@@ -71,12 +71,31 @@ def check_index_consistency() -> dict[str, Any]:
 from backend.settings import UPLOAD_DIR  # noqa: E402
 
 
+def check_dependencies() -> dict[str, Any]:
+    """Check critical runtime dependencies are importable."""
+    from backend.dependency_check import check_runtime_dependencies
+    report = check_runtime_dependencies()
+    if report.status == "failed":
+        return {"status": "error", "missing": report.missing_critical}
+    if report.status == "degraded":
+        return {"status": "warning", "missing_optional": report.missing_optional}
+    return {"status": "ok"}
+
+
 def readiness_report() -> dict[str, Any]:
     """Run all health checks and return a combined report."""
     checks = {
+        "dependencies": check_dependencies(),
         "chroma": check_chroma_health(),
         "bm25": check_bm25_health(),
         "disk": check_disk_health(),
     }
     all_ok = all(c["status"] == "ok" for c in checks.values())
-    return {"status": "ready" if all_ok else "degraded", "checks": checks}
+    any_error = any(c["status"] == "error" for c in checks.values())
+    if any_error:
+        status = "not_ready"
+    elif all_ok:
+        status = "ready"
+    else:
+        status = "degraded"
+    return {"status": status, "checks": checks}
