@@ -46,7 +46,10 @@ async function api(path, options, attempt = 1) {
 }
 
 function statusClass(s) {
-  return (s === 'complete' || s === 'indexed') ? 'ok' : (s === 'failed' || s === 'error') ? 'fail' : 'muted';
+  if (s === 'complete' || s === 'indexed') return 'ok';
+  if (s === 'indexing' || s === 'processing') return 'indexing';
+  if (s === 'failed' || s === 'error') return 'fail';
+  return 'muted';
 }
 
 function safeText(v) {
@@ -70,7 +73,7 @@ function renderDocs(docs) {
       ? doc.chunks_indexed + '/' + doc.total_chunks + ' chunks' + (doc.progress_pct !== null && doc.progress_pct !== undefined ? ' (' + Math.round(doc.progress_pct) + '%)' : '')
       : (doc.chunks_indexed ?? 0) + ' chunks';
     const progressBar = (doc.progress_pct !== null && doc.progress_pct !== undefined && doc.status !== 'complete' && doc.status !== 'indexed' && doc.status !== 'failed')
-      ? '<div style="margin-top:6px; background:#e2e8f0; height:4px; border-radius:2px; overflow:hidden;"><div style="background:#3b82f6; height:100%; width:' + Math.min(100, Math.max(0, doc.progress_pct)) + '%; transition: width 0.3s ease;"></div></div>'
+      ? '<div class="progress-bar-container"><div class="progress-bar-fill" style="width:' + Math.min(100, Math.max(0, doc.progress_pct)) + '%;"></div></div>'
       : '';
     el.innerHTML =
       '<div class="doc-top">' +
@@ -162,19 +165,33 @@ async function loadHealth() {
   }
 }
 
-let docPollTimer = null;
-
 async function loadDocuments() {
   try {
     const docs = await api('/documents');
     renderDocs(docs);
-    const active = docs.some(d => d.status === 'queued' || d.status === 'processing' || d.status === 'indexing');
-    if (active) {
-      if (docPollTimer) clearTimeout(docPollTimer);
-      docPollTimer = setTimeout(loadDocuments, 1000);
-    }
   } catch (e) {
     docsBox.innerHTML = '<div class="fail">' + e.message + '</div>';
+  }
+}
+
+async function pollSingleDocProgress(docId, attempt = 0) {
+  if (attempt >= 20) return;
+  await sleep(3000);
+  try {
+    const doc = await api('/documents/' + docId);
+    const card = document.querySelector('[data-doc-card-id="' + docId + '"]');
+    if (card) {
+      updateCardInDOM(card, doc);
+    } else {
+      await loadDocuments();
+    }
+    if (doc.status === 'queued' || doc.status === 'processing' || doc.status === 'indexing') {
+      pollSingleDocProgress(docId, attempt + 1);
+    } else {
+      await loadDocuments();
+      uploadStatus.textContent = doc.filename + ' ' + doc.status + '.';
+    }
+  } catch (e) {
   }
 }
 
@@ -203,8 +220,9 @@ $('uploadBtn').addEventListener('click', async function() {
     var fd = new FormData();
     fd.append('file', file);
     var d = await api('/upload', { method: 'POST', body: fd });
-    uploadStatus.textContent = d.filename + ' queued.';
+    uploadStatus.textContent = d.filename + ' queued. Ingesting...';
     await loadDocuments();
+    pollSingleDocProgress(d.document_id);
   } catch (e) {
     uploadStatus.textContent = 'Upload failed: ' + e.message;
   } finally {
@@ -255,5 +273,5 @@ $('refreshBtn').addEventListener('click', loadDocuments);
 
 loadHealth();
 loadDocuments();
-setInterval(loadHealth, 15000);
-setInterval(loadDocuments, 15000);
+setInterval(loadHealth, 30000);
+setInterval(loadDocuments, 30000);
