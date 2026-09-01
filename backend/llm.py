@@ -11,6 +11,10 @@ from backend.settings import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, LLM_PROVIDER
 log = logging.getLogger(__name__)
 _diag = logging.getLogger("rag.llm.diag")
 
+# Cloudflare blocks requests with no User-Agent or default Python-urllib signature.
+# ponytail: minimal User-Agent to pass Cloudflare bot detection.
+_USER_AGENT = "RAGDocSearch/1.0"
+
 
 def llm_available() -> bool:
     return bool(LLM_API_KEY)
@@ -100,6 +104,7 @@ def generate_answer(query: str, results: list[SearchResult]) -> str | None:
         headers={
             "Authorization": f"Bearer {LLM_API_KEY}",
             "Content-Type": "application/json",
+            "User-Agent": _USER_AGENT,
         },
         method="POST",
     )
@@ -179,6 +184,7 @@ def diagnostic_groq_ping() -> dict:
         headers={
             "Authorization": f"Bearer {LLM_API_KEY}",
             "Content-Type": "application/json",
+            "User-Agent": _USER_AGENT,
         },
         method="POST",
     )
