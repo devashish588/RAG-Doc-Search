@@ -192,9 +192,9 @@ class TestLLMErrorCategorization:
 # ---------------------------------------------------------------------------
 
 class TestGroqModelFormatValidation:
-    """Verify groq model '/' detection, warning, and fallback."""
+    """Verify groq model '/' handling — now accepted (Groq uses provider/model format)."""
 
-    def test_groq_model_with_slash_warns_and_falls_back(self):
+    def test_groq_model_with_slash_accepted(self):
         import importlib
         import backend.settings as s
         with patch.dict("os.environ", {
@@ -203,16 +203,11 @@ class TestGroqModelFormatValidation:
             "GROQ_MODEL": "openai/gpt-oss-20b",
             "LLM_MODEL": "",
         }, clear=False):
-            with patch.object(s._log, "warning") as mock_warn:
-                importlib.reload(s)
-                # Check fallback happened
-                assert s.LLM_MODEL == "llama-3.1-8b-instant"
-                # Check warning was logged
-                assert mock_warn.called
-                warn_msg = mock_warn.call_args[0][0]
-                assert "contains" in warn_msg and "/" in warn_msg
+            importlib.reload(s)
+            # Models with '/' are valid Groq IDs — no fallback
+            assert s.LLM_MODEL == "openai/gpt-oss-20b"
 
-    def test_groq_model_bare_id_no_warning(self):
+    def test_groq_model_bare_id_accepted(self):
         import importlib
         import backend.settings as s
         with patch.dict("os.environ", {
@@ -221,11 +216,8 @@ class TestGroqModelFormatValidation:
             "GROQ_MODEL": "llama-3.1-8b-instant",
             "LLM_MODEL": "",
         }, clear=False):
-            with patch.object(s._log, "warning") as mock_warn:
-                importlib.reload(s)
-                # No warning for bare ID
-                assert not mock_warn.called
-                assert s.LLM_MODEL == "llama-3.1-8b-instant"
+            importlib.reload(s)
+            assert s.LLM_MODEL == "llama-3.1-8b-instant"
 
     def test_openrouter_model_not_affected(self):
         with patch.dict("os.environ", {
@@ -239,7 +231,7 @@ class TestGroqModelFormatValidation:
             importlib.reload(s)
             assert s.LLM_MODEL == "openai/gpt-4o-mini"  # slash is OK for openrouter
 
-    def test_groq_model_slash_warning_in_generate_answer(self, caplog):
+    def test_groq_model_slash_info_in_generate_answer(self, caplog):
         from urllib import error as urlerror
         with patch.dict("os.environ", {
             "LLM_PROVIDER": "groq",
@@ -263,7 +255,7 @@ class TestGroqModelFormatValidation:
                         )), \
                  patch("backend.llm.get_circuit_breaker", return_value=mock_breaker):
                 from backend.schemas import SearchResult
-                with caplog.at_level(logging.WARNING):
+                with caplog.at_level(logging.INFO):
                     llm.generate_answer("test", [
                         SearchResult(text="test", source="t.pdf", page=1, score=0.9, metadata={})
                     ])

@@ -125,10 +125,6 @@ GROQ_API_KEY  = os.getenv("GROQ_API_KEY", "").strip()
 GROQ_MODEL    = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 GROQ_BASE_URL = os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1")
 
-# Valid Groq model fallback used when a misconfigured OpenRouter-style
-# "provider/model" name is detected (Groq uses bare IDs).
-GROQ_FALLBACK_MODEL = "llama-3.1-8b-instant"
-
 # Unified LLM config (provider-agnostic). These are the values llm.py uses.
 # If LLM_BASE_URL / LLM_MODEL are set, they win. Otherwise the provider
 # default is used.
@@ -140,15 +136,6 @@ if LLM_PROVIDER == "groq":
     LLM_API_KEY = os.getenv("LLM_API_KEY", "").strip() or GROQ_API_KEY
     LLM_BASE_URL = os.getenv("LLM_BASE_URL", "").strip() or GROQ_BASE_URL
     LLM_MODEL = os.getenv("LLM_MODEL", "").strip() or GROQ_MODEL
-    # ponytail: Groq model IDs are bare (no '/'). A '/' means an OpenRouter-style
-    # name was copied by mistake and will 404 on Groq. Substitute the valid default.
-    if "/" in LLM_MODEL:
-        _log.warning(
-            "LLM_MODEL '%s' contains '/' which is invalid for Groq (Groq uses bare "
-            "model IDs like 'llama-3.1-8b-instant'). Falling back to '%s'.",
-            LLM_MODEL, GROQ_FALLBACK_MODEL,
-        )
-        LLM_MODEL = GROQ_FALLBACK_MODEL
 else:  # openrouter (default)
     LLM_API_KEY = os.getenv("LLM_API_KEY", "").strip() or OPENROUTER_API_KEY
     LLM_BASE_URL = os.getenv("LLM_BASE_URL", "").strip() or OPENROUTER_BASE_URL

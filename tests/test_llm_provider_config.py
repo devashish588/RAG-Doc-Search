@@ -42,7 +42,7 @@ class TestGroqConfigLoads:
             assert s.GROQ_BASE_URL == "https://api.groq.com/openai/v1"
             assert s.GROQ_MODEL == "llama-3.3-70b-versatile"
 
-    def test_groq_slashed_model_triggers_fallback(self):
+    def test_groq_slashed_model_accepted(self):
         with patch.dict("os.environ", {
             "LLM_PROVIDER": "groq",
             "GROQ_API_KEY": "test-key",
@@ -52,8 +52,8 @@ class TestGroqConfigLoads:
             import importlib
             import backend.settings as s
             importlib.reload(s)
-            assert "/" not in s.LLM_MODEL
-            assert s.LLM_MODEL in ("llama-3.3-70b-versatile", "llama-3.1-8b-instant")
+            # Groq uses provider/model format — slash is valid
+            assert s.LLM_MODEL == "openai/gpt-oss-20b"
 
 
 # ---------------------------------------------------------------------------
