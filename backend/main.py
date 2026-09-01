@@ -39,8 +39,8 @@ from backend.settings import (
     CORS_ORIGINS,
     EMBEDDING_BACKEND,
     EMBEDDING_WARMUP,
+    LLM_MODEL,
     MAX_UPLOAD_MB,
-    OPENROUTER_MODEL,
     SUPPORTED_EXTENSIONS,
     UPLOAD_DIR,
     ensure_runtime_dirs,
@@ -113,7 +113,7 @@ def health() -> HealthResponse:
         status="ok",
         vector_store=str(CHROMA_DIR),
         embedding_backend=EMBEDDING_BACKEND,
-        answer_model=OPENROUTER_MODEL if llm_available() else None,
+        answer_model=LLM_MODEL if llm_available() else None,
     )
 
 

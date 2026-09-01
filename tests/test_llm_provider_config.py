@@ -319,3 +319,151 @@ class TestResponseContractUnchanged:
         for field in ("answer", "status", "citations", "retrieved_chunks",
                        "confidence", "grounding_metrics", "retrieval_trace"):
             assert field in data, f"Missing field: {field}"
+
+
+# ---------------------------------------------------------------------------
+# 11. Generic LLM_* override behavior (the production root cause)
+# ---------------------------------------------------------------------------
+
+class TestGenericOverrideBehavior:
+    """Verify that generic LLM_* vars override provider-specific defaults.
+
+    This is the documented design (settings.py line 133-134):
+        # If LLM_BASE_URL / LLM_MODEL are set, they win. Otherwise the provider
+        # default is used.
+
+    The production bug was: LLM_BASE_URL=https://openrouter.ai/api/v1 was set
+    on Render, overriding GROQ_BASE_URL even when LLM_PROVIDER=groq.
+    """
+
+    def test_groq_with_stale_llm_base_url_uses_override(self):
+        """Reproduces the exact production bug: LLM_BASE_URL overrides GROQ_BASE_URL."""
+        with patch.dict("os.environ", {
+            "LLM_PROVIDER": "groq",
+            "GROQ_API_KEY": "test-groq-key",
+            "GROQ_MODEL": "llama-3.1-8b-instant",
+            "LLM_BASE_URL": "https://openrouter.ai/api/v1",
+            "LLM_MODEL": "",
+            "LLM_API_KEY": "",
+        }, clear=False):
+            import importlib
+            import backend.settings as s
+            importlib.reload(s)
+            # This IS the bug: generic LLM_BASE_URL wins over GROQ_BASE_URL
+            assert s.LLM_BASE_URL == "https://openrouter.ai/api/v1"
+            assert s.LLM_PROVIDER == "groq"
+
+    def test_groq_without_override_uses_groq_url(self):
+        """Without LLM_BASE_URL set, Groq gets its own base URL."""
+        with patch.dict("os.environ", {
+            "LLM_PROVIDER": "groq",
+            "GROQ_API_KEY": "test-groq-key",
+            "GROQ_MODEL": "llama-3.1-8b-instant",
+            "LLM_BASE_URL": "",
+            "LLM_MODEL": "",
+            "LLM_API_KEY": "",
+        }, clear=False):
+            import importlib
+            import backend.settings as s
+            importlib.reload(s)
+            assert s.LLM_BASE_URL == "https://api.groq.com/openai/v1"
+            assert s.LLM_PROVIDER == "groq"
+
+    def test_groq_with_explicit_groq_url_override(self):
+        """User explicitly sets LLM_BASE_URL to Groq URL — works correctly."""
+        with patch.dict("os.environ", {
+            "LLM_PROVIDER": "groq",
+            "GROQ_API_KEY": "test-groq-key",
+            "GROQ_MODEL": "llama-3.1-8b-instant",
+            "LLM_BASE_URL": "https://api.groq.com/openai/v1",
+            "LLM_MODEL": "",
+            "LLM_API_KEY": "",
+        }, clear=False):
+            import importlib
+            import backend.settings as s
+            importlib.reload(s)
+            assert s.LLM_BASE_URL == "https://api.groq.com/openai/v1"
+
+    def test_groq_with_llm_api_key_override(self):
+        """Generic LLM_API_KEY overrides GROQ_API_KEY when set."""
+        with patch.dict("os.environ", {
+            "LLM_PROVIDER": "groq",
+            "GROQ_API_KEY": "groq-key",
+            "LLM_API_KEY": "generic-key",
+            "LLM_BASE_URL": "",
+            "LLM_MODEL": "",
+        }, clear=False):
+            import importlib
+            import backend.settings as s
+            importlib.reload(s)
+            assert s.LLM_API_KEY == "generic-key"
+
+    def test_groq_without_llm_api_key_uses_groq_key(self):
+        """Without LLM_API_KEY, Groq falls through to GROQ_API_KEY."""
+        with patch.dict("os.environ", {
+            "LLM_PROVIDER": "groq",
+            "GROQ_API_KEY": "groq-key",
+            "LLM_API_KEY": "",
+            "LLM_BASE_URL": "",
+            "LLM_MODEL": "",
+        }, clear=False):
+            import importlib
+            import backend.settings as s
+            importlib.reload(s)
+            assert s.LLM_API_KEY == "groq-key"
+
+    def test_groq_with_llm_model_override(self):
+        """Generic LLM_MODEL overrides GROQ_MODEL when set."""
+        with patch.dict("os.environ", {
+            "LLM_PROVIDER": "groq",
+            "GROQ_API_KEY": "test-key",
+            "GROQ_MODEL": "llama-3.3-70b-versatile",
+            "LLM_MODEL": "custom-model",
+            "LLM_BASE_URL": "",
+        }, clear=False):
+            import importlib
+            import backend.settings as s
+            importlib.reload(s)
+            assert s.LLM_MODEL == "custom-model"
+
+    def test_groq_without_llm_model_uses_groq_model(self):
+        """Without LLM_MODEL, Groq falls through to GROQ_MODEL."""
+        with patch.dict("os.environ", {
+            "LLM_PROVIDER": "groq",
+            "GROQ_API_KEY": "test-key",
+            "GROQ_MODEL": "llama-3.1-8b-instant",
+            "LLM_MODEL": "",
+            "LLM_BASE_URL": "",
+        }, clear=False):
+            import importlib
+            import backend.settings as s
+            importlib.reload(s)
+            assert s.LLM_MODEL == "llama-3.1-8b-instant"
+
+    def test_openrouter_with_groq_url_override(self):
+        """OpenRouter can also be overridden via LLM_BASE_URL."""
+        with patch.dict("os.environ", {
+            "LLM_PROVIDER": "openrouter",
+            "OPENROUTER_API_KEY": "sk-or-test",
+            "OPENROUTER_MODEL": "openai/gpt-4o-mini",
+            "LLM_BASE_URL": "https://custom.api.com/v1",
+            "LLM_MODEL": "",
+            "LLM_API_KEY": "",
+        }, clear=False):
+            import importlib
+            import backend.settings as s
+            importlib.reload(s)
+            assert s.LLM_BASE_URL == "https://custom.api.com/v1"
+
+    def test_health_endpoint_shows_llm_model_not_openrouter_model(self):
+        """Health endpoint should show LLM_MODEL, not always OPENROUTER_MODEL."""
+        from fastapi.testclient import TestClient
+        from backend.main import app
+        from backend.middleware import reset_limiter
+        client = TestClient(app)
+        reset_limiter()
+        resp = client.get("/health")
+        assert resp.status_code == 200
+        data = resp.json()
+        # answer_model should reflect the actual configured model, not always OpenRouter
+        assert data.get("answer_model") is not None
