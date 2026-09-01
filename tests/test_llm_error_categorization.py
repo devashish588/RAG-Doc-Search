@@ -194,38 +194,45 @@ class TestLLMErrorCategorization:
 class TestGroqModelFormatValidation:
     """Verify groq model '/' detection, warning, and fallback."""
 
-    def test_groq_model_with_slash_warns_and_falls_back(self, caplog):
+    def test_groq_model_with_slash_warns_and_falls_back(self):
+        import importlib
+        import backend.settings as s
         with patch.dict("os.environ", {
             "LLM_PROVIDER": "groq",
             "GROQ_API_KEY": "test-key",
             "GROQ_MODEL": "openai/gpt-oss-20b",
+            "LLM_MODEL": "",
         }, clear=False):
-            import importlib
-            import backend.settings as s
-            importlib.reload(s)
-            # Check the warning was logged during settings reload
-            assert "contains '/'" in caplog.text or "invalid for Groq" in caplog.text
-            # Check fallback happened
-            assert s.LLM_MODEL == "llama-3.1-8b-instant"
+            with patch.object(s._log, "warning") as mock_warn:
+                importlib.reload(s)
+                # Check fallback happened
+                assert s.LLM_MODEL == "llama-3.1-8b-instant"
+                # Check warning was logged
+                assert mock_warn.called
+                warn_msg = mock_warn.call_args[0][0]
+                assert "contains" in warn_msg and "/" in warn_msg
 
-    def test_groq_model_bare_id_no_warning(self, caplog):
+    def test_groq_model_bare_id_no_warning(self):
+        import importlib
+        import backend.settings as s
         with patch.dict("os.environ", {
             "LLM_PROVIDER": "groq",
             "GROQ_API_KEY": "test-key",
             "GROQ_MODEL": "llama-3.1-8b-instant",
+            "LLM_MODEL": "",
         }, clear=False):
-            import importlib
-            import backend.settings as s
-            importlib.reload(s)
-            # No warning for bare ID
-            assert "contains '/'" not in caplog.text
-            assert s.LLM_MODEL == "llama-3.1-8b-instant"
+            with patch.object(s._log, "warning") as mock_warn:
+                importlib.reload(s)
+                # No warning for bare ID
+                assert not mock_warn.called
+                assert s.LLM_MODEL == "llama-3.1-8b-instant"
 
     def test_openrouter_model_not_affected(self):
         with patch.dict("os.environ", {
             "LLM_PROVIDER": "openrouter",
             "OPENROUTER_API_KEY": "sk-or-test",
             "OPENROUTER_MODEL": "openai/gpt-4o-mini",
+            "LLM_MODEL": "",
         }, clear=False):
             import importlib
             import backend.settings as s
@@ -238,6 +245,7 @@ class TestGroqModelFormatValidation:
             "LLM_PROVIDER": "groq",
             "GROQ_API_KEY": "test-key",
             "GROQ_MODEL": "openai/gpt-oss-20b",
+            "LLM_MODEL": "",
         }, clear=False):
             import importlib
             import backend.settings as s

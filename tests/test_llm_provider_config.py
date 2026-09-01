@@ -21,6 +21,7 @@ class TestGroqConfigLoads:
             "GROQ_API_KEY": "test-key",
             "GROQ_BASE_URL": "https://api.groq.com/openai/v1",
             "GROQ_MODEL": "llama-3.3-70b-versatile",
+            "LLM_MODEL": "",
         }):
             import importlib
             import backend.settings as s
@@ -46,6 +47,7 @@ class TestGroqConfigLoads:
             "LLM_PROVIDER": "groq",
             "GROQ_API_KEY": "test-key",
             "GROQ_MODEL": "openai/gpt-oss-20b",
+            "LLM_MODEL": "",
         }):
             import importlib
             import backend.settings as s
@@ -109,6 +111,7 @@ class TestGroqModelPassedToClient:
             "LLM_PROVIDER": "groq",
             "GROQ_API_KEY": "test-key",
             "GROQ_MODEL": "llama-3.3-70b-versatile",
+            "LLM_MODEL": "",
         }, clear=False):
             import importlib
             import backend.settings as s
@@ -189,6 +192,7 @@ class TestOpenRouterBackwardCompat:
             "LLM_PROVIDER": "openrouter",
             "OPENROUTER_API_KEY": "sk-or-test",
             "OPENROUTER_MODEL": "openai/gpt-4o-mini",
+            "LLM_MODEL": "",
         }, clear=False):
             import importlib
             import backend.settings as s
