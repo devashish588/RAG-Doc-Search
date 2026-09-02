@@ -34,8 +34,10 @@ CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*").strip()
 
 # ---------------------------------------------------------------------------
 # Rate limiting (per-IP sliding window, in-memory)
+# 120 req/min: frontend polls /health + /documents every 30s (4 req/min),
+# each search is 1 req, plus upload/polling bursts.
 # ---------------------------------------------------------------------------
-RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "60"))
+RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "120"))
 RATE_LIMIT_WINDOW_SECONDS = int(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "60"))
 
 # ---------------------------------------------------------------------------
