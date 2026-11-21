@@ -148,6 +148,7 @@ def _split_claims(answer: str) -> list[Claim]:
         'i cannot answer', 'i am unable to answer', 'i don\'t have',
         'i do not have', 'there is no information', 'the provided text does not',
         'no information is provided', 'based on the provided documents',
+        'based on the indexed documents',
     )
 
     for i, cand in enumerate(candidates):

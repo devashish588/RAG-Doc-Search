@@ -24,10 +24,12 @@ services:
         value: production
       - key: LOG_LEVEL
         value: INFO
-      - key: OPENROUTER_API_KEY
+      - key: LLM_PROVIDER
+        value: groq
+      - key: GROQ_API_KEY
         sync: false # secret — fill in manually in the Render dashboard
-      - key: OPENROUTER_MODEL
-        value: openai/gpt-4o-mini
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-20b
       - key: EMBEDDING_BACKEND
         value: auto
       - key: EMBEDDING_WARMUP
@@ -37,7 +39,7 @@ services:
       - key: CORS_ORIGINS
         value: "*"
       - key: RATE_LIMIT_REQUESTS
-        value: "60"
+        value: "120"
       - key: RATE_LIMIT_WINDOW_SECONDS
         value: "60"
       - key: CIRCUIT_BREAKER_FAILURE_THRESHOLD

@@ -1,5 +1,8 @@
 from datetime import datetime, timezone
 import logging
+import os
+import re
+import unicodedata
 from pathlib import Path
 from threading import RLock
 from typing import Any
@@ -86,6 +89,22 @@ def list_document_statuses() -> list[dict[str, Any]]:
         return [_public(r) for r in _DOCS.values()]
 
 
+def _remove_from_bm25(document_id: str) -> None:
+    """Keep the sparse index in sync with Chroma on delete.
+
+    Without this, deleted documents keep being returned by sparse / hybrid
+    retrieval (and cited in answers) until the BM25 index is rebuilt.
+    """
+    try:
+        from backend.bm25_index import BM25_WRITE_LOCK, get_bm25_index
+        with BM25_WRITE_LOCK:
+            index = get_bm25_index()
+            if index.remove_document(document_id):
+                index.save()
+    except Exception:
+        log.exception("Failed to remove %s from BM25 index", document_id)
+
+
 def delete_document(document_id: str) -> dict[str, Any] | None:
     with _LOCK:
         record = _DOCS.get(document_id)
@@ -96,6 +115,7 @@ def delete_document(document_id: str) -> dict[str, Any] | None:
         _DOCS.pop(document_id, None)
 
     deleted_chunks = delete_by_document(document_id)
+    _remove_from_bm25(document_id)
     if stored_path.exists():
         stored_path.unlink(missing_ok=True)
 
@@ -158,3 +178,22 @@ def ingest_document(document_id: str, stored_path: Path, filename: str) -> None:
     except Exception as exc:
         log.exception("Ingestion failed for %s", document_id)
         _update(document_id, status="failed", message="Ingestion failed.", error=str(exc))
+
+
+_UNSAFE_FILENAME_CHARS = re.compile(r'[<>:"|?*\x00-\x1f]')
+
+
+def safe_upload_name(raw: str) -> str:
+    """Reduce a client-supplied filename to a safe display/storage basename.
+
+    Strips any directory part (both forward and backward slashes, so Windows
+    paths and "../../a.pdf" become "a.pdf") and replaces characters invalid on
+    Windows or awkward in HTML, keeping the extension intact.
+    """
+    name = unicodedata.normalize("NFKC", raw or "").replace("\\", "/").rsplit("/", 1)[-1]
+    name = _UNSAFE_FILENAME_CHARS.sub("_", name).strip()
+    stem, ext = os.path.splitext(name)
+    if not ext and stem.startswith("."):  # ".txt" is an extension, not a stem
+        stem, ext = "", stem
+    stem = stem.strip(" .")[:150] or "document"
+    return stem + ext.lower()

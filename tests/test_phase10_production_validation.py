@@ -484,6 +484,6 @@ def test_circuit_breaker_full_cycle():
 # ---------------------------------------------------------------------------
 
 def test_retriever_instances_exist():
-    from backend.retrieval import DenseRetrieverInstance, BM25RetrieverInstance
-    assert DenseRetrieverInstance is not None
-    assert BM25RetrieverInstance is not None
+    from backend.retrieval import _get_dense, _get_bm25
+    assert _get_dense() is not None
+    assert _get_bm25() is not None

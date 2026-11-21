@@ -157,14 +157,23 @@ class TestStartupValidationStrictAborts:
 
 
 class TestReadyzDependencyHealth:
-    def test_readyz_returns_200_when_deps_ok(self):
+    def test_readyz_returns_200_when_healthy(self):
+        """Test /readyz returns 200 when all dependencies and indexes are healthy."""
+        from backend.bm25_index import rebuild_bm25_from_vector_store
         reset_limiter()
+        # Other tests write straight into Chroma or build throwaway BM25
+        # indexes; start from a consistent state so "healthy" is well-defined.
+        rebuild_bm25_from_vector_store()
         resp = client.get("/readyz")
-        assert resp.status_code == 200
+        # When everything is healthy, should return 200
+        assert resp.status_code == 200, resp.json()
         data = resp.json()
-        assert data["status"] in ("ready", "degraded")
+        assert data["status"] == "ready"
         assert "dependencies" in data["checks"]
         assert data["checks"]["dependencies"]["status"] == "ok"
+        assert "chroma" in data["checks"]
+        assert "bm25" in data["checks"]
+        assert "disk" in data["checks"]
 
     def test_readyz_returns_503_when_chromadb_missing(self):
         """Mock chromadb as missing and verify /readyz returns 503."""
@@ -181,6 +190,30 @@ class TestReadyzDependencyHealth:
             assert resp.status_code == 503
             data = resp.json()
             assert data["status"] == "not_ready"
+
+    def test_readyz_returns_503_on_index_inconsistency(self):
+        """Test /readyz returns 503 when Chroma/BM25 indexes are inconsistent."""
+        from backend.storage_health import check_index_consistency
+        
+        # Mock the consistency check to return an error
+        with patch("backend.storage_health.check_index_consistency") as mock_check:
+            mock_check.return_value = {
+                "status": "error",
+                "issues": [{
+                    "type": "chunk_id_mismatch",
+                    "chroma_chunks": 100,
+                    "bm25_chunks": 1,
+                    "missing_from_bm25": 99,
+                    "orphaned_in_bm25": 0,
+                }]
+            }
+            reset_limiter()
+            resp = client.get("/readyz")
+            assert resp.status_code == 503
+            data = resp.json()
+            assert data["status"] == "not_ready"
+            assert "index_consistency" in data["checks"]
+            assert data["checks"]["index_consistency"]["status"] == "error"
 
     def test_healthz_remains_lightweight(self):
         """Verify /healthz does not perform dependency checks."""

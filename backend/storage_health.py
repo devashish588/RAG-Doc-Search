@@ -27,16 +27,17 @@ def check_chroma_health() -> dict[str, Any]:
 
 
 def check_bm25_health() -> dict[str, Any]:
-    """Check BM25 index accessibility."""
+    """Check BM25 index accessibility.
+
+    A missing index file on a fresh deploy (no documents ingested yet) is a
+    valid empty state, not an error. Real drift between Chroma and BM25 is
+    reported by check_index_consistency().
+    """
     try:
-        if not BM25_INDEX_DIR.exists():
-            return {"status": "error", "message": "BM25 index directory missing"}
+        ensure_runtime_dirs()
         index_file = BM25_INDEX_DIR / "bm25_index.pkl"
-        if not index_file.exists():
-            # Try alternate naming
-            files = list(BM25_INDEX_DIR.glob("*.pkl"))
-            if not files:
-                return {"status": "error", "message": "No BM25 index file found"}
+        if not index_file.exists() and not list(BM25_INDEX_DIR.glob("*.pkl")):
+            return {"status": "ok", "empty": True}
         return {"status": "ok"}
     except Exception as exc:
         return {"status": "error", "message": str(exc)[:200]}
@@ -56,15 +57,56 @@ def check_disk_health() -> dict[str, Any]:
 
 
 def check_index_consistency() -> dict[str, Any]:
-    """Check that Chroma and BM25 index directories exist."""
-    issues = []
+    """Compare authoritative Chroma chunk IDs with the persisted BM25 IDs."""
+    ensure_runtime_dirs()
+    issues: list[dict[str, Any]] = []
     if not CHROMA_DIR.exists():
-        issues.append("Chroma directory missing")
+        issues.append({"type": "chroma_directory_missing"})
     if not BM25_INDEX_DIR.exists():
-        issues.append("BM25 directory missing")
+        issues.append({"type": "bm25_directory_missing"})
     if not UPLOAD_DIR.exists():
-        issues.append("Upload directory missing")
-    return {"status": "ok" if not issues else "warning", "issues": issues}
+        issues.append({"type": "upload_directory_missing"})
+
+    if issues:
+        return {"status": "warning", "issues": issues}
+
+    try:
+        from backend.bm25_index import get_bm25_index
+        from backend.vector_store import get_vector_store
+
+        collection = getattr(get_vector_store(), "_collection", None)
+        if collection is None:
+            return {
+                "status": "error",
+                "issues": [{"type": "chroma_collection_unavailable"}],
+            }
+
+        chroma_ids = set(collection.get(include=[]).get("ids", []))
+        bm25_index = get_bm25_index()
+        bm25_ids = bm25_index.get_chunk_ids()
+        missing_from_bm25 = chroma_ids - bm25_ids
+        orphaned_in_bm25 = bm25_ids - chroma_ids
+        if missing_from_bm25 or orphaned_in_bm25:
+            return {
+                "status": "error",
+                "issues": [{
+                    "type": "chunk_id_mismatch",
+                    "chroma_chunks": len(chroma_ids),
+                    "bm25_chunks": len(bm25_ids),
+                    "missing_from_bm25": len(missing_from_bm25),
+                    "orphaned_in_bm25": len(orphaned_in_bm25),
+                    "sample_missing_from_bm25": sorted(missing_from_bm25)[:5],
+                    "sample_orphaned_in_bm25": sorted(orphaned_in_bm25)[:5],
+                }],
+            }
+        return {
+            "status": "ok",
+            "chroma_chunks": len(chroma_ids),
+            "bm25_chunks": len(bm25_ids),
+        }
+    except Exception as exc:
+        log.exception("Failed to compare Chroma and BM25 indexes")
+        return {"status": "error", "issues": [{"type": "comparison_failed", "message": str(exc)[:200]}]}
 
 
 # lazy import to avoid circular
@@ -88,6 +130,7 @@ def readiness_report() -> dict[str, Any]:
         "dependencies": check_dependencies(),
         "chroma": check_chroma_health(),
         "bm25": check_bm25_health(),
+        "index_consistency": check_index_consistency(),
         "disk": check_disk_health(),
     }
     all_ok = all(c["status"] == "ok" for c in checks.values())

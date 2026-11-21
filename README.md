@@ -426,17 +426,19 @@ An external GitHub Actions workflow reduces Render cold-sleep occurrences by pin
 | Provider | GitHub Actions |
 | Workflow | `.github/workflows/render-keepalive.yml` |
 | Schedule | `*/5 * * * *` (every 5 minutes) |
-| Endpoint | `GET $RENDER_HEALTH_URL` |
-| Timeout | 10 seconds |
+| Endpoint | `GET $RENDER_HEALTH_URL` (defaults to `https://rag-doc-search-1.onrender.com/healthz`) |
+| Timeout | 60 s per attempt, 4 attempts 15 s apart (rides out cold starts) |
 | LLM call | None |
 | State modification | None |
 
-**Required setup:** Set `RENDER_HEALTH_URL` as a GitHub Actions repository variable with your backend's health URL (e.g., `https://rag-doc-search-1.onrender.com/healthz`).
+**Setup:** none required. Set the `RENDER_HEALTH_URL` repository variable only if the backend URL changes.
+
+> GitHub runs scheduled workflows best-effort (often hours apart) and disables them after 60 days of repo inactivity, so this alone cannot keep a free Render instance warm. For reliable keep-warm, also point a free external pinger (UptimeRobot, cron-job.org) at `/healthz` every 5–10 minutes.
 
 **What it does:**
 - Sends a lightweight GET request to `/healthz`
 - Logs HTTP status and latency
-- Fails visibly if the endpoint is unavailable
+- Fails (and emails you) only if the backend stays unreachable across all retries, not on a routine cold start
 
 **What it does NOT do:**
 - Call `/v1/ask` or invoke the LLM
@@ -613,11 +615,13 @@ pip install -r requirements.txt
 Create a `.env` file (git-ignored):
 
 ```text
-OPENROUTER_API_KEY=sk-or-v1-...
-OPENROUTER_MODEL=openai/gpt-4o-mini
+LLM_PROVIDER=groq
+GROQ_API_KEY=gsk_...
+GROQ_MODEL=openai/gpt-oss-20b
 ```
 
-Without an API key, the system returns retrieved context without LLM-generated answers.
+Without an API key, the system uses a local extractive fallback when retrieved
+chunks contain sufficient lexical evidence; unrelated questions abstain.
 
 ### Run
 
@@ -745,7 +749,7 @@ All settings are configurable via environment variables. See `.env.example` for 
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `RATE_LIMIT_REQUESTS` | 60 | Requests per window |
+| `RATE_LIMIT_REQUESTS` | 120 | Requests per window |
 | `RATE_LIMIT_WINDOW_SECONDS` | 60 | Rate limit window |
 | `CIRCUIT_BREAKER_FAILURE_THRESHOLD` | 3 | Failures before open |
 | `CIRCUIT_BREAKER_RECOVERY_SECONDS` | 30 | Recovery timeout |
@@ -763,7 +767,7 @@ All settings are configurable via environment variables. See `.env.example` for 
 1. Push to GitHub
 2. Render → New → Blueprint → select repo
 3. `render.yaml` provisions: web service + 1 GB persistent disk
-4. Set `OPENROUTER_API_KEY` in Render dashboard
+4. Set `GROQ_API_KEY` in the Render dashboard (and keep `LLM_PROVIDER=groq`)
 5. Set `CORS_ORIGINS` to your GitHub Pages origin
 
 | Setting | Value |
@@ -781,9 +785,7 @@ All settings are configurable via environment variables. See `.env.example` for 
 
 ### Keep-Warm
 
-1. GitHub → Settings → Secrets and variables → Actions → Variables
-2. Create `RENDER_HEALTH_URL` = `https://rag-doc-search-1.onrender.com/healthz`
-3. Workflow runs automatically every 5 minutes
+Works out of the box against `https://rag-doc-search-1.onrender.com/healthz`. If the backend moves, set the `RENDER_HEALTH_URL` repository variable (GitHub → Settings → Secrets and variables → Actions → Variables).
 
 ---
 
@@ -861,7 +863,7 @@ All settings are configurable via environment variables. See `.env.example` for 
 3. **Circuit breaker state is not persistent** — resets on restart
 4. **Cold starts** — Render suspends idle services; keep-warm reduces but does not eliminate them
 5. **Grounding is conservative** — 25.7% false-abstention rate on answerable questions at threshold 0.50
-6. **LLM dependency** — without `OPENROUTER_API_KEY`, the system returns context only (no generated answers)
+6. **LLM dependency** — without the configured provider API key, the system returns grounded local extractive answers (no generated answers)
 7. **Single-instance deployment** — no horizontal scaling support for rate limiting or circuit breaker state
 8. **Dense latency variance** — Chroma GC/lock contention causes occasional spikes (P95 = 9259 ms vs P50 = 277 ms)
 

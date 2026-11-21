@@ -221,10 +221,13 @@ class TestMockGenerateAnswerIntegration:
             import importlib
             import backend.llm as llm
             importlib.reload(llm)
-            answer = llm.generate_answer("What is section 9?", [
-                SearchResult(text="Section 9 covers databases.", source="test.pdf",
-                             page=1, score=0.9, metadata={"document_id": "d1", "chunk": 0})
-            ])
+            # generate_answer() skips the network call when no key is set, so
+            # don't depend on whatever key happens to be in the environment.
+            with patch.object(llm, "LLM_API_KEY", "test-key"):
+                answer = llm.generate_answer("What is section 9?", [
+                    SearchResult(text="Section 9 covers databases.", source="test.pdf",
+                                 page=1, score=0.9, metadata={"document_id": "d1", "chunk": 0})
+                ])
             assert answer is not None
             assert "Section 9" in answer
 

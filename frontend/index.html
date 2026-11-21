@@ -12,7 +12,7 @@
   <header>
     <div>
       <h1>RAG Document Search</h1>
-      <div class="subtle">Upload documents · index into ChromaDB · search by meaning.</div>
+      <div class="subtle">Upload documents · index into ChromaDB + BM25 · ask questions with cited, confidence-scored answers.</div>
     </div>
     <div class="pill" id="healthPill">API: checking…</div>
   </header>
@@ -31,6 +31,7 @@
       <div>
         <label for="queryInput">Search query</label>
         <textarea id="queryInput" placeholder="How does AI learn from examples?"></textarea>
+        <div class="hint">Press Enter to search · Shift+Enter for a new line</div>
       </div>
       <div class="row">
         <div>
@@ -63,7 +64,7 @@
         <button class="primary"   id="searchBtn">Search</button>
         <button class="secondary" id="refreshBtn">Refresh Docs</button>
       </div>
-      <div class="status" id="searchStatus">Results will appear on the right.</div>
+      <div class="status" id="searchStatus">Ask a question to see the answer and its sources.</div>
     </section>
 
     <section class="stack">
@@ -77,11 +78,11 @@
       </div>
       <div class="panel">
         <div class="pill" style="margin-bottom:10px">Retrieved Chunks</div>
-        <div class="results" id="resultsBox"></div>
+        <div class="results" id="resultsBox"><div class="muted">Matching passages from your documents will appear here.</div></div>
       </div>
       <div class="panel">
         <div class="pill" style="margin-bottom:10px">Retrieval Trace</div>
-        <div class="trace" id="traceBox"></div>
+        <div class="trace" id="traceBox"><div class="muted">—</div></div>
       </div>
       <div class="panel">
         <div class="pill" style="margin-bottom:10px">Documents</div>

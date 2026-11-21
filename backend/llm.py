@@ -67,6 +67,13 @@ def _messages(query: str, results: list[SearchResult]) -> list[dict[str, str]]:
 
 
 def generate_answer(query: str, results: list[SearchResult]) -> str | None:
+    if not llm_available():
+        _diag.warning(
+            "llm_skip: provider=%s reason=no_api_key",
+            LLM_PROVIDER,
+        )
+        return None
+
     breaker = get_circuit_breaker()
     if not breaker.allow_request():
         _diag.warning(
