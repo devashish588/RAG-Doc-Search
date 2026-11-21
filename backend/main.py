@@ -1,5 +1,6 @@
 import json
 import logging
+import threading
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -16,6 +17,7 @@ from backend.api_v1 import router as v1_router
 from backend.dependency_check import startup_validation
 from backend.circuit_breaker import get_circuit_breaker
 from backend.ingestion import (
+    safe_upload_name,
     delete_document,
     find_active_duplicate,
     get_document_status,
@@ -39,8 +41,8 @@ from backend.settings import (
     CORS_ORIGINS,
     EMBEDDING_BACKEND,
     EMBEDDING_WARMUP,
+    LLM_MODEL,
     MAX_UPLOAD_MB,
-    OPENROUTER_MODEL,
     SUPPORTED_EXTENSIONS,
     UPLOAD_DIR,
     ensure_runtime_dirs,
@@ -60,12 +62,23 @@ def _warmup():
         log.error("Warmup failed: %s", exc)
 
 
+def _heal_bm25() -> None:
+    try:
+        from backend.bm25_index import ensure_bm25_consistent
+        log.info("BM25 consistency check: %s", ensure_bm25_consistent())
+    except Exception as exc:
+        log.error("BM25 consistency check failed: %s", exc)
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     ensure_runtime_dirs()
     startup_validation()
     if EMBEDDING_WARMUP:
         _warmup()
+    # Self-heal BM25/Chroma drift (e.g. from deletes made before BM25 removal
+    # existed) in the background so startup and /healthz stay fast.
+    threading.Thread(target=_heal_bm25, name="bm25-heal", daemon=True).start()
     start_ingestion_worker()
     yield
     stop_ingestion_worker()
@@ -113,7 +126,7 @@ def health() -> HealthResponse:
         status="ok",
         vector_store=str(CHROMA_DIR),
         embedding_backend=EMBEDDING_BACKEND,
-        answer_model=OPENROUTER_MODEL if llm_available() else None,
+        answer_model=LLM_MODEL if llm_available() else None,
     )
 
 
@@ -193,7 +206,7 @@ async def upload_document(file: UploadFile = File(...)) -> UploadResponse:
     if not file.filename:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A filename is required.")
 
-    name = Path(file.filename).name
+    name = safe_upload_name(file.filename)
     ext = Path(name).suffix.lower()
     if ext not in SUPPORTED_EXTENSIONS:
         raise HTTPException(

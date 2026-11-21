@@ -67,6 +67,7 @@ class TestGroqLLMDiagnostics:
         http_err = HTTPError("https://api.groq.com/openai/v1/chat/completions", 404, "Not Found", {}, mock_fp)
 
         with patch("backend.llm.LLM_PROVIDER", "groq"), \
+             patch("backend.llm.LLM_API_KEY", "test-key"), \
              patch("backend.llm.LLM_MODEL", "openai/gpt-oss-20b"), \
              patch("urllib.request.urlopen", side_effect=http_err), \
              caplog.at_level(logging.INFO):
@@ -85,6 +86,7 @@ class TestGroqLLMDiagnostics:
         http_err = HTTPError("https://api.groq.com/openai/v1/chat/completions", 401, "Unauthorized", {}, mock_fp)
 
         with patch("backend.llm.LLM_PROVIDER", "groq"), \
+             patch("backend.llm.LLM_API_KEY", "test-key"), \
              patch("urllib.request.urlopen", side_effect=http_err), \
              caplog.at_level(logging.INFO):
 
@@ -98,6 +100,7 @@ class TestGroqLLMDiagnostics:
         url_err = URLError("Connection refused")
 
         with patch("backend.llm.LLM_PROVIDER", "groq"), \
+             patch("backend.llm.LLM_API_KEY", "test-key"), \
              patch("urllib.request.urlopen", side_effect=url_err), \
              caplog.at_level(logging.INFO):
 

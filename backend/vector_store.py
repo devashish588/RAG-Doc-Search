@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+from pathlib import Path
 from functools import lru_cache
 from threading import RLock
 
@@ -23,7 +24,7 @@ from backend.settings import (
 
 log = logging.getLogger(__name__)
 
-_FASTEMBED_CACHE_DIR = DATA_DIR / "fastembed_cache"
+_FASTEMBED_CACHE_DIR = Path(os.getenv("FASTEMBED_CACHE_DIR", str(DATA_DIR / "fastembed_cache")))
 
 _VECTOR_LOCK = RLock()
 

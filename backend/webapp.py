@@ -16,5 +16,11 @@ FALLBACK_HTML = """<!doctype html>
 def build_index_html() -> str:
     index = FRONTEND_DIR / "index.html"
     if index.exists():
-        return index.read_text(encoding="utf-8")
+        html = index.read_text(encoding="utf-8")
+        # Served by this backend -> same-origin API, whatever port it runs on.
+        return html.replace(
+            '<script src="config.js"></script>',
+            '<script>window.API_BASE = "";</script>\n  <script src="config.js"></script>',
+            1,
+        )
     return FALLBACK_HTML

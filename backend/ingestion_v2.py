@@ -23,6 +23,7 @@ from backend.settings import (
     CHUNK_OVERLAP,
     CHUNK_SIZE,
     CHUNKING_STRATEGY,
+    ENABLE_NEAR_DUPLICATE_DETECTION,
     NEAR_DUPLICATE_THRESHOLD,
     SUPPORTED_EXTENSIONS,
     UPLOAD_DIR,
@@ -43,6 +44,7 @@ def get_ingestion_config_snapshot() -> dict[str, Any]:
         "chunk_size": CHUNK_SIZE,
         "chunk_overlap": CHUNK_OVERLAP,
         "near_duplicate_threshold": NEAR_DUPLICATE_THRESHOLD,
+        "near_duplicate_detection": ENABLE_NEAR_DUPLICATE_DETECTION,
         "embedding_model": os.getenv("EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5"),
         "embedding_backend": os.getenv("EMBEDDING_BACKEND", "auto"),
     }
@@ -181,17 +183,22 @@ def ingest_document_v2(
 
         # Deduplication
         log_event(INGESTION_EVENTS["deduplication_started"], document_id)
-        deduplicator = Deduplicator(near_duplicate_threshold=NEAR_DUPLICATE_THRESHOLD)
+        deduplicator = Deduplicator(
+            near_duplicate_threshold=NEAR_DUPLICATE_THRESHOLD,
+            enable_near_duplicate=ENABLE_NEAR_DUPLICATE_DETECTION,
+        )
 
         # Get embeddings function for near-duplicate detection
-        embeddings = get_embeddings()
+        embed_fn = None
+        if ENABLE_NEAR_DUPLICATE_DETECTION:
+            embeddings = get_embeddings()
 
-        def embed_fn(text: str) -> list[float]:
-            emb = embeddings.embed_query(text)
-            import numpy as np
-            arr = np.array(emb, dtype=np.float32)
-            norm = np.linalg.norm(arr)
-            return arr / norm if norm > 0 else arr
+            def embed_fn(text: str) -> list[float]:
+                emb = embeddings.embed_query(text)
+                import numpy as np
+                arr = np.array(emb, dtype=np.float32)
+                norm = np.linalg.norm(arr)
+                return arr / norm if norm > 0 else arr
 
         kept_chunks, dup_results = deduplicate_chunks(
             chunks,
@@ -245,9 +252,11 @@ def ingest_document_v2(
         # Index to BM25 (sparse)
         log_event(INGESTION_EVENTS["indexing_completed"], document_id, indexed=count, index="bm25")
         try:
-            bm25_index = get_bm25_index()
-            bm25_index.build(kept_chunks)
-            bm25_index.save()
+            from backend.bm25_index import BM25_WRITE_LOCK
+            with BM25_WRITE_LOCK:
+                bm25_index = get_bm25_index()
+                bm25_index.add_chunks(kept_chunks)
+                bm25_index.save()
             log_event(INGESTION_EVENTS["bm25_index_updated"], document_id, indexed=count)
             log.info("BM25 index built and saved for document %s", document_id)
         except Exception as exc:

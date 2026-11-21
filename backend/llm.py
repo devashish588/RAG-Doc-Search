@@ -11,6 +11,10 @@ from backend.settings import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, LLM_PROVIDER
 log = logging.getLogger(__name__)
 _diag = logging.getLogger("rag.llm.diag")
 
+# Cloudflare blocks requests with no User-Agent or default Python-urllib signature.
+# ponytail: minimal User-Agent to pass Cloudflare bot detection.
+_USER_AGENT = "RAGDocSearch/1.0"
+
 
 def llm_available() -> bool:
     return bool(LLM_API_KEY)
@@ -63,6 +67,13 @@ def _messages(query: str, results: list[SearchResult]) -> list[dict[str, str]]:
 
 
 def generate_answer(query: str, results: list[SearchResult]) -> str | None:
+    if not llm_available():
+        _diag.warning(
+            "llm_skip: provider=%s reason=no_api_key",
+            LLM_PROVIDER,
+        )
+        return None
+
     breaker = get_circuit_breaker()
     if not breaker.allow_request():
         _diag.warning(
@@ -78,13 +89,13 @@ def generate_answer(query: str, results: list[SearchResult]) -> str | None:
         LLM_PROVIDER, LLM_BASE_URL, LLM_MODEL, len(query), len(results), context_chars,
     )
 
-    # Groq model IDs are bare (no '/'). A '/' means an OpenRouter-style
-    # "provider/model" name was copied by mistake and will 404 on Groq.
+    # Log a warning if the model looks like an OpenRouter-style name —
+    # could be a copy-paste mistake, but Groq also uses 'provider/model'
+    # format (e.g. openai/gpt-oss-20b), so only warn, don't replace.
     if LLM_PROVIDER == "groq" and "/" in LLM_MODEL:
-        _diag.warning(
-            "llm_model_format_warn: provider=groq model=%s contains '/'; "
-            "Groq models are bare IDs (e.g. llama-3.1-8b-instant), not 'provider/model' "
-            "(OpenRouter-style). This will likely 404.",
+        _diag.info(
+            "llm_model_info: provider=groq model=%s contains '/'; "
+            "this is valid for Groq models like openai/gpt-oss-20b.",
             LLM_MODEL,
         )
 
@@ -100,6 +111,7 @@ def generate_answer(query: str, results: list[SearchResult]) -> str | None:
         headers={
             "Authorization": f"Bearer {LLM_API_KEY}",
             "Content-Type": "application/json",
+            "User-Agent": _USER_AGENT,
         },
         method="POST",
     )
@@ -179,6 +191,7 @@ def diagnostic_groq_ping() -> dict:
         headers={
             "Authorization": f"Bearer {LLM_API_KEY}",
             "Content-Type": "application/json",
+            "User-Agent": _USER_AGENT,
         },
         method="POST",
     )

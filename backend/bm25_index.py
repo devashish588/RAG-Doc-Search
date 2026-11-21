@@ -8,6 +8,7 @@ import logging
 import os
 import pickle
 import re
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -169,23 +170,30 @@ class BM25Index:
 
         log.info("Adding %d chunks to BM25 index", len(chunks))
 
-        # For BM25Okapi, we need to rebuild with all documents
-        # Collect existing + new
-        all_chunks = []
+        new_ids = {chunk.id for chunk in chunks}
+        existing_chunks = []
+        for chunk_id, content, metadata in zip(
+            self._chunk_ids,
+            self._chunk_contents,
+            self._chunk_metadatas,
+        ):
+            if not chunk_id or content is None or metadata is None:
+                continue
+            if chunk_id in new_ids:
+                continue  # re-added chunk replaces the old entry (no duplicates)
+            existing_chunks.append(
+                Chunk.create(
+                    document_id=str(metadata["document_id"]),
+                    chunk_index=int(metadata["chunk_index"]),
+                    content=content,
+                    content_hash=str(metadata.get("content_hash", "")),
+                    section=metadata.get("section"),
+                    page=metadata.get("page"),
+                    metadata={"source": metadata.get("source", "")},
+                ).model_copy(update={"id": chunk_id})  # keep the stored ID verbatim
+            )
 
-        # Reconstruct existing chunks from stored data
-        for i, chunk_id in enumerate(self._chunk_ids):
-            from backend.models import Chunk
-            # We don't have full Chunk objects, so we rebuild from stored data
-            # This is a limitation - we need to store enough to rebuild
-            pass
-
-        # Since BM25Okapi doesn't support incremental add easily,
-        # we'll need to rebuild. For now, delegate to build.
-        # In production, we'd store tokenized corpus for true incremental updates.
-        log.warning("BM25 incremental add not fully implemented, rebuilding index")
-        # Get existing chunks from vector store or rebuild from all known chunks
-        # For now, this is a placeholder - full rebuild happens on re-ingestion
+        self.build(existing_chunks + chunks)
 
     def remove_document(self, document_id: str) -> int:
         """Remove all chunks for a document from the index.
@@ -278,6 +286,20 @@ class BM25Index:
         # Get BM25 scores for all documents
         scores = self._bm25.get_scores(tokens)
 
+        # BM25's IDF is zero for terms appearing in exactly one of two
+        # documents. Preserve useful sparse retrieval for small indexes with a
+        # deterministic lexical-overlap fallback when no positive BM25 signal
+        # exists.
+        if len(scores) and float(np.max(scores)) <= 0.0:
+            query_tokens = set(tokens)
+            overlap_scores = np.array([
+                len(query_tokens & set(self._tokenize(content))) / len(query_tokens)
+                if query_tokens else 0.0
+                for content in self._chunk_contents
+            ], dtype=float)
+            if float(np.max(overlap_scores)) > 0.0:
+                scores = overlap_scores
+
         # Apply source filter if specified
         if source:
             # Filter by source or section in metadata - create a mask
@@ -288,6 +310,10 @@ class BM25Index:
             
             # Apply mask to scores
             scores = np.where(valid_mask, scores, -np.inf)
+
+        # Drop chunks with no lexical match: a zero score means the chunk shares
+        # no query terms and is not a sparse-retrieval hit.
+        scores = np.where(scores > 0.0, scores, -np.inf)
 
         # Get top-k indices (handle case where k > len(scores))
         # Filter out -inf scores first
@@ -328,12 +354,24 @@ class BM25Index:
     # Persistence
     # -------------------------------------------------------------------------
 
+    @property
+    def _index_file(self) -> Path:
+        return self.index_dir / INDEX_FILE.name
+
+    @property
+    def _metadata_file(self) -> Path:
+        return self.index_dir / METADATA_FILE.name
+
+    @property
+    def _chunk_map_file(self) -> Path:
+        return self.index_dir / CHUNK_MAP_FILE.name
+
     def save(self) -> None:
         """Persist BM25 index to disk."""
         self.index_dir.mkdir(parents=True, exist_ok=True)
 
         # Save BM25 model
-        with INDEX_FILE.open("wb") as f:
+        with self._index_file.open("wb") as f:
             pickle.dump({
                 "bm25": self._bm25,
                 "k1": self.k1,
@@ -356,12 +394,12 @@ class BM25Index:
             "num_documents": len(self._doc_to_chunks),
             "chunk_ids": [c for c in self._chunk_ids if c is not None],
         }
-        with METADATA_FILE.open("w") as f:
+        with self._metadata_file.open("w") as f:
             json.dump(metadata, f, indent=2)
 
         # Save chunk ID -> index mapping for quick lookups
         chunk_map = {cid: i for i, cid in enumerate(self._chunk_ids) if cid is not None}
-        with CHUNK_MAP_FILE.open("w") as f:
+        with self._chunk_map_file.open("w") as f:
             json.dump(chunk_map, f)
 
         log.info("BM25 index saved to %s (%d chunks)", self.index_dir, metadata["num_chunks"])
@@ -371,12 +409,12 @@ class BM25Index:
 
         Returns True if loaded successfully, False otherwise.
         """
-        if not INDEX_FILE.exists():
-            log.info("No BM25 index found at %s", INDEX_FILE)
+        if not self._index_file.exists():
+            log.info("No BM25 index found at %s", self._index_file)
             return False
 
         try:
-            with INDEX_FILE.open("rb") as f:
+            with self._index_file.open("rb") as f:
                 data = pickle.load(f)
 
             # Check version compatibility
@@ -434,12 +472,20 @@ class BM25Index:
             "index_dir": str(self.index_dir),
         }
 
+    def get_chunk_ids(self) -> set[str]:
+        """Return the stable chunk IDs currently represented by the index."""
+        return {chunk_id for chunk_id in self._chunk_ids if chunk_id is not None}
+
 
 # ---------------------------------------------------------------------------
 # Global index instance
 # ---------------------------------------------------------------------------
 
 _BM25_INDEX: BM25Index | None = None
+
+# Serialises mutations (add/remove + save) of the shared index: the ingestion
+# worker thread and DELETE requests can otherwise race and lose updates.
+BM25_WRITE_LOCK = threading.RLock()
 
 
 def get_bm25_index() -> BM25Index:
@@ -455,3 +501,69 @@ def reset_bm25_index() -> None:
     """Reset the singleton (mainly for testing)."""
     global _BM25_INDEX
     _BM25_INDEX = None
+
+def rebuild_bm25_from_vector_store() -> int:
+    """Rebuild the BM25 index from Chroma, the authoritative chunk store.
+
+    Used to self-heal drift (e.g. chunks deleted from Chroma but left in BM25,
+    or a lost/old BM25 pickle). Chunk IDs are copied verbatim from Chroma so the
+    two indexes stay join-compatible. Returns the number of indexed chunks.
+    """
+    from backend.vector_store import get_vector_store
+
+    collection = getattr(get_vector_store(), "_collection", None)
+    if collection is None:
+        raise RuntimeError("Chroma collection unavailable")
+    data = collection.get(include=["documents", "metadatas"])
+
+    chunks: list[Chunk] = []
+    for chunk_id, text, meta in zip(
+        data.get("ids", []), data.get("documents", []), data.get("metadatas", [])
+    ):
+        meta = meta or {}
+        document_id = str(meta.get("document_id") or chunk_id.rsplit(":", 1)[0])
+        try:
+            chunk_index = int(meta.get("chunk", meta.get("chunk_index", 0)) or 0)
+        except (TypeError, ValueError):
+            chunk_index = 0
+        page = meta.get("page")
+        chunk = Chunk.create(
+            document_id=document_id,
+            chunk_index=chunk_index,
+            content=text or "",
+            content_hash=str(meta.get("content_hash", "")),
+            section=meta.get("section") or None,
+            page=page if isinstance(page, int) else None,
+            metadata={"source": meta.get("source", "")},
+        )
+        chunks.append(chunk.model_copy(update={"id": chunk_id}))
+
+    with BM25_WRITE_LOCK:
+        index = get_bm25_index()
+        if chunks:
+            index.build(chunks)
+        else:
+            index._bm25 = None
+            index._chunk_ids, index._chunk_contents = [], []
+            index._chunk_metadatas, index._doc_to_chunks = [], {}
+        index.save()
+    log.info("BM25 index rebuilt from vector store: %d chunks", len(chunks))
+    return len(chunks)
+
+
+def ensure_bm25_consistent() -> dict[str, Any]:
+    """Rebuild BM25 from Chroma if their chunk ID sets differ (cheap ID check)."""
+    from backend.vector_store import get_vector_store
+
+    collection = getattr(get_vector_store(), "_collection", None)
+    if collection is None:
+        return {"status": "skipped", "reason": "no_collection"}
+    chroma_ids = set(collection.get(include=[]).get("ids", []))
+    bm25_ids = get_bm25_index().get_chunk_ids()
+    if chroma_ids == bm25_ids:
+        return {"status": "ok", "chunks": len(chroma_ids)}
+    log.warning(
+        "BM25/Chroma drift detected (chroma=%d bm25=%d); rebuilding BM25",
+        len(chroma_ids), len(bm25_ids),
+    )
+    return {"status": "rebuilt", "chunks": rebuild_bm25_from_vector_store()}

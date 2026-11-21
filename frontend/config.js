@@ -3,7 +3,9 @@
 // Handles GitHub Pages, same-origin Render serving, and local dev, so no manual
 // URL edits are needed per environment. The backend serves the frontend itself
 // locally on port 9826 (see main.py).
-window.API_BASE = (() => {
+// If the backend served this page it pre-sets window.API_BASE = "" (same
+// origin, any port); keep that.
+window.API_BASE = window.API_BASE ?? (() => {
   const host = window.location.hostname;
 
   // Local Development (uvicorn runs on port 9826 in this repo)

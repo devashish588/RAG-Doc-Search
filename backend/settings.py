@@ -16,7 +16,9 @@ except ImportError:
     pass
 
 BASE_DIR = Path(__file__).resolve().parents[1]
-DATA_DIR  = BASE_DIR / "data"
+# DATA_DIR can be overridden (tests point it at a temp dir so they never
+# touch the real index).
+DATA_DIR  = Path(os.getenv("DATA_DIR", str(BASE_DIR / "data"))).resolve()
 UPLOAD_DIR = DATA_DIR / "uploads"
 CHROMA_DIR = DATA_DIR / "chroma_db"
 
@@ -34,8 +36,10 @@ CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*").strip()
 
 # ---------------------------------------------------------------------------
 # Rate limiting (per-IP sliding window, in-memory)
+# 120 req/min: frontend polls /health + /documents every 30s (4 req/min),
+# each search is 1 req, plus upload/polling bursts.
 # ---------------------------------------------------------------------------
-RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "60"))
+RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "120"))
 RATE_LIMIT_WINDOW_SECONDS = int(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "60"))
 
 # ---------------------------------------------------------------------------
@@ -64,6 +68,9 @@ CHUNK_SIZE    = int(os.getenv("CHUNK_SIZE", "1200"))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "200"))
 CHUNKING_STRATEGY = os.getenv("CHUNKING_STRATEGY", "recursive").strip().lower()
 NEAR_DUPLICATE_THRESHOLD = float(os.getenv("NEAR_DUPLICATE_THRESHOLD", "0.95"))
+ENABLE_NEAR_DUPLICATE_DETECTION = os.getenv(
+    "ENABLE_NEAR_DUPLICATE_DETECTION", "false"
+).strip().lower() in {"1", "true", "yes", "on"}
 
 # Dense retrieval configuration
 DENSE_TOP_K = int(os.getenv("DENSE_TOP_K", "10"))
@@ -111,9 +118,8 @@ SUPPORTED_EXTENSIONS = {".pdf", ".txt", ".md", ".html", ".htm"}
 # ---------------------------------------------------------------------------
 # LLM provider configuration
 # ---------------------------------------------------------------------------
-# LLM_PROVIDER selects the backend: "openrouter" (default) or "groq".
+# LLM_PROVIDER selects the backend: "openrouter" or "groq".
 # Unified LLM_* vars override provider-specific OPENROUTER_* / GROQ_* vars.
-LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openrouter").strip().lower()
 
 # OpenRouter (legacy, kept for backward compatibility)
 OPENROUTER_API_KEY  = os.getenv("OPENROUTER_API_KEY", "").strip()
@@ -125,9 +131,12 @@ GROQ_API_KEY  = os.getenv("GROQ_API_KEY", "").strip()
 GROQ_MODEL    = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 GROQ_BASE_URL = os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1")
 
-# Valid Groq model fallback used when a misconfigured OpenRouter-style
-# "provider/model" name is detected (Groq uses bare IDs).
-GROQ_FALLBACK_MODEL = "llama-3.1-8b-instant"
+# When LLM_PROVIDER is unset, follow the key that is actually configured:
+# a .env with only GROQ_API_KEY used to default to "openrouter", find no key,
+# and silently fall back to extractive answers.
+_has_or_key = bool(os.getenv("OPENROUTER_API_KEY", "").strip())
+_DEFAULT_PROVIDER = "groq" if GROQ_API_KEY and not _has_or_key else "openrouter"
+LLM_PROVIDER = (os.getenv("LLM_PROVIDER", "").strip() or _DEFAULT_PROVIDER).lower()
 
 # Unified LLM config (provider-agnostic). These are the values llm.py uses.
 # If LLM_BASE_URL / LLM_MODEL are set, they win. Otherwise the provider
@@ -140,15 +149,6 @@ if LLM_PROVIDER == "groq":
     LLM_API_KEY = os.getenv("LLM_API_KEY", "").strip() or GROQ_API_KEY
     LLM_BASE_URL = os.getenv("LLM_BASE_URL", "").strip() or GROQ_BASE_URL
     LLM_MODEL = os.getenv("LLM_MODEL", "").strip() or GROQ_MODEL
-    # ponytail: Groq model IDs are bare (no '/'). A '/' means an OpenRouter-style
-    # name was copied by mistake and will 404 on Groq. Substitute the valid default.
-    if "/" in LLM_MODEL:
-        _log.warning(
-            "LLM_MODEL '%s' contains '/' which is invalid for Groq (Groq uses bare "
-            "model IDs like 'llama-3.1-8b-instant'). Falling back to '%s'.",
-            LLM_MODEL, GROQ_FALLBACK_MODEL,
-        )
-        LLM_MODEL = GROQ_FALLBACK_MODEL
 else:  # openrouter (default)
     LLM_API_KEY = os.getenv("LLM_API_KEY", "").strip() or OPENROUTER_API_KEY
     LLM_BASE_URL = os.getenv("LLM_BASE_URL", "").strip() or OPENROUTER_BASE_URL
@@ -175,3 +175,4 @@ CONF_GROUNDING_WEIGHT = float(os.getenv("CONF_GROUNDING_WEIGHT", "0.5"))
 def ensure_runtime_dirs() -> None:
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     CHROMA_DIR.mkdir(parents=True, exist_ok=True)
+    BM25_INDEX_DIR.mkdir(parents=True, exist_ok=True)

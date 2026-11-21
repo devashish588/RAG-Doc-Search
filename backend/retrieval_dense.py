@@ -113,7 +113,17 @@ class DenseRetriever(BaseDenseRetriever):
         filters = {"source": source} if source else None
 
         try:
-            # MMR search - retrieves varied content
+            # Similarity search keeps the provider's relevance score. MMR does
+            # not return scores and its old 1.0 placeholder made unrelated
+            # chunks indistinguishable from strong matches.
+            pairs = store.similarity_search_with_relevance_scores(
+                query,
+                k=effective_fetch_k,
+                filter=filters,
+            )
+            pairs = [(doc, _clamp(score)) for doc, score in pairs]
+        except Exception as exc:
+            log.warning("Similarity search failed, falling back to MMR: %s", exc)
             docs = store.max_marginal_relevance_search(
                 query,
                 k=effective_k,
@@ -121,17 +131,12 @@ class DenseRetriever(BaseDenseRetriever):
                 lambda_mult=self.lambda_mult,
                 filter=filters,
             )
-            # MMR returns docs without scores; use 1.0 as placeholder
-            pairs = [(doc, 1.0) for doc in docs]
-        except Exception as exc:
-            log.warning("MMR search failed, falling back to similarity: %s", exc)
-            # Fallback to similarity search with relevance scores
-            pairs = store.similarity_search_with_relevance_scores(
-                query,
-                k=effective_k,
-                filter=filters,
-            )
-            pairs = [(doc, _clamp(score)) for doc, score in pairs]
+            # MMR does not expose relevance scores. Assign a conservative
+            # score of 0.0 to indicate unscored evidence. These results will
+            # be filtered by MIN_RELEVANCE_SCORE threshold, ensuring conservative
+            # confidence behavior. This is intentional: unscored MMR results
+            # should not contribute to high-confidence answers.
+            pairs = [(doc, 0.0) for doc in docs]
 
         # Deduplicate by normalized text content
         seen_text = set()

@@ -103,6 +103,8 @@ def check_runtime_dependencies() -> DependencyReport:
 
 def log_environment_info() -> None:
     """Log runtime environment details. Called once at startup."""
+    from backend.settings import RATE_LIMIT_REQUESTS, RATE_LIMIT_WINDOW_SECONDS, LLM_PROVIDER, LLM_MODEL
+
     is_venv = _is_venv()
     site_packages = site.getsitepackages()[0] if site.getsitepackages() else "N/A"
 
@@ -113,6 +115,8 @@ def log_environment_info() -> None:
     log.info("  base_prefix:    %s", sys.base_prefix)
     log.info("  virtualenv:     %s", is_venv)
     log.info("  site-packages:  %s", site_packages)
+    log.info("  rate_limit:     %d req / %ds", RATE_LIMIT_REQUESTS, RATE_LIMIT_WINDOW_SECONDS)
+    log.info("  llm_provider:   %s  model: %s", LLM_PROVIDER, LLM_MODEL)
 
     if not is_venv:
         log.warning(

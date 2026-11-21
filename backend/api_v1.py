@@ -7,6 +7,7 @@ from fastapi import APIRouter, File, UploadFile, status
 from pydantic import BaseModel, Field
 
 from backend.ingestion import (
+    safe_upload_name,
     delete_document,
     find_active_duplicate,
     get_document_status,
@@ -133,6 +134,7 @@ def _extract_retrieved_chunks(
     rrf_results: list,
     reranker_results: list,
     retrieval_mode: str,
+    limit: int | None = None,
 ) -> list[RetrievedChunk]:
     """Extract the final-stage retrieval chunks for the frontend.
 
@@ -152,6 +154,10 @@ def _extract_retrieved_chunks(
         raw = dense_results
     else:
         raw = []
+
+    # Show the same chunks that were used as answer context (top-k for mode).
+    if limit is not None:
+        raw = raw[:limit]
 
     chunks = []
     for r in raw:
@@ -201,7 +207,7 @@ async def ingest_document_v1(file: UploadFile = File(...)) -> IngestResponse:
             status_code=status.HTTP_400_BAD_REQUEST,
         )
 
-    name = Path(file.filename).name
+    name = safe_upload_name(file.filename)
     ext = Path(name).suffix.lower()
     if ext not in SUPPORTED_EXTENSIONS:
         raise InvalidFileTypeError(name, sorted(SUPPORTED_EXTENSIONS))
@@ -244,12 +250,13 @@ async def ask_v1(request: AskRequest) -> AskResponse:
             bm25_results = []
             rrf_results = []
             reranker_results = []
+            # Answer generation uses the dense results (limited by top_k_dense)
             legacy_req = LegacySearchRequest(
                 query=request.question,
                 top_k=request.top_k_dense,
                 source=source_filter,
             )
-            search_res = run_search(legacy_req)
+            search_res = run_search(legacy_req, retrieval_results=dense_results)
         elif request.retrieval_mode == "sparse":
             # BM25 only mode
             dense_results = []
@@ -260,12 +267,13 @@ async def ask_v1(request: AskRequest) -> AskResponse:
             )
             rrf_results = []
             reranker_results = []
+            # Answer generation uses the BM25 results (limited by top_k_sparse)
             legacy_req = LegacySearchRequest(
                 query=request.question,
                 top_k=request.top_k_sparse,
                 source=source_filter,
             )
-            search_res = run_search(legacy_req)
+            search_res = run_search(legacy_req, retrieval_results=bm25_results)
         elif request.retrieval_mode == "hybrid_rerank":
             # Hybrid RRF + Cross-Encoder reranking
             dense_results = run_search_dense(
@@ -293,13 +301,13 @@ async def ask_v1(request: AskRequest) -> AskResponse:
                 candidates=rrf_results,
                 top_k=request.top_k_final,
             )
-            # Answer generation uses the reranked context (existing behavior)
+            # Answer generation uses the reranked context (limited by top_k_final)
             legacy_req = LegacySearchRequest(
                 query=request.question,
                 top_k=request.top_k_final,
                 source=source_filter,
             )
-            search_res = run_search(legacy_req)
+            search_res = run_search(legacy_req, retrieval_results=reranker_results)
         else:  # hybrid mode
             # Hybrid RRF mode
             dense_results = run_search_dense(
@@ -321,13 +329,13 @@ async def ask_v1(request: AskRequest) -> AskResponse:
                 source=source_filter,
             )
             reranker_results = []
-            # Use dense for answer generation (existing behavior)
+            # Answer generation uses the RRF results (limited by top_k_fused)
             legacy_req = LegacySearchRequest(
                 query=request.question,
-                top_k=request.top_k_dense,
+                top_k=request.top_k_fused,
                 source=source_filter,
             )
-            search_res = run_search(legacy_req)
+            search_res = run_search(legacy_req, retrieval_results=rrf_results)
     except ValueError as exc:
         raise APIError(
             code="INVALID_QUERY",
@@ -389,6 +397,12 @@ async def ask_v1(request: AskRequest) -> AskResponse:
         rrf_results=rrf_results,
         reranker_results=reranker_results,
         retrieval_mode=request.retrieval_mode,
+        limit={
+            "dense": request.top_k_dense,
+            "sparse": request.top_k_sparse,
+            "hybrid": request.top_k_fused,
+            "hybrid_rerank": request.top_k_final,
+        }.get(request.retrieval_mode),
     )
 
     conf_obj = Confidence(

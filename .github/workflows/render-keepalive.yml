@@ -1,19 +1,26 @@
 # Render Keep-Warm Health Check
 #
-# Sends a lightweight GET /healthz request to the Render backend every 5 minutes
-# to reduce inactivity-related cold starts.
+# Pings the Render backend's GET /healthz to reduce inactivity cold starts.
 #
-# IMPORTANT: This is a best-effort keep-warm mechanism. Its effectiveness
-# depends on the Render service plan and current platform behavior.
-# It does NOT guarantee zero cold starts.
+# Why it used to fail every run (in ~2s): the RENDER_HEALTH_URL repository
+# variable was never set, and the script exited 1 when it was empty. It now
+# falls back to the canonical production URL, so no setup is required.
+# Set RENDER_HEALTH_URL (Settings -> Secrets and variables -> Actions ->
+# Variables) only if the backend moves.
 #
-# Required: Set RENDER_HEALTH_URL as a repository variable (Settings → Secrets → Variables).
-# Example: https://rag-doc-search-1.onrender.com/healthz
+# Cold starts: a sleeping Render free instance takes ~30-60s to wake, so a
+# single 10s request always timed out. We retry with a generous timeout and
+# only fail the job if the service stays unreachable for ~4 minutes -- i.e. a
+# real outage worth an email, not a routine cold start.
+#
+# NOTE: GitHub runs scheduled workflows on a best-effort basis (often hours
+# apart on free accounts) and disables them after 60 days without repo
+# activity, so this cannot guarantee a warm instance. For reliable keep-warm,
+# also point an external pinger (e.g. UptimeRobot, cron-job.org) at /healthz.
 name: Render Keep-Warm
 
 on:
   schedule:
-    # Every 5 minutes
     - cron: '*/5 * * * *'
   workflow_dispatch:
     inputs:
@@ -21,35 +28,35 @@ on:
         description: 'Manual trigger reason'
         required: false
 
+concurrency:
+  group: render-keep-warm
+  cancel-in-progress: true
+
 jobs:
   keep-warm:
     runs-on: ubuntu-latest
-    timeout-minutes: 1
+    timeout-minutes: 6
     steps:
       - name: Render health check
         env:
-          HEALTH_URL: ${{ vars.RENDER_HEALTH_URL }}
+          HEALTH_URL: ${{ vars.RENDER_HEALTH_URL || 'https://rag-doc-search-1.onrender.com/healthz' }}
         run: |
-          if [ -z "$HEALTH_URL" ]; then
-            echo "::error::RENDER_HEALTH_URL repository variable is not set."
-            echo "Set it in Settings → Secrets and variables → Actions → Variables."
-            exit 1
-          fi
-
           echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
           echo "Endpoint:  $HEALTH_URL"
 
-          START=$(date +%s%N)
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$HEALTH_URL" || echo "000")
-          END=$(date +%s%N)
-          LATENCY_MS=$(( (END - START) / 1000000 ))
+          for attempt in 1 2 3 4; do
+            START=$(date +%s%N)
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              --connect-timeout 15 --max-time 60 "$HEALTH_URL" || true)
+            LATENCY_MS=$(( ($(date +%s%N) - START) / 1000000 ))
+            echo "Attempt $attempt: HTTP ${HTTP_STATUS:-000} in ${LATENCY_MS}ms"
 
-          echo "HTTP Status: $HTTP_STATUS"
-          echo "Latency:     ${LATENCY_MS}ms"
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "Result: PASS"
+              exit 0
+            fi
+            [ "$attempt" -lt 4 ] && sleep 15
+          done
 
-          if [ "$HTTP_STATUS" = "200" ]; then
-            echo "Result: PASS"
-          else
-            echo "::warning::Health check returned HTTP $HTTP_STATUS"
-            echo "Result: FAIL (HTTP $HTTP_STATUS)"
-          fi
+          echo "::error::Backend unreachable after 4 attempts (last HTTP ${HTTP_STATUS:-000}). Check the Render dashboard."
+          exit 1
